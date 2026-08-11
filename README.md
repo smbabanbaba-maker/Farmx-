@@ -105,8 +105,25 @@ src/
 public/                   FarmX logo and browser assets
 ```
 
+## Vercel deployment
+
+FarmX yanzu yana ɗauke da Nitro da `vercel.json`, wanda ke sa Vercel ya gina TanStack Start server functions da SSR routes daidai. Bayan wannan commit ya shiga GitHub, Vercel zai fara sabon deployment idan repository ɗin yana haɗe da project ɗinka.
+
+| Vercel setting   | Saitin da za ka tabbatar                               |
+| ---------------- | ------------------------------------------------------ |
+| Framework Preset | `TanStack Start`                                       |
+| Root Directory   | `.`                                                    |
+| Install Command  | Ka bar Vercel ya gano `pnpm install --frozen-lockfile` |
+| Build Command    | Ka bar default `pnpm run build`                        |
+| Output Directory | Kada a sa wani custom output directory                 |
+| Node.js          | `22.x`                                                 |
+
+Bayan push, buɗe **Deployments** a Vercel ka duba sabon build. Idan project ɗin ya riga ya haɗu da repository, sabon commit zai sake deploy ta atomatik. Idan bai yi ba, danna **Redeploy** a deployment mafi sabo. Kada ka sa `dist` ko `.output` da hannu a matsayin output directory; Nitro/Vercel suna gano server output ɗin kai tsaye. [3]
+
 ## References
 
 [1] [Amazon S3: Download and upload objects with presigned URLs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)
 
 [2] [Amazon DynamoDB: Introduction and on-demand capacity](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html)
+
+[3] [Vercel: Deploy a TanStack Start app with Nitro](https://vercel.com/kb/guide/deploy-a-tanstack-start-app-to-vercel)
