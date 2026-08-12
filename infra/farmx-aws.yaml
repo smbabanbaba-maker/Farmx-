@@ -97,6 +97,43 @@ Resources:
         - Key: Environment
           Value: !Ref Environment
 
+  ProfileTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        - AttributeName: gsi1pk
+          AttributeType: S
+        - AttributeName: gsi1sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1
+          KeySchema:
+            - AttributeName: gsi1pk
+              KeyType: HASH
+            - AttributeName: gsi1sk
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      Tags:
+        - Key: Application
+          Value: FarmX
+        - Key: Environment
+          Value: !Ref Environment
+
   FarmXUserPool:
     Type: AWS::Cognito::UserPool
     Properties:
@@ -167,6 +204,24 @@ Resources:
             Resource:
               - !GetAtt ListingsTable.Arn
               - !Sub "${ListingsTable.Arn}/index/*"
+          - Sid: ProfileDataAccess
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+            Resource:
+              - !GetAtt ProfileTable.Arn
+              - !Sub "${ProfileTable.Arn}/index/*"
+          - Sid: ProfileMediaObjectAccess
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+            Resource: !Sub "${MediaBucket.Arn}/profiles/*"
           - Sid: PaymentSecretRead
             Effect: Allow
             Action:
@@ -180,6 +235,9 @@ Outputs:
   ListingsTableName:
     Description: Use as FARMX_LISTINGS_TABLE on the FarmX server.
     Value: !Ref ListingsTable
+  ProfileTableName:
+    Description: Use as FARMX_PROFILE_TABLE on the FarmX server.
+    Value: !Ref ProfileTable
   AwsRegion:
     Description: Use as AWS_REGION on the FarmX server.
     Value: !Ref AWS::Region

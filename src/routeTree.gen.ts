@@ -38,6 +38,8 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
+import { Route as UUsernameRouteImport } from './routes/u.$username'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -184,6 +186,16 @@ const ProductIdRoute = ProductIdRouteImport.update({
   path: '/product/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileCenterSectionRoute = ProfileCenterSectionRouteImport.update({
+  id: '/profile-center/$section',
+  path: '/profile-center/$section',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UUsernameRoute = UUsernameRouteImport.update({
+  id: '/u/$username',
+  path: '/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,6 +227,8 @@ export interface FileRoutesByFullPath {
   '/c/$slug': typeof CSlugRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
+  '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -246,6 +260,8 @@ export interface FileRoutesByTo {
   '/c/$slug': typeof CSlugRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
+  '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -278,6 +294,8 @@ export interface FileRoutesById {
   '/c/$slug': typeof CSlugRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
+  '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/u/$username': typeof UUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -311,6 +329,8 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/messages/$id'
     | '/product/$id'
+    | '/profile-center/$section'
+    | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -342,6 +362,8 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/messages/$id'
     | '/product/$id'
+    | '/profile-center/$section'
+    | '/u/$username'
   id:
     | '__root__'
     | '/'
@@ -373,6 +395,8 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/messages/$id'
     | '/product/$id'
+    | '/profile-center/$section'
+    | '/u/$username'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -404,6 +428,8 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   CSlugRoute: typeof CSlugRoute
   ProductIdRoute: typeof ProductIdRoute
+  ProfileCenterSectionRoute: typeof ProfileCenterSectionRoute
+  UUsernameRoute: typeof UUsernameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -611,6 +637,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProductIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile-center/$section': {
+      id: '/profile-center/$section'
+      path: '/profile-center/$section'
+      fullPath: '/profile-center/$section'
+      preLoaderRoute: typeof ProfileCenterSectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/u/$username': {
+      id: '/u/$username'
+      path: '/u/$username'
+      fullPath: '/u/$username'
+      preLoaderRoute: typeof UUsernameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -655,6 +695,8 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   CSlugRoute: CSlugRoute,
   ProductIdRoute: ProductIdRoute,
+  ProfileCenterSectionRoute: ProfileCenterSectionRoute,
+  UUsernameRoute: UUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

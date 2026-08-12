@@ -1,30 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { useI18n } from "@/lib/i18n";
-import { useSubscription, FREE_QUOTA } from "@/lib/subscription";
-import { usePrefs } from "@/lib/prefs";
-import { useMessages } from "@/lib/messages-store";
-import { transactions } from "@/lib/mock-data";
+import { useProfileData } from "@/lib/use-profile";
+import { useProfilePhoto } from "@/lib/use-profile-photo";
 import {
   BadgeCheck,
-  Megaphone,
-  TrendingUp,
-  Users,
-  Crown,
-  Star,
-  Wallet,
-  BarChart3,
-  LifeBuoy,
   Bell,
-  HelpCircle,
-  UserPlus,
-  Heart,
-  Settings,
+  Building2,
   ChevronRight,
+  CircleHelp,
+  Heart,
+  LayoutDashboard,
+  MessageSquareText,
+  MoreHorizontal,
   Pencil,
-  PackageCheck,
-  AlertTriangle,
   ShieldCheck,
+  Share2,
+  Sparkles,
+  Star,
+  TrendingUp,
+  UserCheck,
+  UserRound,
+  UsersRound,
+  WalletCards,
 } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
@@ -33,154 +30,371 @@ export const Route = createFileRoute("/profile")({
       { title: "My Profile — FarmX" },
       {
         name: "description",
-        content:
-          "Manage your FarmX ads, clients, premium services, feedback, balance, performance and notifications.",
-      },
-      { property: "og:title", content: "FarmX Profile" },
-      {
-        property: "og:description",
-        content: "Your ads, clients, balance and performance in one place.",
+        content: "Manage your FarmX profile, advertisements, inquiries, services and settings.",
       },
     ],
   }),
   component: ProfilePage,
 });
 
+const sections = [
+  {
+    id: "ads",
+    label: "My ads",
+    description: "Active, drafts, paused and closed adverts",
+    icon: LayoutDashboard,
+  },
+  {
+    id: "promotions",
+    label: "Pro sales",
+    description: "Boosts, featured listings and campaigns",
+    icon: Sparkles,
+  },
+  {
+    id: "inquiries",
+    label: "Buyer inquiries",
+    description: "People who contacted you about an advert",
+    icon: MessageSquareText,
+  },
+  {
+    id: "interactions",
+    label: "My interactions",
+    description: "Recent chats, viewed ads and saved activity",
+    icon: UsersRound,
+  },
+  {
+    id: "saved",
+    label: "Saved ads",
+    description: "Listings you saved to revisit later",
+    icon: Heart,
+  },
+  {
+    id: "analytics",
+    label: "Ad analytics",
+    description: "Views, saves, contacts and promotion performance",
+    icon: TrendingUp,
+  },
+  {
+    id: "balance",
+    label: "FarmX balance",
+    description: "Payments for FarmX services only",
+    icon: WalletCards,
+  },
+  {
+    id: "services",
+    label: "Premium services",
+    description: "Subscription, limits and service receipts",
+    icon: Sparkles,
+  },
+  {
+    id: "reviews",
+    label: "Ratings & reviews",
+    description: "Feedback from verified FarmX interactions",
+    icon: Star,
+  },
+  {
+    id: "network",
+    label: "Followers & following",
+    description: "People and businesses you connect with",
+    icon: UsersRound,
+  },
+  {
+    id: "verification",
+    label: "Seller verification",
+    description: "Phone, email, identity and business status",
+    icon: UserCheck,
+  },
+  {
+    id: "business",
+    label: "Business profile",
+    description: "Your public agricultural business information",
+    icon: Building2,
+  },
+  {
+    id: "safety",
+    label: "Safety & trust",
+    description: "Safety guidance, reports and blocked users",
+    icon: ShieldCheck,
+  },
+  {
+    id: "support",
+    label: "Help & support",
+    description: "FAQ, support tickets and FarmX assistance",
+    icon: CircleHelp,
+  },
+] as const;
+
 function ProfilePage() {
-  const { t } = useI18n();
-  const { tier, listingsLeft } = useSubscription();
-  const { saved, followed } = usePrefs();
-  const { totalUnread } = useMessages();
+  const { status, profile, stats, error, refresh } = useProfileData();
+  const photoUrl = useProfilePhoto(profile?.photoKey);
 
-  const menu = [
-    { to: "/market", icon: Megaphone, label: t("myAds"), meta: "12" },
-    { to: "/analytics", icon: TrendingUp, label: t("proSales"), meta: "" },
-    { to: "/messages", icon: Users, label: t("myClients"), meta: "" },
-    { to: "/subscribe", icon: Crown, label: t("premiumServices"), meta: tier?.name ?? t("free") },
-    { to: "/community", icon: Star, label: t("feedback"), meta: "4.8" },
-    { to: "/wallet", icon: Wallet, label: t("balance"), meta: "₦248,500" },
-    { to: "/analytics", icon: BarChart3, label: t("performance"), meta: "" },
-    { to: "/messages", icon: LifeBuoy, label: t("requestHelp"), meta: "" },
-    {
-      to: "/notifications",
-      icon: Bell,
-      label: t("notifications"),
-      meta: totalUnread ? String(totalUnread) : "",
-    },
-    { to: "/faq", icon: HelpCircle, label: t("faq"), meta: "" },
-    {
-      to: "/community",
-      icon: UserPlus,
-      label: t("followers"),
-      meta: String(348 + followed.length),
-    },
-    { to: "/saved", icon: Heart, label: t("savedAds"), meta: String(saved.length) },
-    { to: "/orders", icon: PackageCheck, label: t("orders"), meta: "" },
-    { to: "/disputes", icon: AlertTriangle, label: t("disputes"), meta: "" },
-    { to: "/verify", icon: ShieldCheck, label: t("sellerVerification"), meta: "" },
-  ] as const;
+  if (status === "loading") {
+    return <ProfileLoading />;
+  }
 
-  return (
-    <AppShell>
-      <div className="space-y-4 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-16 w-16 rounded-full bg-brand text-brand-foreground flex items-center justify-center font-bold text-2xl">
-            IB
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1">
-              <h1 className="font-bold text-lg truncate">Ibrahim Bello</h1>
-              <BadgeCheck className="h-4 w-4 text-brand shrink-0" />
-            </div>
-            <p className="text-xs text-muted-foreground">Kano, Nigeria · Farmer</p>
-            <p className="text-xs text-brand truncate">www.ibrahimbello.com.farmx</p>
-          </div>
+  if (status === "error") {
+    return (
+      <AppShell title="Profile">
+        <section className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-5 text-center">
+          <ShieldCheck className="mx-auto h-9 w-9 text-brand" />
+          <h1 className="mt-3 text-lg font-bold">Your secure Profile is unavailable</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Sign in with your FarmX account and make sure the Profile service environment is
+            configured before loading private profile data.
+          </p>
+          <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
+            {error}
+          </p>
+          <button
+            onClick={() => void refresh()}
+            className="mt-4 rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-foreground"
+          >
+            Retry Profile
+          </button>
+        </section>
+      </AppShell>
+    );
+  }
+
+  if (!profile || !stats) {
+    return (
+      <AppShell title="Profile">
+        <section className="mx-auto max-w-lg rounded-2xl border border-dashed border-border bg-card p-6 text-center">
+          <UserRound className="mx-auto h-10 w-10 text-brand" />
+          <h1 className="mt-3 text-lg font-bold">Complete your FarmX Profile</h1>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Add your verified identity, role, location and professional details to use Profile tools
+            safely.
+          </p>
           <Link
             to="/edit-profile"
-            className="p-2 rounded-full hover:bg-accent"
-            aria-label={t("editProfile")}
+            className="mt-4 inline-flex rounded-xl bg-brand px-4 py-2.5 text-sm font-bold text-brand-foreground"
           >
-            <Pencil className="h-4 w-4" />
+            Complete profile
           </Link>
-        </div>
+        </section>
+      </AppShell>
+    );
+  }
 
-        <Link
-          to="/subscribe"
-          className="block rounded-2xl p-4 bg-gradient-to-br from-black to-brand text-white"
-        >
-          <p className="text-[10px] uppercase tracking-wide text-white/70">{t("currentPlan")}</p>
-          <p className="text-lg font-bold mt-0.5">
-            {tier ? tier.name : `${t("freeQuota")} · ${FREE_QUOTA}`}
-          </p>
-          <p className="text-xs text-white/80 mt-0.5">
-            {listingsLeft === "unlimited"
-              ? t("unlimitedListings")
-              : `${listingsLeft} ${t("quotaLeft")}`}
-          </p>
-        </Link>
+  const initials = profile.fullName
+    .split(" ")
+    .map((part) => part.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  const profileUrl =
+    typeof window === "undefined"
+      ? `/u/${profile.username}`
+      : `${window.location.origin}/u/${profile.username}`;
 
-        {/* Sidebar + content */}
-        <div className="flex gap-3 items-start">
-          <nav className="w-40 shrink-0 rounded-2xl bg-card border border-border overflow-hidden">
-            {menu.map((m) => (
+  const shareProfile = async () => {
+    const shareData = {
+      title: `${profile.fullName} on FarmX`,
+      text: `View ${profile.fullName}'s FarmX profile`,
+      url: profileUrl,
+    };
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else await navigator.clipboard.writeText(profileUrl);
+    } catch {
+      /* A user may cancel native share; no action is needed. */
+    }
+  };
+
+  return (
+    <AppShell title="Profile">
+      <div className="space-y-4 pb-6">
+        <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="h-20 bg-gradient-to-r from-brand via-brand to-red-800" />
+          <div className="px-4 pb-4">
+            <div className="-mt-9 flex items-end justify-between gap-3">
+              <div className="flex h-[76px] w-[76px] items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-brand/10 text-xl font-black text-brand shadow-sm">
+                {photoUrl ? (
+                  <img
+                    src={photoUrl}
+                    alt={`${profile.fullName} profile`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div className="flex gap-2 pb-1">
+                <Link
+                  to="/edit-profile"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-xs font-bold hover:border-brand"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Edit
+                </Link>
+                <button
+                  onClick={() => void shareProfile()}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand px-3 text-xs font-bold text-brand-foreground"
+                >
+                  <Share2 className="h-3.5 w-3.5" /> Share
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <h1 className="text-xl font-black">{profile.fullName}</h1>
+              {profile.verification === "approved" && (
+                <BadgeCheck className="h-4 w-4 text-brand" aria-label="Verified" />
+              )}
+            </div>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              @{profile.username} · {roleLabel(profile.role)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {profile.location || profile.state}
+            </p>
+            {profile.bio && <p className="mt-3 text-sm leading-6 text-foreground">{profile.bio}</p>}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <StatusPill
+                label={verificationLabel(profile.verification)}
+                tone={profile.verification === "approved" ? "success" : "neutral"}
+              />
+              <StatusPill label={`${stats.activeAds} active ads`} tone="brand" />
+              {profile.agriculturalInterests.slice(0, 2).map((interest) => (
+                <StatusPill key={interest} label={interest} tone="neutral" />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Metric label="Active ads" value={stats.activeAds} />
+          <Metric label="Ad views" value={stats.totalAdViews} />
+          <Metric label="Buyer inquiries" value={stats.buyerInquiries ?? "—"} />
+          <Metric label="Saved ads" value={stats.savedAds ?? "—"} />
+          <Metric label="Followers" value={stats.followers ?? "—"} />
+          <Metric label="Following" value={stats.following ?? "—"} />
+          <Metric label="Rating" value={stats.rating === null ? "—" : stats.rating.toFixed(1)} />
+          <Metric label="Reviews" value={stats.reviews ?? "—"} />
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+            <div>
+              <h2 className="text-sm font-bold">Profile centre</h2>
+              <p className="text-[11px] text-muted-foreground">
+                Manage your FarmX activity and services
+              </p>
+            </div>
+            <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="divide-y divide-border">
+            {sections.map((section) => (
               <Link
-                key={m.label}
-                to={m.to}
-                className="flex items-center gap-2 px-3 py-3 text-xs font-medium border-b border-border last:border-0 hover:bg-accent"
+                key={section.id}
+                to="/profile-center/$section"
+                params={{ section: section.id }}
+                className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70 active:scale-[0.995]"
               >
-                <m.icon className="h-4 w-4 text-brand shrink-0" />
-                <span className="truncate flex-1">{m.label}</span>
-                {m.meta && <span className="text-[10px] text-muted-foreground">{m.meta}</span>}
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                  <section.icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{section.label}</span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    {section.description}
+                  </span>
+                </span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </Link>
             ))}
             <Link
-              to="/settings"
-              className="flex items-center gap-2 px-3 py-3 text-xs font-bold bg-brand/10 text-brand hover:bg-brand/20"
+              to="/notifications"
+              className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70"
             >
-              <Settings className="h-4 w-4" /> {t("settings")}
-              <ChevronRight className="h-3 w-3 ml-auto" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                <Bell className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Notifications</span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  Profile, chat and service updates
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
-          </nav>
-
-          <div className="flex-1 min-w-0 space-y-3">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              {[
-                { l: t("myAds"), v: "12" },
-                { l: t("followers"), v: "348" },
-                { l: "★", v: "4.8" },
-              ].map((s) => (
-                <div key={s.l} className="p-2.5 rounded-xl bg-card border border-border">
-                  <p className="font-bold">{s.v}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{s.l}</p>
-                </div>
-              ))}
-            </div>
-
-            <section>
-              <h2 className="font-bold text-sm mb-2">{t("performance")}</h2>
-              <div className="space-y-2">
-                {transactions.slice(0, 4).map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="p-2.5 rounded-xl bg-card border border-border flex justify-between text-xs gap-2"
-                  >
-                    <span className="truncate">{tx.label}</span>
-                    <span
-                      className={
-                        tx.amount > 0
-                          ? "text-green-600 dark:text-green-400 shrink-0"
-                          : "text-brand shrink-0"
-                      }
-                    >
-                      {tx.amount > 0 ? "+" : ""}₦{Math.abs(tx.amount).toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </section>
+            <Link
+              to="/settings"
+              className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70"
+            >
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                <ShieldCheck className="h-4 w-4" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">Settings & privacy</span>
+                <span className="block truncate text-[11px] text-muted-foreground">
+                  Visibility, messaging, security and account controls
+                </span>
+              </span>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Link>
           </div>
-        </div>
+        </section>
       </div>
     </AppShell>
+  );
+}
+
+function ProfileLoading() {
+  return (
+    <AppShell title="Profile">
+      <div className="space-y-4 animate-pulse">
+        <div className="h-56 rounded-2xl bg-muted" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div key={index} className="h-20 rounded-xl bg-muted" />
+          ))}
+        </div>
+        <div className="h-80 rounded-2xl bg-muted" />
+      </div>
+    </AppShell>
+  );
+}
+
+function Metric({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-3 text-center">
+      <p className="text-lg font-black text-foreground">
+        {typeof value === "number" ? value.toLocaleString() : value}
+      </p>
+      <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function StatusPill({ label, tone }: { label: string; tone: "brand" | "success" | "neutral" }) {
+  const styles = {
+    brand: "bg-brand/10 text-brand",
+    success: "bg-green-500/10 text-green-700 dark:text-green-400",
+    neutral: "bg-muted text-muted-foreground",
+  };
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${styles[tone]}`}>
+      {label}
+    </span>
+  );
+}
+
+function roleLabel(role: string) {
+  return role
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function verificationLabel(status: string) {
+  return (
+    {
+      not_started: "Not verified",
+      pending: "Verification pending",
+      approved: "Verified",
+      rejected: "Verification rejected",
+      more_information: "More information needed",
+    }[status] ?? "Not verified"
   );
 }
