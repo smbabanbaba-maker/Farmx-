@@ -6,14 +6,10 @@ type Ctx = {
   setLocation: (l: LocationName) => void;
   all: readonly LocationName[];
 };
-const LocationCtx = createContext<Ctx>({
-  location: "Lagos",
-  setLocation: () => {},
-  all: LOCATIONS,
-});
+const LocationCtx = createContext<Ctx>({ location: "Kano", setLocation: () => {}, all: LOCATIONS });
 
 export function LocationProvider({ children }: { children: ReactNode }) {
-  const [location, setLoc] = useState<LocationName>("Lagos");
+  const [location, setLoc] = useState<LocationName>("Kano");
   useEffect(() => {
     const saved =
       typeof window !== "undefined"

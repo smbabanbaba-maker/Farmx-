@@ -21,7 +21,6 @@ import {
   LogOut,
   Info,
   Wifi,
-  DatabaseZap,
   Star,
   ChevronRight,
 } from "lucide-react";
@@ -53,18 +52,6 @@ function SettingsPage() {
   const navigate = useNavigate();
   const [langOpen, setLangOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
-
-  const clearCache = async () => {
-    try {
-      if (typeof window !== "undefined" && "caches" in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map((key) => caches.delete(key)));
-      }
-      setNote("✓ Cache cleared. Reload the app to refresh local assets.");
-    } catch {
-      setNote("Unable to clear the browser cache on this device.");
-    }
-  };
 
   const ping = async () => {
     const start = Date.now();
@@ -183,7 +170,6 @@ function SettingsPage() {
             onClick={() => setNote("FarmX v1.0")}
           />
           <Row icon={Wifi} label={t("checkConnection")} onClick={ping} />
-          <Row icon={DatabaseZap} label="Clear cache" onClick={() => void clearCache()} />
           <Row
             icon={Star}
             label={t("rateUs")}

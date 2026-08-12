@@ -47,21 +47,23 @@ function SubscribePage() {
             {tier ? tier.name : `${t("freeQuota")} (${FREE_QUOTA})`}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {`${listingsLeft} ${t("quotaLeft")}`}
+            {listingsLeft === "unlimited"
+              ? t("unlimitedListings")
+              : `${listingsLeft} ${t("quotaLeft")}`}
           </p>
           {tier && state.installmentsPaid === 1 && (
             <button
               onClick={() =>
                 setPending({
                   id: tier.id,
-                  amount: tier.secondInstallment,
+                  amount: tier.installment,
                   title: `${tier.name} — ${t("secondInstallment")}`,
                   second: true,
                 })
               }
               className="mt-3 w-full py-2 rounded-lg bg-brand text-brand-foreground text-sm font-semibold"
             >
-              {t("secondInstallment")} · ₦{tier.secondInstallment.toLocaleString()}
+              {t("secondInstallment")} · ₦{tier.installment.toLocaleString()}
             </button>
           )}
           {!tier && freeLeft === 0 && (
@@ -106,11 +108,11 @@ function SubscribePage() {
                   <div className="mt-3 grid grid-cols-2 gap-2 text-center">
                     <div className="rounded-lg bg-accent/40 py-1.5">
                       <p className="text-[10px] text-muted-foreground">{t("firstInstallment")}</p>
-                      <p className="text-sm font-bold">₦{p.firstInstallment.toLocaleString()}</p>
+                      <p className="text-sm font-bold">₦{p.installment.toLocaleString()}</p>
                     </div>
                     <div className="rounded-lg bg-accent/40 py-1.5">
                       <p className="text-[10px] text-muted-foreground">{t("secondInstallment")}</p>
-                      <p className="text-sm font-bold">₦{p.secondInstallment.toLocaleString()}</p>
+                      <p className="text-sm font-bold">₦{p.installment.toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -119,7 +121,7 @@ function SubscribePage() {
                     onClick={() =>
                       setPending({
                         id: p.id,
-                        amount: p.firstInstallment,
+                        amount: p.installment,
                         title: `${p.name} — ${t("firstInstallment")}`,
                       })
                     }
@@ -132,7 +134,7 @@ function SubscribePage() {
                         <Check className="h-4 w-4" /> {t("currentPlan")}
                       </>
                     ) : (
-                      `${t("payFirstInstallment")} · ₦${p.firstInstallment.toLocaleString()}`
+                      `${t("payFirstInstallment")} · ₦${p.installment.toLocaleString()}`
                     )}
                   </button>
                 </div>

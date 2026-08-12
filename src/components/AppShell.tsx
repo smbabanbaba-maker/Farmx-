@@ -8,7 +8,6 @@ import {
   MessageSquare,
   Users,
   User,
-  Heart,
   Menu,
   X,
   Sun,
@@ -20,23 +19,22 @@ import { useState, type ReactNode } from "react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useMessages } from "@/lib/messages-store";
-import { useNotifications } from "@/lib/notifications-store";
 
 const LOGO = "/farmx-logo.png";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const { t } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { totalUnread } = useMessages();
-  const { unread, items, markRead, markAllRead } = useNotifications();
 
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
-    { to: "/saved", icon: Heart, label: "Saved", badge: 0 },
-    { to: "/post-product", icon: Plus, label: "Sell", badge: 0 },
-    { to: "/messages", icon: MessageSquare, label: "Messages", badge: totalUnread },
+    { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
+    { to: "/wallet", icon: Wallet, label: t("wallet"), badge: 0 },
+    { to: "/post-product", icon: Plus, label: "Post", badge: 0 },
+    { to: "/messages", icon: MessageSquare, label: "Chats", badge: totalUnread },
+    { to: "/community", icon: Users, label: t("community"), badge: 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
   ] as const;
 
@@ -51,18 +49,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             </span>
           </Link>
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => setNotifOpen((open) => !open)}
-              className="relative p-2 rounded-full hover:bg-accent"
-              aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
-            >
+            <Link to="/notifications" className="relative p-2 rounded-full hover:bg-accent">
               <Bell className="h-5 w-5" />
-              {unread > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              )}
-            </button>
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-brand" />
+            </Link>
             <button
               onClick={() => setMenuOpen(true)}
               className="p-2 rounded-full hover:bg-accent"
@@ -82,7 +72,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>
 
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border">
-        <div className="mx-auto max-w-2xl grid grid-cols-5">
+        <div className="mx-auto max-w-2xl grid grid-cols-7">
           {tabs.map((tab) => {
             const active = tab.to === "/" ? pathname === "/" : pathname.startsWith(tab.to);
             const Icon = tab.icon;
@@ -126,84 +116,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         </div>
       </nav>
 
-      {notifOpen && (
-        <NotificationPopover
-          items={items}
-          onClose={() => setNotifOpen(false)}
-          onMarkRead={markRead}
-          onMarkAllRead={markAllRead}
-        />
-      )}
       {menuOpen && <SettingsDrawer onClose={() => setMenuOpen(false)} />}
-    </div>
-  );
-}
-
-function NotificationPopover({
-  items,
-  onClose,
-  onMarkRead,
-  onMarkAllRead,
-}: {
-  items: ReturnType<typeof useNotifications>["items"];
-  onClose: () => void;
-  onMarkRead: (id: string) => void;
-  onMarkAllRead: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
-      <section
-        className="absolute top-16 right-3 w-[calc(100%-1.5rem)] max-w-sm rounded-2xl bg-card border border-border shadow-2xl overflow-hidden"
-        onClick={(event) => event.stopPropagation()}
-        aria-label="Notifications"
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-          <div>
-            <p className="font-bold text-sm">Notifications</p>
-            <p className="text-[11px] text-muted-foreground">
-              Updates from your marketplace activity
-            </p>
-          </div>
-          <button onClick={onMarkAllRead} className="text-xs font-semibold text-brand">
-            Mark all read
-          </button>
-        </div>
-        <div className="max-h-80 overflow-y-auto divide-y divide-border">
-          {items.length === 0 ? (
-            <p className="p-5 text-center text-sm text-muted-foreground">You are all caught up.</p>
-          ) : (
-            items.slice(0, 8).map((item) => (
-              <Link
-                key={item.id}
-                to={item.link ?? "/notifications"}
-                onClick={() => {
-                  onMarkRead(item.id);
-                  onClose();
-                }}
-                className={`block px-4 py-3 hover:bg-accent ${item.read ? "" : "bg-brand/5"}`}
-              >
-                <div className="flex items-start gap-2">
-                  {!item.read && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand" />}
-                  <div className={item.read ? "pl-4" : ""}>
-                    <p className="text-sm font-semibold">{item.title}</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">{item.body}</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">
-                      {new Date(item.at).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-        <Link
-          to="/notifications"
-          onClick={onClose}
-          className="block px-4 py-3 text-center text-xs font-bold text-brand border-t border-border"
-        >
-          View all notifications
-        </Link>
-      </section>
     </div>
   );
 }
@@ -282,9 +195,9 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
           {t("logout")}
         </button>
 
-        <div className="mt-8 flex flex-col items-center gap-1 border-t border-border pt-5 pb-4">
-          <img src={LOGO} alt="FarmX" className="h-8 w-8 rounded-full object-cover opacity-80" />
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="mt-8 flex flex-col items-center gap-1 pb-4">
+          <img src={LOGO} alt="" className="h-8 w-8 rounded-full object-cover opacity-80" />
+          <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             FarmX Marketplace
           </p>
         </div>

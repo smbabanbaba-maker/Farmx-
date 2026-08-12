@@ -14,8 +14,8 @@
  *  - Implement these endpoints on AWS:
  *      POST /payments/init         -> returns { authorization_url, reference }  (creates a Paystack tx)
  *      POST /payments/verify       -> body { reference } -> verifies + updates wallet/listing
- *      POST /subscriptions/activate -> activates a verified FarmX subscription
- *      POST /wallet/topup           -> credits FarmX Wallet after verified Paystack tx
+ *      POST /subscriptions/bluetek -> creates ₦4,500/mo plan for the company
+ *      POST /wallet/topup          -> credits FarmX Wallet after verified Paystack tx
  */
 
 export const PAYSTACK_PUBLIC_KEY =
@@ -24,6 +24,7 @@ export const PAYSTACK_PUBLIC_KEY =
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
 
 export type PaymentPurpose =
+  | { kind: "listing_fee"; productId?: string }
   | { kind: "promo_week"; productId: string }
   | { kind: "promo_month"; productId: string }
   | { kind: "job_promo"; jobId: string }
@@ -49,7 +50,7 @@ export interface InitPaymentResult {
  */
 export async function initPayment(input: InitPaymentInput): Promise<InitPaymentResult> {
   if (!API_BASE_URL) {
-    // Local development path only. Production must use the configured API endpoint.
+    // Frontend mock — replace once AWS is live.
     return {
       reference: `mock_${Date.now()}`,
       authorization_url: "#mock-checkout",

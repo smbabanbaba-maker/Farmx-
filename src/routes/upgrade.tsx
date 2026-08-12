@@ -80,7 +80,7 @@ function UpgradePage() {
   const localPriceLabel = useMemo(() => formatFromNGN(priceNGN, country), [priceNGN, country]);
 
   // Auto-fill company from personal
-  const fillCompanyFromPersonal = () => {
+  const copyPersonalToCompany = () => {
     setCompany((c) => ({
       ...c,
       name: c.name || personal.fullName + " Enterprises",
@@ -268,7 +268,7 @@ function UpgradePage() {
                 disabled={!canContinuePersonal}
                 onClick={() => {
                   savePersonal(personal);
-                  fillCompanyFromPersonal();
+                  copyPersonalToCompany();
                   setStep("company");
                 }}
                 className="flex-1 py-3 rounded-xl bg-brand text-brand-foreground font-semibold disabled:opacity-50"

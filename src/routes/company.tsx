@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { partners, products, jobs, PRICING } from "@/lib/mock-data";
 import {
+  type LucideIcon,
   BadgeCheck,
   Users2,
   TrendingUp,
@@ -277,7 +278,7 @@ function CompanyPage() {
   );
 }
 
-function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: typeof Users2 }) {
+function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
   return (
     <div className="p-2 rounded-lg bg-muted">
       <Icon className="h-3.5 w-3.5 mx-auto text-brand" />

@@ -4,9 +4,9 @@ import { useRouterState } from "@tanstack/react-router";
 const LOGO = "/farmx-logo.png";
 
 /**
- * FarmX opening splash:
- *  - First app open: full screen FarmX mark (~1.2s)
- *  - Route changes use a restrained logo flash (~0.45s)
+ * FarmX brand splash:
+ *  - First app open: full screen, centered FarmX logo (~1.8s)
+ *  - Every route change afterwards: quick logo flash (~0.7s)
  */
 export function BrandSplash() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -18,7 +18,7 @@ export function BrandSplash() {
     const t = setTimeout(() => {
       booted.current = true;
       setPhase("idle");
-    }, 1200);
+    }, 1800);
     return () => clearTimeout(t);
   }, []);
 
@@ -27,7 +27,7 @@ export function BrandSplash() {
     lastPath.current = pathname;
     if (!booted.current) return;
     setPhase("flash");
-    const t = setTimeout(() => setPhase("idle"), 450);
+    const t = setTimeout(() => setPhase("idle"), 700);
     return () => clearTimeout(t);
   }, [pathname]);
 
@@ -52,11 +52,7 @@ export function BrandSplash() {
           </span>
         )}
       </div>
-      <div className="pb-10 text-center">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-          Marketplace for growth
-        </p>
-      </div>
+      <div className="h-10" />
     </div>
   );
 }

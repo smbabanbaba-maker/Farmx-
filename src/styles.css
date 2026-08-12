@@ -121,29 +121,3 @@
     opacity: 0;
   }
 }
-
-@layer components {
-  .input-control {
-    width: 100%;
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    background: var(--color-card);
-    padding: 0.625rem 0.75rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--color-foreground);
-    outline: none;
-    transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease;
-  }
-
-  .input-control::placeholder {
-    color: var(--color-muted-foreground);
-  }
-
-  .input-control:focus {
-    border-color: var(--color-brand);
-    box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-brand) 16%, transparent);
-  }
-}

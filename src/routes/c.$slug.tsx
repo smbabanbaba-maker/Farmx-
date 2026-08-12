@@ -3,6 +3,7 @@ import { useCompany, TIER_META } from "@/lib/company-store";
 import { COUNTRIES } from "@/lib/currency";
 import { products } from "@/lib/mock-data";
 import {
+  type LucideIcon,
   BadgeCheck,
   Crown,
   Sparkles,
@@ -222,7 +223,7 @@ function MiniSite() {
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof Users2; label: string; value: string }) {
+function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="p-3 rounded-xl bg-card border border-border">
       <Icon className="h-4 w-4 mx-auto text-brand" />
