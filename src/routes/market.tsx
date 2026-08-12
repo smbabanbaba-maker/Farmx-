@@ -2,17 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { products, PRICING } from "@/lib/mock-data";
-import {
-  Plus,
-  Star,
-  Search,
-  MapPin,
-  Sparkles,
-  X,
-  BadgeCheck,
-  Crown,
-  MessageSquare,
-} from "lucide-react";
+import { Star, Search, MapPin, Sparkles, X, BadgeCheck, Crown, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { PayModal } from "@/components/PayModal";
 import type { PaymentPurpose } from "@/lib/paystack";
@@ -46,31 +36,23 @@ function Market() {
           />
         </div>
 
-        {/* Upgrade CTA when badge is not active */}
-        {!badgeActive && (
+        {state.tier === "none" && (
           <Link
-            to="/upgrade"
-            className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-brand/10 to-brand/5 border border-brand/30"
+            to="/subscribe"
+            className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-brand/10 to-brand/5 border border-brand/30 hover:border-brand transition-colors"
           >
             <div className="flex items-center gap-2">
-              <BadgeCheck className="h-5 w-5 text-brand" />
+              <Sparkles className="h-5 w-5 text-brand" />
               <div>
-                <p className="text-sm font-bold">Get verified</p>
+                <p className="text-sm font-bold">Get subscribed</p>
                 <p className="text-[11px] text-muted-foreground">
-                  Bluetek badge on all your products
+                  Unlock more listings, visibility and marketplace tools
                 </p>
               </div>
             </div>
-            <span className="text-xs font-semibold text-brand">Upgrade →</span>
+            <span className="text-xs font-semibold text-brand">Subscribe →</span>
           </Link>
         )}
-
-        <button
-          onClick={() => navigate({ to: "/post-product" })}
-          className="w-full py-2.5 rounded-xl bg-brand text-brand-foreground font-semibold flex items-center justify-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> {t("addProduct")}
-        </button>
         <div className="grid grid-cols-2 gap-3">
           {products.map((p) => (
             <div
@@ -148,8 +130,6 @@ function Market() {
           ))}
         </div>
       </div>
-
-      {/* Add product now uses full posting flow at /post-product */}
 
       {/* Promo tier picker */}
       {promoFor && (

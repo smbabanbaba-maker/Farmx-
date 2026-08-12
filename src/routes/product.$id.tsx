@@ -1,31 +1,36 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { useI18n } from "@/lib/i18n";
 import { products } from "@/lib/mock-data";
 import { usePrefs } from "@/lib/prefs";
 import { useMessages } from "@/lib/messages-store";
 import { useCommerce } from "@/lib/commerce-store";
 import { PayModal } from "@/components/PayModal";
 import {
+  ArrowLeft,
   BadgeCheck,
-  Star,
+  Bookmark,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Clock3,
+  Copy,
+  Flag,
+  HandCoins,
+  Heart,
   MapPin,
+  MessageSquare,
   MoreVertical,
+  PackageCheck,
+  Phone,
+  Send,
   Share2,
+  ShieldCheck,
+  Star,
+  Tag,
   UserPlus,
   EyeOff,
-  Flag,
-  Phone,
-  PhoneCall,
-  Tag,
-  PackageCheck,
-  ShieldCheck,
-  MessageSquare,
-  Heart,
-  Clock,
-  Circle,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export const Route = createFileRoute("/product/$id")({
   head: () => ({
@@ -34,12 +39,7 @@ export const Route = createFileRoute("/product/$id")({
       {
         name: "description",
         content:
-          "See product photos, price, seller verification, customer reviews and buyer protection options on FarmX.",
-      },
-      { property: "og:title", content: "FarmX product details" },
-      {
-        property: "og:description",
-        content: "Product photos, price, verified seller info and buyer protection.",
+          "See detailed product, seller feedback, buyer protection and contact options on FarmX.",
       },
     ],
   }),
@@ -47,14 +47,31 @@ export const Route = createFileRoute("/product/$id")({
 });
 
 const REVIEWS = [
-  { id: "r1", name: "Musa A.", stars: 5, text: "Kaya ya zo lafiya, quality mai kyau sosai." },
-  { id: "r2", name: "Grace O.", stars: 4, text: "Good product, delivery was one day late." },
-  { id: "r3", name: "Yusuf B.", stars: 5, text: "Verified seller, na sake saye karo na biyu." },
+  {
+    id: "r1",
+    name: "Amina Yusuf",
+    date: "Recently",
+    stars: 5,
+    text: "Kaya ya zo lafiya, ingancinsa ya yi kyau kuma mai sayarwa ya amsa da sauri.",
+  },
+  {
+    id: "r2",
+    name: "Salisu Musa",
+    date: "2 weeks ago",
+    stars: 5,
+    text: "Honest seller. Na samu abin da aka bayyana a talla, zan sake saya.",
+  },
+  {
+    id: "r3",
+    name: "Grace O.",
+    date: "1 month ago",
+    stars: 4,
+    text: "Good quality and smooth pickup process. Recommended for bulk orders.",
+  },
 ];
 
 function ProductPage() {
   const { id } = Route.useParams();
-  const { t } = useI18n();
   const navigate = useNavigate();
   const { isSaved, toggleSaved, toggleFollow, isFollowing, hideAd, hideSeller } = usePrefs();
   const { openConversationWith } = useMessages();
@@ -62,13 +79,22 @@ function ProductPage() {
   const [menu, setMenu] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [escrow, setEscrow] = useState(false);
+  const [chatText, setChatText] = useState("");
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
-  const product = products.find((p) => p.id === id) ?? products[0];
-  const similar = products.filter((p) => p.id !== product.id).slice(0, 4);
+  const product = products.find((item) => item.id === id) ?? products[0];
   const verified = product.rating >= 4.4;
+  const similar = useMemo(
+    () => products.filter((item) => item.id !== product.id).slice(0, 4),
+    [product.id],
+  );
+  const priceLow = Math.round(product.price * 0.92);
+  const priceHigh = Math.round(product.price * 1.1);
+  const sellerInitial = product.seller.charAt(0).toUpperCase();
+  const reviewList = showAllReviews ? REVIEWS : REVIEWS.slice(0, 2);
 
-  const chat = (text: string) => {
-    const cid = openConversationWith(
+  const openChat = (message = "") => {
+    const conversationId = openConversationWith(
       { name: product.seller, avatar: product.image, verified, location: product.location },
       {
         id: product.id,
@@ -78,64 +104,59 @@ function ProductPage() {
         seller: product.seller,
       },
     );
-    navigate({ to: "/messages/$id", params: { id: cid }, search: { q: text } as never });
+    navigate({
+      to: "/messages/$id",
+      params: { id: conversationId },
+      search: { q: message } as never,
+    });
   };
 
-  const actions = [
-    { label: t("makeOffer"), icon: Tag, run: () => chat(t("makeOffer")) },
-    { label: t("requestCallBack"), icon: PhoneCall, run: () => chat(t("pleaseCallMe")) },
-    {
-      label: t("call"),
-      icon: Phone,
-      run: () => {
-        window.location.href = "tel:+2348000000000";
-      },
-    },
-    { label: t("askLastPrice"), icon: Tag, run: () => chat(t("askLastPrice")) },
-    { label: t("checkAvailability"), icon: PackageCheck, run: () => chat(t("checkAvailability")) },
-    { label: t("reportAbuse"), icon: Flag, run: () => setNote(t("reportAbuse") + " ✓") },
-  ];
+  const shareAd = () => {
+    const url = typeof window === "undefined" ? "" : window.location.href;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: product.name, url }).catch(() => undefined);
+    } else if (typeof navigator !== "undefined") {
+      navigator.clipboard?.writeText(url);
+      setNote("Link copied for sharing.");
+    }
+    setMenu(false);
+  };
 
   return (
     <AppShell>
-      <div className="space-y-5 pb-6">
-        <div className="flex items-start justify-between">
-          <h1 className="text-xl font-bold flex-1 pr-2">{product.name}</h1>
+      <div className="space-y-4 pb-8">
+        <div className="flex items-center justify-between">
+          <Link
+            to="/market"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Market
+          </Link>
           <div className="flex items-center gap-1">
             <button
               onClick={() => toggleSaved(product.id)}
-              className="p-2 rounded-full hover:bg-accent"
-              aria-label={t("savedAds")}
+              className="rounded-full p-2 hover:bg-accent"
+              aria-label={isSaved(product.id) ? "Remove from saved" : "Save product"}
             >
-              <Heart className={`h-5 w-5 ${isSaved(product.id) ? "fill-brand text-brand" : ""}`} />
+              <Bookmark
+                className={`h-5 w-5 ${isSaved(product.id) ? "fill-brand text-brand" : ""}`}
+              />
             </button>
             <div className="relative">
               <button
-                onClick={() => setMenu(!menu)}
-                className="p-2 rounded-full hover:bg-accent"
-                aria-label="menu"
+                onClick={() => setMenu((open) => !open)}
+                className="rounded-full p-2 hover:bg-accent"
+                aria-label="More options"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
               {menu && (
-                <div className="absolute right-0 mt-1 w-52 rounded-xl bg-card border border-border shadow-lg z-20 overflow-hidden">
-                  <MenuItem
-                    icon={Share2}
-                    label={t("shareAd")}
-                    onClick={() => {
-                      const url = typeof window !== "undefined" ? window.location.href : "";
-                      if (typeof navigator !== "undefined" && navigator.share)
-                        navigator.share({ title: product.name, url }).catch(() => {});
-                      else if (typeof navigator !== "undefined")
-                        navigator.clipboard?.writeText(url);
-                      setMenu(false);
-                      setNote("🔗 " + t("shareAd"));
-                    }}
-                  />
+                <div className="absolute right-0 top-10 z-30 w-56 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+                  <MenuItem icon={Share2} label="Share this ad" onClick={shareAd} />
                   <MenuItem
                     icon={UserPlus}
                     label={
-                      isFollowing(product.seller) ? "✓ " + t("followSeller") : t("followSeller")
+                      isFollowing(product.seller) ? "Following this seller" : "Follow this seller"
                     }
                     onClick={() => {
                       toggleFollow(product.seller);
@@ -144,7 +165,7 @@ function ProductPage() {
                   />
                   <MenuItem
                     icon={EyeOff}
-                    label={t("hideAd")}
+                    label="Hide this ad"
                     onClick={() => {
                       hideAd(product.id);
                       setMenu(false);
@@ -153,7 +174,7 @@ function ProductPage() {
                   />
                   <MenuItem
                     icon={EyeOff}
-                    label={t("hideAdsFromSeller")}
+                    label="Hide ads from this seller"
                     onClick={() => {
                       hideSeller(product.seller);
                       setMenu(false);
@@ -162,11 +183,11 @@ function ProductPage() {
                   />
                   <MenuItem
                     icon={Flag}
-                    label={t("reportSeller")}
+                    label="Report this seller"
                     danger
                     onClick={() => {
                       setMenu(false);
-                      setNote(t("reportSeller") + " ✓");
+                      setNote("Report received. FarmX will review it.");
                     }}
                   />
                 </div>
@@ -175,98 +196,150 @@ function ProductPage() {
           </div>
         </div>
 
-        {/* Photos */}
-        <div className="aspect-square rounded-2xl bg-brand/5 border border-border flex items-center justify-center text-8xl">
-          {product.image}
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="aspect-square rounded-lg bg-brand/5 border border-border flex items-center justify-center text-2xl"
-            >
-              {product.image}
-            </div>
-          ))}
-        </div>
-
-        <div>
-          <p className="text-2xl font-bold text-brand">₦{product.price.toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-            <MapPin className="h-3 w-3" /> {product.location}, Nigeria
-          </p>
-        </div>
-
-        <section>
-          <h2 className="font-bold mb-1">{t("description")}</h2>
-          <p className="text-sm text-muted-foreground">
-            {product.name} — clean, farm-fresh stock ready for pickup or delivery. Bulk orders
-            welcome, price negotiable for quantities above 10 units.
-          </p>
+        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
+          <div className="relative aspect-[4/3] bg-gradient-to-br from-brand/15 via-brand/5 to-accent flex items-center justify-center text-8xl">
+            {product.promoted && (
+              <span className="absolute left-3 top-3 rounded-full bg-brand px-2.5 py-1 text-[10px] font-bold text-brand-foreground">
+                PROMO
+              </span>
+            )}
+            <span aria-label={product.name}>{product.image}</span>
+            <span className="absolute bottom-3 left-3 rounded-lg bg-black/65 px-2 py-1 text-xs font-semibold text-white">
+              4 photos
+            </span>
+          </div>
+          <div className="grid grid-cols-4 gap-2 p-3">
+            {[0, 1, 2, 3].map((index) => (
+              <button
+                key={index}
+                onClick={() => setNote(`Photo ${index + 1} selected`)}
+                className={`aspect-square rounded-xl border flex items-center justify-center text-2xl ${index === 0 ? "border-brand bg-brand/10" : "border-border bg-accent/30"}`}
+                aria-label={`View product photo ${index + 1}`}
+              >
+                {product.image}
+              </button>
+            ))}
+          </div>
         </section>
 
-        {/* Seller info */}
-        <section className="rounded-2xl bg-card border border-border p-4">
-          <h2 className="font-bold mb-2">{t("sellerInfo")}</h2>
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-brand/10 flex items-center justify-center text-xl">
-              {product.image}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm flex items-center gap-1">
-                {product.seller}
-                {verified && <BadgeCheck className="h-4 w-4 text-brand" />}
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 text-brand" /> {product.location}, Nigeria · Listed
+                today
               </p>
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Circle className="h-2 w-2 fill-green-500 text-green-500" /> {t("online")}
+              <h1 className="mt-2 text-xl font-bold leading-tight">{product.name}</h1>
+              <p className="mt-2 text-2xl font-black text-brand">
+                ₦{product.price.toLocaleString()}
               </p>
             </div>
+            {verified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand/10 px-2 py-1 text-[10px] font-bold text-brand">
+                <BadgeCheck className="h-3.5 w-3.5" /> Verified
+              </span>
+            )}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
             <button
-              onClick={() => chat("")}
-              className="px-3 py-2 rounded-lg bg-brand text-brand-foreground text-xs font-bold flex items-center gap-1"
+              onClick={() => openChat("Please call me about this listing.")}
+              className="rounded-xl border border-brand py-2.5 text-sm font-bold text-brand hover:bg-brand/5"
             >
-              <MessageSquare className="h-3.5 w-3.5" /> {t("messageSeller")}
+              Request call back
+            </button>
+            <button
+              onClick={() => {
+                window.location.href = "tel:+2348000000000";
+              }}
+              className="inline-flex items-center justify-center gap-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-foreground"
+            >
+              <Phone className="h-4 w-4" /> Call seller
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
-            <div className="rounded-lg bg-accent/40 p-2">
-              <p className="text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" /> {t("replySpeed")}
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">FarmX market price guide</p>
+              <p className="mt-1 text-sm font-semibold">
+                ₦{priceLow.toLocaleString()} – ₦{priceHigh.toLocaleString()}
               </p>
-              <p className="font-semibold mt-0.5">~12 min</p>
             </div>
-            <div className="rounded-lg bg-accent/40 p-2">
-              <p className="text-muted-foreground">{t("memberSince")}</p>
-              <p className="font-semibold mt-0.5">2023 · 2 yrs</p>
-            </div>
+            <span className="rounded-full bg-green-500/10 px-2 py-1 text-xs font-bold text-green-600">
+              Fair price
+            </span>
           </div>
         </section>
 
-        {/* Buyer protection */}
-        <section className="rounded-2xl border border-brand/40 bg-brand/5 p-4">
-          <h2 className="font-bold flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-brand" /> {t("buyerProtection")}
-          </h2>
-          <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-            <li>
-              • <span className="font-semibold text-foreground">{t("escrow")}:</span>{" "}
-              {t("escrowDesc")}
-            </li>
-            <li>
-              • <span className="font-semibold text-foreground">{t("payOnDelivery")}</span>
-            </li>
-            <li>
-              • <span className="font-semibold text-foreground">{t("refundPolicy")}:</span>{" "}
-              {t("refundDesc")}
-            </li>
-            <li>• {t("verifiedOnly")}</li>
-          </ul>
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <h2 className="font-bold">Chat with the seller</h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["Make an offer", "Is this available?", "Last price", "Ask location"].map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => setChatText(prompt)}
+                className="rounded-lg border border-brand/50 px-2.5 py-1.5 text-xs font-semibold text-brand hover:bg-brand/5"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={chatText}
+            onChange={(event) => setChatText(event.target.value)}
+            placeholder="Write your message here"
+            className="mt-3 min-h-24 w-full resize-none rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-brand"
+          />
           <button
-            disabled={!verified}
-            onClick={() => setEscrow(true)}
-            className="mt-3 w-full py-2.5 rounded-xl bg-brand text-brand-foreground text-sm font-bold disabled:opacity-50"
+            onClick={() => openChat(chatText)}
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground"
           >
-            {t("payWithEscrow")} · ₦{product.price.toLocaleString()}
+            <Send className="h-4 w-4" /> Start chat
+          </button>
+        </section>
+
+        <section className="grid grid-cols-3 gap-2 rounded-2xl border border-border bg-card p-3 text-center">
+          <Stat icon="🌾" label="Condition" value="Quality checked" />
+          <Stat icon="📦" label="Availability" value="In stock" />
+          <Stat icon="🚚" label="Delivery" value="Pickup or delivery" />
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <h2 className="font-bold">Product details</h2>
+          <div className="mt-3 grid grid-cols-2 gap-x-5 gap-y-3 text-sm">
+            <Spec label="Condition" value="Fresh / quality checked" />
+            <Spec label="Category" value="Agricultural products" />
+            <Spec label="Location" value={product.location} />
+            <Spec label="Bulk orders" value="Available" />
+            <Spec label="Negotiation" value="Open to offers" />
+            <Spec label="Payment" value="Paystack protected" />
+          </div>
+          <p className="mt-4 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">
+            Fresh, quality-checked {product.name.toLowerCase()} from {product.seller}. Buyers can
+            inspect at pickup or agree a delivery plan directly with the seller. Bulk orders are
+            welcome.
+          </p>
+          <button
+            onClick={() => openChat("I want to make an offer for this product.")}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-brand py-2.5 text-sm font-bold text-brand hover:bg-brand/5"
+          >
+            <HandCoins className="h-4 w-4" /> Make an offer
+          </button>
+        </section>
+
+        <section className="rounded-2xl border border-brand/30 bg-brand/5 p-4">
+          <h2 className="flex items-center gap-1.5 font-bold">
+            <ShieldCheck className="h-4 w-4 text-brand" /> Buyer protection
+          </h2>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Pay securely, keep messages inside FarmX, and inspect items before confirming delivery.
+          </p>
+          <button
+            onClick={() => setEscrow(true)}
+            className="mt-3 w-full rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-foreground"
+          >
+            Secure payment · ₦{product.price.toLocaleString()}
           </button>
           <button
             onClick={() => {
@@ -278,95 +351,112 @@ function ProductPage() {
                 amount: product.price,
                 method: "pod",
               });
-              setNote("🚚 " + t("payOnDelivery"));
+              setNote("Pay on delivery order started.");
             }}
-            className="mt-2 w-full py-2.5 rounded-xl border border-border text-sm font-bold"
+            className="mt-2 w-full rounded-xl border border-border py-2.5 text-sm font-bold"
           >
-            {t("payOnDelivery")}
+            Pay on delivery
           </button>
-          <Link
-            to="/orders"
-            className="mt-2 block text-center text-[11px] text-brand font-semibold"
-          >
-            {t("orders")} →
-          </Link>
-          <Link
-            to="/buyer-protection"
-            className="mt-2 block text-center text-[11px] text-brand font-semibold"
-          >
-            {t("buyerProtection")} →
-          </Link>
         </section>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          {actions.map((a) => (
-            <button
-              key={a.label}
-              onClick={a.run}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-card border border-border text-xs font-semibold hover:border-brand"
-            >
-              <a.icon className="h-4 w-4 text-brand" /> <span className="truncate">{a.label}</span>
-            </button>
-          ))}
-        </div>
-        {note && <p className="text-xs text-brand font-semibold text-center">{note}</p>}
-
-        {/* Reviews */}
-        <section>
-          <h2 className="font-bold mb-2">{t("reviews")}</h2>
-          <div className="space-y-2">
-            {REVIEWS.map((r) => (
-              <div key={r.id} className="p-3 rounded-xl bg-card border border-border">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{r.name}</p>
-                  <div className="flex">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3 w-3 ${i < r.stars ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                      />
-                    ))}
-                  </div>
+        <section className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/10 text-xl font-bold text-brand">
+              {sellerInitial}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="flex items-center gap-1 text-base font-bold">
+                    {product.seller}
+                    {verified && <BadgeCheck className="h-4 w-4 text-brand" />}
+                  </p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Seller on FarmX for 2+ years · {product.location}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{r.text}</p>
+                <button
+                  onClick={() => toggleFollow(product.seller)}
+                  className="text-xs font-bold text-brand"
+                >
+                  {isFollowing(product.seller) ? "Following" : "Follow"}
+                </button>
               </div>
+              <p className="mt-2 inline-flex items-center gap-1 rounded-lg bg-accent px-2 py-1 text-[11px] text-muted-foreground">
+                <Clock3 className="h-3 w-3" /> Typically replies within a few hours
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+            <p className="font-bold text-sm">Feedback about seller</p>
+            <button
+              onClick={() => setShowAllReviews(true)}
+              className="inline-flex items-center gap-0.5 text-xs font-bold text-brand"
+            >
+              View all ({REVIEWS.length}) <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <div className="mt-3 space-y-3">
+            {reviewList.map((review) => (
+              <Review key={review.id} review={review} />
             ))}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button
+              onClick={() => toggleSaved(product.id)}
+              className="rounded-xl border border-border py-2.5 text-sm font-bold"
+            >
+              {isSaved(product.id) ? "Saved" : "Save ad"}
+            </button>
+            <button
+              onClick={() => setNote("Report received. Thank you for helping keep FarmX safe.")}
+              className="inline-flex items-center justify-center gap-1 rounded-xl border border-brand py-2.5 text-sm font-bold text-brand"
+            >
+              <Flag className="h-4 w-4" /> Report abuse
+            </button>
           </div>
         </section>
 
-        {/* Similar ads */}
         <section>
-          <h2 className="font-bold mb-2">{t("similarAds")}</h2>
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-bold">Similar ads</h2>
+            <Link to="/market" className="text-xs font-semibold text-brand">
+              View market
+            </Link>
+          </div>
           <div className="grid grid-cols-2 gap-2">
-            {similar.map((p) => (
+            {similar.map((item) => (
               <Link
-                key={p.id}
+                key={item.id}
                 to="/product/$id"
-                params={{ id: p.id }}
-                className="rounded-xl bg-card border border-border overflow-hidden hover:border-brand"
+                params={{ id: item.id }}
+                className="overflow-hidden rounded-xl border border-border bg-card hover:border-brand"
               >
                 <div className="aspect-square bg-brand/5 flex items-center justify-center text-4xl">
-                  {p.image}
+                  {item.image}
                 </div>
                 <div className="p-2">
-                  <p className="text-xs font-semibold truncate">{p.name}</p>
-                  <p className="text-xs font-bold text-brand">₦{p.price.toLocaleString()}</p>
-                  <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <p className="truncate text-xs font-semibold">{item.name}</p>
+                  <p className="mt-1 text-xs font-bold text-brand">
+                    ₦{item.price.toLocaleString()}
+                  </p>
+                  <p className="mt-0.5 flex items-center gap-0.5 text-[10px] text-muted-foreground">
                     <MapPin className="h-2.5 w-2.5" />
-                    {p.location}
+                    {item.location}
                   </p>
                 </div>
               </Link>
             ))}
           </div>
         </section>
+
+        {note && <p className="text-center text-xs font-semibold text-brand">{note}</p>}
       </div>
 
       <PayModal
         open={escrow}
         onClose={() => setEscrow(false)}
-        title={`${t("escrow")} — ${product.name}`}
+        title={`Secure payment — ${product.name}`}
         amountNaira={product.price}
         purpose={{ kind: "escrow", productId: product.id }}
         onPaid={(_via, reference) => {
@@ -380,10 +470,49 @@ function ProductPage() {
           });
           if (order) fundEscrow(order.id, reference);
           setEscrow(false);
-          setNote("🔒 " + t("escrowDesc"));
+          setNote("Secure payment has been recorded.");
         }}
       />
     </AppShell>
+  );
+}
+
+function Stat({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1 px-1">
+      <span className="text-2xl">{icon}</span>
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="text-xs font-bold text-center">{value}</p>
+    </div>
+  );
+}
+
+function Spec({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function Review({ review }: { review: (typeof REVIEWS)[number] }) {
+  return (
+    <div className="rounded-xl bg-accent/50 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-bold">{review.name}</p>
+        <span className="text-[10px] text-muted-foreground">{review.date}</span>
+      </div>
+      <div className="mt-1 flex">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Star
+            key={index}
+            className={`h-3.5 w-3.5 ${index < review.stars ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
+          />
+        ))}
+      </div>
+      <p className="mt-2 text-xs leading-5 text-foreground/80">{review.text}</p>
+    </div>
   );
 }
 
@@ -401,9 +530,10 @@ function MenuItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-accent text-left ${danger ? "text-brand" : ""}`}
+      className={`flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-accent ${danger ? "text-brand" : ""}`}
     >
-      <Icon className="h-4 w-4" /> {label}
+      <Icon className="h-4 w-4" />
+      {label}
     </button>
   );
 }
