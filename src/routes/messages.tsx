@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useMessages } from "@/lib/messages-store";
 import { BadgeCheck, Flag, MessageSquare, Search, ShieldAlert } from "lucide-react";
@@ -32,6 +32,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 function MessagesInbox() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { conversations, totalUnread, searchMessages } = useMessages();
   const [q, setQ] = useState("");
   const [tab, setTab] = useState<Tab>("all");
@@ -48,6 +49,8 @@ function MessagesInbox() {
     unanswered: conversations.filter((c) => !c.spam && isUnanswered(c)).length,
     spam: conversations.filter((c) => c.spam).length,
   };
+
+  if (pathname.startsWith("/messages/")) return <Outlet />;
 
   const list = conversations
     .filter((c) =>
@@ -69,8 +72,19 @@ function MessagesInbox() {
     );
 
   return (
-    <AppShell title="Messages">
+    <AppShell title="Live chats">
       <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-xl border border-brand/20 bg-brand/5 px-3 py-2">
+          <div>
+            <p className="text-sm font-bold">Buyer & seller live chat</p>
+            <p className="text-[11px] text-muted-foreground">
+              Messages, typing status, read receipts and secure in-app replies.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-1 text-[10px] font-bold text-green-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> LIVE
+          </span>
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input

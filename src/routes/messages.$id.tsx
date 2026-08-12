@@ -47,6 +47,7 @@ function ChatDetail() {
     setSpam,
     deleteConversation,
     submitReport,
+    isTyping,
   } = useMessages();
   const conv = getConversation(id);
   const [draft, setDraft] = useState("");
@@ -67,6 +68,7 @@ function ChatDetail() {
   }, [conv?.messages.length]);
 
   const grouped = useMemo(() => groupByDay(conv?.messages ?? []), [conv?.messages]);
+  const sellerTyping = isTyping(id);
 
   if (!conv) {
     return (
@@ -122,7 +124,7 @@ function ChatDetail() {
             <p className="text-[11px] text-muted-foreground flex items-center gap-1">
               {conv.peer.verified ? "Verified · KYC complete" : "Unverified"}
               <span>·</span>
-              {conv.peer.lastSeen ?? "offline"}
+              {sellerTyping ? "typing…" : (conv.peer.lastSeen ?? "offline")}
               {conv.peer.location && (
                 <>
                   <span>·</span>
@@ -267,6 +269,7 @@ function ChatDetail() {
               ))}
             </div>
           ))}
+          {sellerTyping && <TypingBubble seller={conv.peer.name} />}
           <div ref={bottomRef} />
         </div>
       </main>
@@ -436,6 +439,21 @@ function ChatDetail() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TypingBubble({ seller }: { seller: string }) {
+  return (
+    <div className="flex justify-start">
+      <div className="rounded-2xl rounded-bl-md border border-border bg-card px-3 py-2">
+        <p className="text-[10px] text-muted-foreground">{seller} is typing</p>
+        <div className="mt-1 flex gap-1" aria-label="Seller is typing">
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand [animation-delay:-0.2s]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand [animation-delay:-0.1s]" />
+          <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-brand" />
+        </div>
+      </div>
     </div>
   );
 }

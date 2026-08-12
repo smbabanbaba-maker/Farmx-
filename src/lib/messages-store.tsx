@@ -80,6 +80,7 @@ export interface Report {
 interface StoreShape {
   conversations: Conversation[];
   reports: Report[];
+  typing: Record<string, boolean>;
 }
 
 const STORAGE_KEY = "farmx-messages-v2";
@@ -115,12 +116,30 @@ export function scanFraud(text: string | undefined): string[] {
   return FRAUD_RULES.filter((r) => r.re.test(text)).map((r) => r.reason);
 }
 
+function sellerReplyFor(text: string, location?: string) {
+  const message = text.toLowerCase();
+  if (message.includes("last price") || message.includes("offer")) {
+    return "The listed price is the best price for now, but you can send your offer and I will consider it.";
+  }
+  if (message.includes("available")) {
+    return "Yes, it is still available. Please let me know the quantity you need.";
+  }
+  if (message.includes("location")) {
+    return `I am available in ${location ?? "the listed location"}. Pickup and delivery can be arranged.`;
+  }
+  if (message.includes("call")) {
+    return "Sure. Please use the request call back button and I will contact you shortly.";
+  }
+  return "Thanks for your message. I am online and will reply with the details shortly.";
+}
+
 /* --------------------------------- seed --------------------------------- */
 
 function seed(): StoreShape {
   const now = Date.now();
   return {
     reports: [],
+    typing: {},
     conversations: [
       {
         id: "c_green",
@@ -259,6 +278,7 @@ type Ctx = {
   sendCoupon: (id: string, code: string, percent: number) => void;
   sendDelivery: (id: string, update: DeliveryUpdate) => void;
   receiveText: (id: string, text: string) => void;
+  isTyping: (id: string) => boolean;
   markRead: (id: string) => void;
   setSpam: (id: string, spam: boolean) => void;
   deleteConversation: (id: string) => void;
@@ -274,7 +294,7 @@ type Ctx = {
 const MessagesCtx = createContext<Ctx | null>(null);
 
 export function MessagesProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<StoreShape>({ conversations: [], reports: [] });
+  const [store, setStore] = useState<StoreShape>({ conversations: [], reports: [], typing: {} });
   const storeRef = useRef(store);
   storeRef.current = store;
   const chanRef = useRef<BroadcastChannel | null>(null);
@@ -284,7 +304,11 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const parsed = JSON.parse(raw) as StoreShape;
-      return { conversations: parsed.conversations ?? [], reports: parsed.reports ?? [] };
+      return {
+        conversations: parsed.conversations ?? [],
+        reports: parsed.reports ?? [],
+        typing: parsed.typing ?? {},
+      };
     } catch {
       return null;
     }
@@ -404,6 +428,40 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       persist({ ...store, conversations });
     };
 
+    const scheduleLiveReply = (id: string, text: string) => {
+      const current = storeRef.current;
+      const conversation = current.conversations.find((item) => item.id === id);
+      if (!conversation || conversation.spam || conversation.productClosed) return;
+
+      persist({ ...current, typing: { ...current.typing, [id]: true } });
+      window.setTimeout(
+        () => {
+          const latest = storeRef.current;
+          const active = latest.conversations.find((item) => item.id === id);
+          if (!active || active.spam) return;
+          const now = Date.now();
+          const reply: Message = {
+            id: `m_${now}_${Math.random().toString(36).slice(2, 7)}`,
+            from: "them",
+            kind: "text",
+            text: sellerReplyFor(text, active.peer.location),
+            createdAt: now,
+            read: false,
+          };
+          persist({
+            ...latest,
+            typing: { ...latest.typing, [id]: false },
+            conversations: latest.conversations.map((item) =>
+              item.id === id
+                ? { ...item, messages: [...item.messages, reply], updatedAt: now }
+                : item,
+            ),
+          });
+        },
+        900 + Math.floor(Math.random() * 700),
+      );
+    };
+
     return {
       conversations: [...store.conversations].sort((a, b) => b.updatedAt - a.updatedAt),
       reports: [...store.reports].sort((a, b) => b.createdAt - a.createdAt),
@@ -433,12 +491,16 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
         persist({ ...store, conversations: [conv, ...store.conversations] });
         return id;
       },
-      sendText: (id, text) => append(id, { from: "me", kind: "text", text }),
+      sendText: (id, text) => {
+        append(id, { from: "me", kind: "text", text });
+        scheduleLiveReply(id, text);
+      },
       sendProduct: (id, product) => append(id, { from: "me", kind: "product", product }),
       sendCoupon: (id, code, percent) =>
         append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
       sendDelivery: (id, update) => append(id, { from: "me", kind: "delivery", delivery: update }),
       receiveText: (id, text) => append(id, { from: "them", kind: "text", text }),
+      isTyping: (id) => Boolean(store.typing[id]),
       markRead: (id) => {
         const conversations = store.conversations.map((c) =>
           c.id === id ? { ...c, messages: c.messages.map((m) => ({ ...m, read: true })) } : c,
