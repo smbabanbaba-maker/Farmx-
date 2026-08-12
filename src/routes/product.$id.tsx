@@ -73,7 +73,8 @@ const REVIEWS = [
 function ProductPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { isSaved, toggleSaved, toggleFollow, isFollowing, hideAd, hideSeller } = usePrefs();
+  const { isSaved, toggleSaved, toggleFollow, isFollowing, hideAd, hideSeller, toggles } =
+    usePrefs();
   const { openConversationWith } = useMessages();
   const { createOrder, fundEscrow } = useCommerce();
   const [menu, setMenu] = useState(false);
@@ -92,8 +93,15 @@ function ProductPage() {
   const priceHigh = Math.round(product.price * 1.1);
   const sellerInitial = product.seller.charAt(0).toUpperCase();
   const reviewList = showAllReviews ? REVIEWS : REVIEWS.slice(0, 2);
+  const chatsDisabled = !!toggles.disableChats;
+  const callsEnabled = !!toggles.inAppCalls;
+  const feedbackDisabled = !!toggles.disableFeedback;
 
   const openChat = (message = "") => {
+    if (chatsDisabled) {
+      setNote("Chats are disabled in Settings. Enable chats to contact this seller.");
+      return;
+    }
     const conversationId = openConversationWith(
       { name: product.seller, avatar: product.image, verified, location: product.location },
       {
@@ -243,17 +251,22 @@ function ProductPage() {
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button
               onClick={() => openChat("Please call me about this listing.")}
-              className="rounded-xl border border-brand py-2.5 text-sm font-bold text-brand hover:bg-brand/5"
+              disabled={chatsDisabled}
+              className="rounded-xl border border-brand py-2.5 text-sm font-bold text-brand hover:bg-brand/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Request call back
             </button>
             <button
               onClick={() => {
+                if (!callsEnabled) {
+                  setNote("In-app calls are disabled in Settings.");
+                  return;
+                }
                 window.location.href = "tel:+2348000000000";
               }}
               className="inline-flex items-center justify-center gap-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-foreground"
             >
-              <Phone className="h-4 w-4" /> Call seller
+              <Phone className="h-4 w-4" /> {callsEnabled ? "Call seller" : "Calls disabled"}
             </button>
           </div>
         </section>
@@ -273,7 +286,14 @@ function ProductPage() {
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-4">
-          <h2 className="font-bold">Chat with the seller</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-bold">Chat with the seller</h2>
+            {chatsDisabled && (
+              <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">
+                Disabled in Settings
+              </span>
+            )}
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {["Make an offer", "Is this available?", "Last price", "Ask location"].map((prompt) => (
               <button
@@ -293,9 +313,10 @@ function ProductPage() {
           />
           <button
             onClick={() => openChat(chatText)}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground"
+            disabled={chatsDisabled}
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Send className="h-4 w-4" /> Start chat
+            <Send className="h-4 w-4" /> {chatsDisabled ? "Chats disabled" : "Start chat"}
           </button>
         </section>
 
@@ -390,16 +411,27 @@ function ProductPage() {
           <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
             <p className="font-bold text-sm">Feedback about seller</p>
             <button
-              onClick={() => setShowAllReviews(true)}
-              className="inline-flex items-center gap-0.5 text-xs font-bold text-brand"
+              onClick={() => {
+                if (feedbackDisabled) {
+                  setNote("Feedback is disabled in Settings.");
+                  return;
+                }
+                setShowAllReviews(true);
+              }}
+              className="inline-flex items-center gap-0.5 text-xs font-bold text-brand disabled:opacity-40"
             >
-              View all ({REVIEWS.length}) <ChevronRight className="h-3.5 w-3.5" />
+              {feedbackDisabled ? "Feedback disabled" : `View all (${REVIEWS.length})`}{" "}
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
           <div className="mt-3 space-y-3">
-            {reviewList.map((review) => (
-              <Review key={review.id} review={review} />
-            ))}
+            {feedbackDisabled ? (
+              <p className="rounded-xl bg-muted px-3 py-3 text-xs leading-5 text-muted-foreground">
+                Seller feedback is currently hidden by your Settings preference.
+              </p>
+            ) : (
+              reviewList.map((review) => <Review key={review.id} review={review} />)
+            )}
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button

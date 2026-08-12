@@ -139,6 +139,15 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
   const { t, lang, setLang } = useI18n();
   const { mode, setMode, fontScale, setFontScale } = useTheme();
 
+  const logOut = () => {
+    try {
+      localStorage.removeItem("farmx-session-active");
+    } catch {
+      /* local session may be unavailable */
+    }
+    window.location.assign("/");
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose}>
       <div
@@ -205,7 +214,17 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
           />
         </section>
 
-        <button className="w-full py-2.5 rounded-lg bg-brand text-brand-foreground font-semibold">
+        <Link
+          to="/settings"
+          onClick={onClose}
+          className="mb-2 flex w-full items-center justify-center rounded-lg border border-brand py-2.5 text-sm font-semibold text-brand"
+        >
+          Open full settings
+        </Link>
+        <button
+          onClick={logOut}
+          className="w-full rounded-lg bg-brand py-2.5 font-semibold text-brand-foreground"
+        >
           {t("logout")}
         </button>
 

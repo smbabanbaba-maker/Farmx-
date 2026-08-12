@@ -6,7 +6,7 @@
  *  - The SECRET key (`sk_*`) MUST live in your AWS backend (Lambda / API Gateway)
  *    as an env var (e.g. PAYSTACK_SECRET_KEY). NEVER ship it in the app.
  *  - Charges MUST be verified server-side via GET https://api.paystack.co/transaction/verify/:reference
- *    before you credit the wallet / activate a listing / activate the bluetek badge.
+ *    before you credit the wallet, activate a subscription/promotion, or release escrow.
  *
  * Wire-up:
  *  - Set VITE_PAYSTACK_PUBLIC_KEY in your .env for the frontend.
@@ -24,7 +24,6 @@ export const PAYSTACK_PUBLIC_KEY =
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "";
 
 export type PaymentPurpose =
-  | { kind: "listing_fee"; productId?: string }
   | { kind: "promo_week"; productId: string }
   | { kind: "promo_month"; productId: string }
   | { kind: "job_promo"; jobId: string }

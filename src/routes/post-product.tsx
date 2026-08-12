@@ -475,7 +475,7 @@ function PostProduct() {
         onClose={() => setPay(null)}
         title={pay?.title ?? ""}
         amountNaira={pay?.amount ?? 0}
-        purpose={pay?.purpose ?? { kind: "listing_fee" }}
+        purpose={pay?.purpose ?? { kind: "promo_week", productId: "new" }}
         onPaid={() => {
           consumeListing();
           if (promo !== "none") addPromo(title || "Your ad", promo === "premium" ? "30" : "7");
