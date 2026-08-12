@@ -19,6 +19,7 @@ import { useState, type ReactNode } from "react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useMessages } from "@/lib/messages-store";
+import { useNotifications } from "@/lib/notifications-store";
 
 const LOGO = "/farmx-logo.png";
 
@@ -27,6 +28,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { totalUnread } = useMessages();
+  const { unread: unreadNotifications } = useNotifications();
 
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
@@ -49,9 +51,21 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             </span>
           </Link>
           <div className="flex items-center gap-1">
-            <Link to="/notifications" className="relative p-2 rounded-full hover:bg-accent">
+            <Link
+              to="/notifications"
+              className="relative p-2 rounded-full hover:bg-accent"
+              aria-label={
+                unreadNotifications > 0
+                  ? `${unreadNotifications} unread notifications`
+                  : "Notifications"
+              }
+            >
               <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-brand" />
+              {unreadNotifications > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
+                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                </span>
+              )}
             </Link>
             <button
               onClick={() => setMenuOpen(true)}
