@@ -1,18 +1,16 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Lang = "en" | "ha" | "yo" | "ig" | "ar" | "fr" | "ku";
+export type Lang = "en" | "ha" | "yo" | "ig" | "kr";
 
 export const LANGUAGES: { code: Lang; label: string }[] = [
   { code: "en", label: "English" },
   { code: "ha", label: "Hausa" },
   { code: "yo", label: "Yoruba" },
   { code: "ig", label: "Igbo" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "ku", label: "Kurdî" },
+  { code: "kr", label: "Kanuri" },
 ];
 
-export const RTL_LANGS: Lang[] = ["ar"];
+export const RTL_LANGS: Lang[] = [];
 
 type Dict = Record<string, string>;
 
@@ -1229,7 +1227,23 @@ const ku: Dict = {
   payWithEscrow: "Bi escrow bide",
 };
 
-const T: Record<Lang, Dict> = { en, ha, yo, ig, ar, fr, ku };
+const kr: Dict = {
+  ...ha,
+  home: "Kǝla",
+  market: "Kasúwa",
+  messages: "Saƙonni",
+  profile: "Bayanin mai amfani",
+  settings: "Saituna",
+  language: "Yare",
+  greeting: "Barka da zuwa",
+  search: "Nema",
+  post: "Sanya",
+  light: "Haske",
+  dark: "Duhu",
+  logout: "Fita",
+};
+
+const T: Record<Lang, Dict> = { en, ha, yo, ig, kr };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string; dir: "ltr" | "rtl" };
 const I18nCtx = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => k, dir: "ltr" });

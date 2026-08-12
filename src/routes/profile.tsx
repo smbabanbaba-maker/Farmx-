@@ -12,7 +12,7 @@ import {
   Users,
   Crown,
   Star,
-  Wallet,
+  CreditCard,
   BarChart3,
   LifeBuoy,
   Bell,
@@ -58,7 +58,7 @@ function ProfilePage() {
     { to: "/messages", icon: Users, label: t("myClients"), meta: "" },
     { to: "/subscribe", icon: Crown, label: t("premiumServices"), meta: tier?.name ?? t("free") },
     { to: "/community", icon: Star, label: t("feedback"), meta: "4.8" },
-    { to: "/wallet", icon: Wallet, label: t("balance"), meta: "₦248,500" },
+    { to: "/wallet", icon: CreditCard, label: "Payment history", meta: "" },
     { to: "/analytics", icon: BarChart3, label: t("performance"), meta: "" },
     { to: "/messages", icon: LifeBuoy, label: t("requestHelp"), meta: "" },
     {
@@ -92,8 +92,8 @@ function ProfilePage() {
               <h1 className="font-bold text-lg truncate">Ibrahim Bello</h1>
               <BadgeCheck className="h-4 w-4 text-brand shrink-0" />
             </div>
-            <p className="text-xs text-muted-foreground">Kano, Nigeria · Farmer</p>
-            <p className="text-xs text-brand truncate">www.ibrahimbello.com.farmx</p>
+            <p className="text-xs text-muted-foreground">Lagos, Nigeria · Marketplace member</p>
+            <p className="text-xs text-brand truncate">Verified FarmX seller profile</p>
           </div>
           <Link
             to="/edit-profile"
@@ -112,16 +112,12 @@ function ProfilePage() {
           <p className="text-lg font-bold mt-0.5">
             {tier ? tier.name : `${t("freeQuota")} · ${FREE_QUOTA}`}
           </p>
-          <p className="text-xs text-white/80 mt-0.5">
-            {listingsLeft === "unlimited"
-              ? t("unlimitedListings")
-              : `${listingsLeft} ${t("quotaLeft")}`}
-          </p>
+          <p className="text-xs text-white/80 mt-0.5">{`${listingsLeft} ${t("quotaLeft")}`}</p>
         </Link>
 
         {/* Sidebar + content */}
         <div className="flex gap-3 items-start">
-          <nav className="w-40 shrink-0 rounded-2xl bg-card border border-border overflow-hidden">
+          <nav className="w-44 shrink-0 rounded-2xl bg-card border border-border overflow-hidden">
             {menu.map((m) => (
               <Link
                 key={m.label}

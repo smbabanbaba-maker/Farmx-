@@ -1,9 +1,19 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { Camera, Check, ChevronRight, Loader2, Sparkles, Upload, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Camera,
+  Check,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { PayModal } from "@/components/PayModal";
-import { LOCATIONS, PRICING } from "@/lib/mock-data";
+import { LOCATIONS, PRODUCT_CATEGORIES, PRICING } from "@/lib/mock-data";
 import { useLocation } from "@/lib/location";
 import { publishListing } from "@/lib/listing.functions";
 import type { PaymentPurpose } from "@/lib/paystack";
@@ -13,26 +23,11 @@ import { useSubscription } from "@/lib/subscription";
 
 export const Route = createFileRoute("/post-product")({ component: PostProduct });
 
-const CATEGORIES = [
-  "Food & Beverages",
-  "Agriculture",
-  "Electronics",
-  "Fashion & Beauty",
-  "Vehicles",
-  "Real Estate",
-  "Home & Household",
-  "Industrial Supplies",
-  "Health & Beauty",
-  "Services",
-  "Jobs",
-  "Pets & Animals",
-  "Farm Machinery",
-  "Other",
-] as const;
+const CATEGORIES = PRODUCT_CATEGORIES;
 
 const TYPES = ["New", "Fairly Used", "Second-hand", "Made to Order"] as const;
 const CONDITIONS = ["Excellent", "Good", "Fair"] as const;
-const DELIVERY = ["Pickup", "Courier", "Farm delivery", "Pay on delivery"] as const;
+const DELIVERY = ["Pickup", "Courier", "Seller delivery", "Pay on delivery"] as const;
 const NEGOTIATION = ["Yes", "No", "Not sure"] as const;
 const PROMOS = [
   {
@@ -43,18 +38,25 @@ const PROMOS = [
     sub: "Free — standard marketplace visibility",
   },
   {
-    id: "top7",
-    label: "TOP promo",
-    price: PRICING.promoTop,
+    id: "basic",
+    label: "Basic Boost",
+    price: PRICING.promoWeek,
     days: 7,
-    sub: "Priority placement for 7 days",
+    sub: "Top of search for 7 days",
   },
   {
-    id: "top30",
-    label: "TOP promo",
+    id: "top",
+    label: "TOP Promo",
     price: PRICING.promoTop,
+    days: 7,
+    sub: "Top spot + 15× traffic for 7 days",
+  },
+  {
+    id: "premium",
+    label: "Premium Boost",
+    price: PRICING.promoMonth,
     days: 30,
-    sub: "Priority placement for 30 days",
+    sub: "Top spot + badge + 30× traffic",
   },
 ] as const;
 
@@ -83,6 +85,20 @@ function PostProduct() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string>("");
   const [brand, setBrand] = useState("");
+  const [details, setDetails] = useState({
+    make: "",
+    color: "",
+    transmission: "",
+    powertrain: "",
+    fuel: "",
+    drivetrain: "",
+    seats: "",
+    cylinders: "",
+    engineSize: "",
+    horsepower: "",
+    exchange: "",
+    registered: "",
+  });
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [videoLink, setVideoLink] = useState("");
   const [region, setRegion] = useState<string>(location);
@@ -105,7 +121,7 @@ function PostProduct() {
 
   const activePromo = PROMOS.find((item) => item.id === promo)!;
   const brandHint =
-    category === "Vehicles"
+    category === "Cars"
       ? "e.g. Toyota, Honda"
       : category === "Electronics"
         ? "e.g. Samsung, Apple"
@@ -176,7 +192,8 @@ function PostProduct() {
   const validate = () => {
     if (title.trim().length < MIN_TITLE) return `Take yana buƙatar aƙalla haruffa ${MIN_TITLE}.`;
     if (!category) return "Zaɓi category.";
-    if (photos.length < 1) return "Saka aƙalla hoto ɗaya.";
+    if (photos.length < MAX_PHOTOS)
+      return `Saka hotuna ${MAX_PHOTOS} domin tallar ta samu ingantacciyar bayyana.`;
     if (photos.some((photo) => photo.uploading)) return "Ana loda hotuna zuwa AWS S3; jira kaɗan.";
     if (photos.some((photo) => !photo.objectKey))
       return "Wasu hotuna ba a loda su ba. Da fatan a sake gwadawa.";
@@ -213,7 +230,10 @@ function PostProduct() {
           region,
           type,
           condition,
-          description: description.trim(),
+          description: `${description.trim()}\n\nDetails: ${Object.entries(details)
+            .filter(([, value]) => value)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(" · ")}`,
           price: Number(price),
           bulkPrice: bulkPrice ? Number(bulkPrice) : undefined,
           negotiation: negotiation as "Yes" | "No" | "Not sure",
@@ -273,9 +293,7 @@ function PostProduct() {
             An adana bayanan tallar cikin aminci.
           </p>
           <p className="mt-3 text-sm font-semibold text-brand">
-            {listingsLeft === "unlimited"
-              ? "Kana da tallace-tallace marasa iyaka."
-              : `Kana da tallace-tallace ${listingsLeft} kyauta da suka rage.`}
+            {`Kana da tallace-tallace ${listingsLeft} da suka rage a wannan lokaci.`}
           </p>
           <button
             onClick={() => navigate({ to: "/market" })}
@@ -292,9 +310,8 @@ function PostProduct() {
     <AppShell title="Wallafa talla">
       <div className="space-y-4 pb-8">
         <p className="rounded-xl border border-brand/20 bg-brand/5 px-3 py-2 text-xs text-muted-foreground">
-          Ba a cajin kuɗin wallafa. Kana da{" "}
-          {listingsLeft === "unlimited" ? "tallace-tallace marasa iyaka" : `${listingsLeft} kyauta`}{" "}
-          a tsarin yanzu.
+          Ba a cajin kuɗin wallafa. Kana da {`${listingsLeft} tallace-tallace suka rage`} a tsarin
+          yanzu.
         </p>
 
         <Field label="Title" hint={`${title.length}/${MAX_TITLE} · min ${MIN_TITLE}`}>
@@ -331,7 +348,10 @@ function PostProduct() {
           </Field>
         </div>
 
-        <Field label="Photos" hint={`Aƙalla 1 · Matsakaicin ${MAX_PHOTOS} · 5MB/hoto`}>
+        <Field
+          label="Photos"
+          hint={`Aƙalla ${MAX_PHOTOS} · Matsakaicin ${MAX_PHOTOS} · JPG, PNG, HEIC, WEBP · 5MB/hoto`}
+        >
           <input
             ref={fileRef}
             type="file"
@@ -366,16 +386,50 @@ function PostProduct() {
                     Upload ya kasa
                   </span>
                 )}
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPhotos((current) => current.filter((_, position) => position !== index))
-                  }
-                  className="absolute right-1 top-1 rounded-full bg-black/65 p-1 text-white"
-                  aria-label="Cire hoto"
-                >
-                  <X className="h-3 w-3" />
-                </button>
+                <div className="absolute right-1 top-1 flex gap-1">
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPhotos((current) => {
+                          const next = [...current];
+                          [next[index - 1], next[index]] = [next[index], next[index - 1]];
+                          return next;
+                        })
+                      }
+                      className="rounded-full bg-black/65 p-1 text-white"
+                      aria-label="Matsar da hoto baya"
+                    >
+                      <ArrowLeft className="h-3 w-3" />
+                    </button>
+                  )}
+                  {index < photos.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPhotos((current) => {
+                          const next = [...current];
+                          [next[index + 1], next[index]] = [next[index], next[index + 1]];
+                          return next;
+                        })
+                      }
+                      className="rounded-full bg-black/65 p-1 text-white"
+                      aria-label="Matsar da hoto gaba"
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPhotos((current) => current.filter((_, position) => position !== index))
+                    }
+                    className="rounded-full bg-black/65 p-1 text-white"
+                    aria-label="Cire hoto"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
               </div>
             ))}
             {photos.length < MAX_PHOTOS && (
@@ -444,6 +498,84 @@ function PostProduct() {
             ))}
           </select>
         </Field>
+        {(category === "Cars" ||
+          category === "Vehicle Parts" ||
+          category === "Commercial Equipment") && (
+          <section className="space-y-3 rounded-2xl border border-border bg-card p-3">
+            <div>
+              <p className="text-sm font-bold">Item details</p>
+              <p className="text-[11px] text-muted-foreground">
+                Add specifications relevant to this category.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <DetailField
+                label="Make"
+                value={details.make}
+                onChange={(value) => setDetails((current) => ({ ...current, make: value }))}
+              />
+              <DetailField
+                label="Color"
+                value={details.color}
+                onChange={(value) => setDetails((current) => ({ ...current, color: value }))}
+              />
+              <DetailSelect
+                label="Transmission"
+                value={details.transmission}
+                options={["Automatic", "Manual"]}
+                onChange={(value) => setDetails((current) => ({ ...current, transmission: value }))}
+              />
+              <DetailField
+                label="Powertrain"
+                value={details.powertrain}
+                onChange={(value) => setDetails((current) => ({ ...current, powertrain: value }))}
+              />
+              <DetailField
+                label="Fuel"
+                value={details.fuel}
+                onChange={(value) => setDetails((current) => ({ ...current, fuel: value }))}
+              />
+              <DetailField
+                label="Drivetrain"
+                value={details.drivetrain}
+                onChange={(value) => setDetails((current) => ({ ...current, drivetrain: value }))}
+              />
+              <DetailField
+                label="Seats"
+                value={details.seats}
+                onChange={(value) => setDetails((current) => ({ ...current, seats: value }))}
+              />
+              <DetailField
+                label="Cylinders"
+                value={details.cylinders}
+                onChange={(value) => setDetails((current) => ({ ...current, cylinders: value }))}
+              />
+              <DetailField
+                label="Engine size"
+                value={details.engineSize}
+                onChange={(value) => setDetails((current) => ({ ...current, engineSize: value }))}
+              />
+              <DetailField
+                label="Horsepower"
+                value={details.horsepower}
+                onChange={(value) => setDetails((current) => ({ ...current, horsepower: value }))}
+              />
+              <DetailSelect
+                label="Exchange possible"
+                value={details.exchange}
+                options={["Yes", "No"]}
+                onChange={(value) => setDetails((current) => ({ ...current, exchange: value }))}
+              />
+              <DetailSelect
+                label="Registered"
+                value={details.registered}
+                options={["Yes", "No"]}
+                onChange={(value) => setDetails((current) => ({ ...current, registered: value }))}
+              />
+            </div>
+          </section>
+        )}
+
         <Field label="Description" hint={`${description.length}/${MAX_DESC}`}>
           <textarea
             value={description}
@@ -583,6 +715,57 @@ function PostProduct() {
         }}
       />
     </AppShell>
+  );
+}
+
+function DetailField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-[11px] font-semibold text-muted-foreground">
+      {label}
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full input-control"
+      />
+    </label>
+  );
+}
+
+function DetailSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: readonly string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="text-[11px] font-semibold text-muted-foreground">
+      {label}
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full input-control"
+      >
+        <option value="">— Select —</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 
