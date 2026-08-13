@@ -76,7 +76,7 @@ const en: Dict = {
   // settings menu
   personalInfo: "Personal info",
   businessInfo: "Business info",
-  verifiedBadge: "Verified badge",
+  verifiedBadge: "Get Subscribed",
   phoneNumbers: "Phone numbers",
   changeEmail: "Change email",
   changeLanguage: "Change language",
@@ -303,7 +303,7 @@ const ha: Dict = {
   savedAds: "Tallace-tallacen da aka ajiye",
   personalInfo: "Bayanin kai",
   businessInfo: "Bayanin kasuwanci",
-  verifiedBadge: "Alamar tabbaci",
+  verifiedBadge: "Samun Rajista (Get Subscribed)",
   phoneNumbers: "Lambobin waya",
   changeEmail: "Canza imel",
   changeLanguage: "Canza harshe",

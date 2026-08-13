@@ -37,7 +37,7 @@ function Dashboard() {
 
   const dashIcons = [
     { to: "/market", icon: ShoppingBag, label: t("market") },
-    { to: "/wallet", icon: Wallet, label: t("wallet") },
+
     { to: "/jobs", icon: Briefcase, label: t("jobs") },
     { to: "/learn", icon: GraduationCap, label: t("learn") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
