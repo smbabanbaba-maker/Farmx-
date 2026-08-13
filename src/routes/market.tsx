@@ -123,9 +123,7 @@ function Market() {
               <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand">
                 <Sparkles className="h-3.5 w-3.5" /> FarmX classified marketplace
               </p>
-              <h1 className="mt-2 text-2xl font-black tracking-tight">
-                Find what you need.
-              </h1>
+              <h1 className="mt-2 text-2xl font-black tracking-tight">Find what you need.</h1>
               <p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">
                 Discover vehicles, property, electronics, agriculture, services, and trusted
                 businesses. Contact sellers directly—FarmX does not process private product

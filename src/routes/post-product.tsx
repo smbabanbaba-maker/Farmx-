@@ -77,7 +77,16 @@ const DEFAULT_PRICE_UNITS = [
   "request quote",
 ];
 
-const KANO_LGAS = ["Kano Municipal", "Dala", "Fagge", "Gwale", "Kumbotso", "Nassarawa", "Tarauni", "Other LGA"];
+const KANO_LGAS = [
+  "Kano Municipal",
+  "Dala",
+  "Fagge",
+  "Gwale",
+  "Kumbotso",
+  "Nassarawa",
+  "Tarauni",
+  "Other LGA",
+];
 
 function PostProduct() {
   const navigate = useNavigate();
@@ -116,7 +125,9 @@ function PostProduct() {
   );
   const [done, setDone] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [selector, setSelector] = useState<"category" | "subcategory" | "location" | "priceUnit" | null>(null);
+  const [selector, setSelector] = useState<
+    "category" | "subcategory" | "location" | "priceUnit" | null
+  >(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
   const [draftNotice, setDraftNotice] = useState(false);
@@ -176,7 +187,10 @@ function PostProduct() {
         setErrors((prev) => ({ ...prev, photos: `${f.name} ya wuce 10MB.` }));
         return;
       }
-      if (!/image\/(jpeg|jpg|png|heic|webp)/i.test(f.type) && !/\.(jpe?g|png|heic|webp)$/i.test(f.name)) {
+      if (
+        !/image\/(jpeg|jpg|png|heic|webp)/i.test(f.type) &&
+        !/\.(jpe?g|png|heic|webp)$/i.test(f.name)
+      ) {
         setErrors((prev) => ({ ...prev, photos: `Format ba a yarda ba: ${f.name}` }));
         return;
       }
@@ -209,7 +223,11 @@ function PostProduct() {
           ...prev,
           photos: prev.photos.map((photo, photoIndex) =>
             photoIndex === idx
-              ? { ...photo, uploading: false, error: e instanceof Error ? e.message : "Upload failed" }
+              ? {
+                  ...photo,
+                  uploading: false,
+                  error: e instanceof Error ? e.message : "Upload failed",
+                }
               : photo,
           ),
         }));
@@ -243,7 +261,11 @@ function PostProduct() {
             ...prev,
             photos: prev.photos.map((photo, photoIndex) =>
               photoIndex === idx
-                ? { ...photo, uploading: false, error: e instanceof Error ? e.message : "Upload failed" }
+                ? {
+                    ...photo,
+                    uploading: false,
+                    error: e instanceof Error ? e.message : "Upload failed",
+                  }
                 : photo,
             ),
           }));
@@ -286,7 +308,8 @@ function PostProduct() {
     }
 
     if (!form.contactName.trim()) newErrors.contactName = "Sanya sunan mai talla.";
-    if (!/^\d{7,15}$/.test(form.contactPhone)) newErrors.contactPhone = "Sanya lambar waya mai kyau.";
+    if (!/^\d{7,15}$/.test(form.contactPhone))
+      newErrors.contactPhone = "Sanya lambar waya mai kyau.";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -341,7 +364,13 @@ function PostProduct() {
         eventId: `listing-published:${published.id}`,
         title: "Listing published",
         body: `${form.title.trim()} is now live on FarmX.`,
-        listing: { id: published.id, title: form.title.trim(), price: form.price, image: form.photos[0]?.url, location: `${form.city}, ${form.state}` },
+        listing: {
+          id: published.id,
+          title: form.title.trim(),
+          price: form.price,
+          image: form.photos[0]?.url,
+          location: `${form.city}, ${form.state}`,
+        },
         targetUrl: `/product/${published.id}`,
       });
       consumeListing();
@@ -349,7 +378,9 @@ function PostProduct() {
       setDone(true);
       window.scrollTo(0, 0);
     } catch (e) {
-      setErrors({ global: e instanceof Error ? e.message : "Publishing failed. Please try again." });
+      setErrors({
+        global: e instanceof Error ? e.message : "Publishing failed. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -421,16 +452,28 @@ function PostProduct() {
         <header className="flex items-center justify-between gap-3">
           <h1 className="text-2xl font-black">Post New Ad</h1>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={saveDraft} className="rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-black text-muted-foreground transition hover:border-brand hover:text-brand">
+            <button
+              type="button"
+              onClick={saveDraft}
+              className="rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-black text-muted-foreground transition hover:border-brand hover:text-brand"
+            >
               Save Draft
             </button>
-            <button type="button" onClick={() => setShowClearConfirm(true)} className="flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-brand">
+            <button
+              type="button"
+              onClick={() => setShowClearConfirm(true)}
+              className="flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-brand"
+            >
               <Trash2 className="h-3.5 w-3.5" />
               Clear
             </button>
           </div>
         </header>
-        {draftNotice && <p className="-mt-6 text-right text-[10px] font-bold text-emerald-600">Draft saved locally.</p>}
+        {draftNotice && (
+          <p className="-mt-6 text-right text-[10px] font-bold text-emerald-600">
+            Draft saved locally.
+          </p>
+        )}
 
         {errors.global && (
           <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold flex gap-2">
@@ -474,9 +517,7 @@ function PostProduct() {
             onClick={() => setSelector("category")}
             invalid={!!errors.category}
           />
-          {errors.category && (
-            <InlineError message={errors.category} />
-          )}
+          {errors.category && <InlineError message={errors.category} />}
 
           {form.categoryId && (
             <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
@@ -496,11 +537,15 @@ function PostProduct() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <FieldLabel label="Photos" />
-            <span className="text-[10px] font-bold text-muted-foreground">{form.photos.length}/15</span>
+            <span className="text-[10px] font-bold text-muted-foreground">
+              {form.photos.length}/15
+            </span>
           </div>
           <div className="rounded-2xl border border-dashed border-brand/30 bg-brand/[0.03] p-4">
             <p className="text-xs font-bold">Add up to 15 photos</p>
-            <p className="mt-1 text-[10px] text-muted-foreground">The first photo is your cover. You can reorder or replace photos below.</p>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              The first photo is your cover. You can reorder or replace photos below.
+            </p>
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
@@ -513,31 +558,139 @@ function PostProduct() {
           {form.photos.length > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {form.photos.map((p, i) => (
-                <div key={`${p.url}-${i}`} className="group relative overflow-hidden rounded-2xl border border-border bg-muted">
-                  <button type="button" onClick={() => setPreviewPhoto(p.url)} className="block aspect-square w-full" aria-label={`Preview photo ${i + 1}`}>
-                    <img src={p.url} alt={`Listing photo ${i + 1}`} className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]" />
+                <div
+                  key={`${p.url}-${i}`}
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-muted"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setPreviewPhoto(p.url)}
+                    className="block aspect-square w-full"
+                    aria-label={`Preview photo ${i + 1}`}
+                  >
+                    <img
+                      src={p.url}
+                      alt={`Listing photo ${i + 1}`}
+                      className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
+                    />
                   </button>
-                  {i === 0 && <span className="absolute left-2 top-2 rounded-lg bg-brand px-2 py-1 text-[8px] font-black text-brand-foreground shadow-sm">COVER PHOTO</span>}
-                  {p.uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/45"><Loader2 className="h-6 w-6 animate-spin text-white" /></div>}
-                  {p.error && <div className="absolute inset-0 flex items-center justify-center bg-red-600/60"><AlertCircle className="h-6 w-6 text-white" /></div>}
+                  {i === 0 && (
+                    <span className="absolute left-2 top-2 rounded-lg bg-brand px-2 py-1 text-[8px] font-black text-brand-foreground shadow-sm">
+                      COVER PHOTO
+                    </span>
+                  )}
+                  {p.uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/45">
+                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+                    </div>
+                  )}
+                  {p.error && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-600/60">
+                      <AlertCircle className="h-6 w-6 text-white" />
+                    </div>
+                  )}
                   <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
                     <div className="flex gap-1">
-                      <button type="button" onClick={() => setPreviewPhoto(p.url)} className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur" aria-label="Preview photo"><Eye className="h-3.5 w-3.5" /></button>
-                      <button type="button" onClick={() => { setReplaceIndex(i); fileRef.current?.click(); }} className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur" aria-label="Replace photo"><Upload className="h-3.5 w-3.5" /></button>
-                      <button type="button" onClick={() => setForm((prev) => ({ ...prev, photos: prev.photos.filter((_, photoIndex) => photoIndex !== i) }))} className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur" aria-label="Delete photo"><X className="h-3.5 w-3.5" /></button>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewPhoto(p.url)}
+                        className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur"
+                        aria-label="Preview photo"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplaceIndex(i);
+                          fileRef.current?.click();
+                        }}
+                        className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur"
+                        aria-label="Replace photo"
+                      >
+                        <Upload className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            photos: prev.photos.filter((_, photoIndex) => photoIndex !== i),
+                          }))
+                        }
+                        className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur"
+                        aria-label="Delete photo"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                     <div className="flex gap-1">
-                      <button type="button" disabled={i === 0} onClick={() => setForm((prev) => { if (i === 0) return prev; const photos = [...prev.photos]; [photos[i - 1], photos[i]] = [photos[i], photos[i - 1]]; return { ...prev, photos }; })} className="rounded-lg bg-black/65 px-2 py-1 text-[9px] font-black text-white disabled:opacity-30" aria-label="Move photo left">←</button>
-                      <button type="button" disabled={i === form.photos.length - 1} onClick={() => setForm((prev) => { if (i === prev.photos.length - 1) return prev; const photos = [...prev.photos]; [photos[i], photos[i + 1]] = [photos[i + 1], photos[i]]; return { ...prev, photos }; })} className="rounded-lg bg-black/65 px-2 py-1 text-[9px] font-black text-white disabled:opacity-30" aria-label="Move photo right">→</button>
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() =>
+                          setForm((prev) => {
+                            if (i === 0) return prev;
+                            const photos = [...prev.photos];
+                            [photos[i - 1], photos[i]] = [photos[i], photos[i - 1]];
+                            return { ...prev, photos };
+                          })
+                        }
+                        className="rounded-lg bg-black/65 px-2 py-1 text-[9px] font-black text-white disabled:opacity-30"
+                        aria-label="Move photo left"
+                      >
+                        ←
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === form.photos.length - 1}
+                        onClick={() =>
+                          setForm((prev) => {
+                            if (i === prev.photos.length - 1) return prev;
+                            const photos = [...prev.photos];
+                            [photos[i], photos[i + 1]] = [photos[i + 1], photos[i]];
+                            return { ...prev, photos };
+                          })
+                        }
+                        className="rounded-lg bg-black/65 px-2 py-1 text-[9px] font-black text-white disabled:opacity-30"
+                        aria-label="Move photo right"
+                      >
+                        →
+                      </button>
                     </div>
                   </div>
-                  {i !== 0 && <button type="button" onClick={() => setForm((prev) => { const photos = [...prev.photos]; const [cover] = photos.splice(i, 1); photos.unshift(cover); return { ...prev, photos }; })} className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">Set cover</button>}
+                  {i !== 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setForm((prev) => {
+                          const photos = [...prev.photos];
+                          const [cover] = photos.splice(i, 1);
+                          photos.unshift(cover);
+                          return { ...prev, photos };
+                        })
+                      }
+                      className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
+                    >
+                      Set cover
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
           {errors.photos && <InlineError message={errors.photos} />}
-          <input ref={fileRef} type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic" className="hidden" onChange={(e) => { void onPickFiles(e.target.files); e.currentTarget.value = ""; }} />
+          <input
+            ref={fileRef}
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/heic"
+            className="hidden"
+            onChange={(e) => {
+              void onPickFiles(e.target.files);
+              e.currentTarget.value = "";
+            }}
+          />
         </section>
 
         {/* 4. Video */}
@@ -565,8 +718,12 @@ function PostProduct() {
             onClick={() => setSelector("location")}
             invalid={!!(errors.state || errors.lga || errors.city)}
           />
-          <p className="text-[10px] text-muted-foreground">Nigeria location hierarchy · State, LGA and City/Area</p>
-          {(errors.state || errors.lga || errors.city) && <InlineError message="Complete your State, LGA and City/Area." />}
+          <p className="text-[10px] text-muted-foreground">
+            Nigeria location hierarchy · State, LGA and City/Area
+          </p>
+          {(errors.state || errors.lga || errors.city) && (
+            <InlineError message="Complete your State, LGA and City/Area." />
+          )}
         </section>
 
         {/* 6. Dynamic Attributes */}
@@ -670,13 +827,20 @@ function PostProduct() {
                     <input
                       type="text"
                       placeholder={field.placeholder || "Separate options with commas"}
-                      value={Array.isArray(form.dynamicFields[field.id]) ? form.dynamicFields[field.id].join(", ") : form.dynamicFields[field.id] || ""}
+                      value={
+                        Array.isArray(form.dynamicFields[field.id])
+                          ? form.dynamicFields[field.id].join(", ")
+                          : form.dynamicFields[field.id] || ""
+                      }
                       onChange={(e) =>
                         setForm({
                           ...form,
                           dynamicFields: {
                             ...form.dynamicFields,
-                            [field.id]: e.target.value.split(",").map((item) => item.trim()).filter(Boolean),
+                            [field.id]: e.target.value
+                              .split(",")
+                              .map((item) => item.trim())
+                              .filter(Boolean),
                           },
                         })
                       }
@@ -705,7 +869,10 @@ function PostProduct() {
                   )}
 
                   {errors[`field_${field.id}`] && (
-                    <p className="text-[10px] font-bold text-brand flex items-center gap-1" data-error>
+                    <p
+                      className="text-[10px] font-bold text-brand flex items-center gap-1"
+                      data-error
+                    >
                       <AlertCircle className="h-3 w-3" /> {errors[`field_${field.id}`]}
                     </p>
                   )}
@@ -751,25 +918,52 @@ function PostProduct() {
           <div className="space-y-3">
             <FieldLabel label="Price *" />
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">₦</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">
+                ₦
+              </span>
               <input
                 type="number"
                 min="0"
                 placeholder="Enter price"
                 value={form.price ?? ""}
                 disabled={form.priceType === "free" || form.priceType === "request"}
-                onChange={(e) => setForm({ ...form, price: e.target.value ? Number(e.target.value) : null })}
+                onChange={(e) =>
+                  setForm({ ...form, price: e.target.value ? Number(e.target.value) : null })
+                }
                 className={`w-full rounded-2xl border bg-card p-4 pl-10 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-muted ${errors.price ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
               />
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {[{ id: "fixed", label: "Fixed price" }, { id: "negotiable", label: "Negotiable" }, { id: "request", label: "Request quote" }, { id: "free", label: "Free" }].map((type) => (
-                <button key={type.id} type="button" onClick={() => setForm({ ...form, priceType: type.id as ListingFormState["priceType"], price: type.id === "free" || type.id === "request" ? null : form.price })} className={`rounded-xl border px-3 py-2.5 text-[10px] font-black transition active:scale-[0.98] ${form.priceType === type.id ? "border-brand bg-brand/5 text-brand" : "border-border bg-card"}`}>
+              {[
+                { id: "fixed", label: "Fixed price" },
+                { id: "negotiable", label: "Negotiable" },
+                { id: "request", label: "Request quote" },
+                { id: "free", label: "Free" },
+              ].map((type) => (
+                <button
+                  key={type.id}
+                  type="button"
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      priceType: type.id as ListingFormState["priceType"],
+                      price: type.id === "free" || type.id === "request" ? null : form.price,
+                    })
+                  }
+                  className={`rounded-xl border px-3 py-2.5 text-[10px] font-black transition active:scale-[0.98] ${form.priceType === type.id ? "border-brand bg-brand/5 text-brand" : "border-border bg-card"}`}
+                >
                   {type.label}
                 </button>
               ))}
             </div>
-            {(form.priceType === "fixed" || form.priceType === "negotiable") && <SelectorRow value={form.priceUnit || "per item"} placeholder="Select price unit" onClick={() => setSelector("priceUnit")} invalid={false} />}
+            {(form.priceType === "fixed" || form.priceType === "negotiable") && (
+              <SelectorRow
+                value={form.priceUnit || "per item"}
+                placeholder="Select price unit"
+                onClick={() => setSelector("priceUnit")}
+                invalid={false}
+              />
+            )}
             {errors.price && <InlineError message={errors.price} />}
           </div>
 
@@ -777,7 +971,14 @@ function PostProduct() {
             <FieldLabel label="Are you open to negotiation?" />
             <div className="grid grid-cols-3 gap-2">
               {["Yes", "No", "Not sure"].map((opt) => (
-                <button key={opt} type="button" onClick={() => setForm({ ...form, negotiation: opt as ListingFormState["negotiation"] })} className={`rounded-xl border px-2 py-3 text-xs font-bold transition active:scale-[0.98] ${form.negotiation === opt ? "border-brand bg-brand/5 text-brand" : "border-border bg-card"}`}>
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, negotiation: opt as ListingFormState["negotiation"] })
+                  }
+                  className={`rounded-xl border px-2 py-3 text-xs font-bold transition active:scale-[0.98] ${form.negotiation === opt ? "border-brand bg-brand/5 text-brand" : "border-border bg-card"}`}
+                >
                   {opt}
                 </button>
               ))}
@@ -831,7 +1032,9 @@ function PostProduct() {
             </div>
             <div>
               <h3 className="text-sm font-black">Boost Visibility</h3>
-              <p className="text-[10px] text-muted-foreground">Get up to 10x more views and sales</p>
+              <p className="text-[10px] text-muted-foreground">
+                Get up to 10x more views and sales
+              </p>
             </div>
           </div>
 
@@ -840,6 +1043,7 @@ function PostProduct() {
               <button
                 key={p.id}
                 type="button"
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={() => setForm({ ...form, promoId: p.id as any })}
                 className={`flex items-center justify-between p-5 rounded-3xl border transition-all ${form.promoId === p.id ? "border-brand bg-brand/5 ring-2 ring-brand/20" : "border-border bg-card"}`}
               >
@@ -970,21 +1174,61 @@ function PostProduct() {
       )}
 
       {selector && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={() => setSelector(null)}>
-          <div className="max-h-[88vh] w-full max-w-xl overflow-hidden rounded-t-[2rem] border border-border bg-card shadow-2xl sm:rounded-[2rem]" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm sm:items-center sm:p-6"
+          onClick={() => setSelector(null)}
+        >
+          <div
+            className="max-h-[88vh] w-full max-w-xl overflow-hidden rounded-t-[2rem] border border-border bg-card shadow-2xl sm:rounded-[2rem]"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">FarmX selector</p>
-                <h2 className="mt-1 text-lg font-black">{selector === "category" ? "Select category" : selector === "subcategory" ? "Select subcategory" : selector === "location" ? "Select location" : "Select price unit"}</h2>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
+                  FarmX selector
+                </p>
+                <h2 className="mt-1 text-lg font-black">
+                  {selector === "category"
+                    ? "Select category"
+                    : selector === "subcategory"
+                      ? "Select subcategory"
+                      : selector === "location"
+                        ? "Select location"
+                        : "Select price unit"}
+                </h2>
               </div>
-              <button type="button" onClick={() => setSelector(null)} className="rounded-full p-2 text-muted-foreground transition hover:bg-accent" aria-label="Close selector"><X className="h-5 w-5" /></button>
+              <button
+                type="button"
+                onClick={() => setSelector(null)}
+                className="rounded-full p-2 text-muted-foreground transition hover:bg-accent"
+                aria-label="Close selector"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
             {selector === "category" && (
               <div className="max-h-[68vh] overflow-y-auto p-3">
                 {UNIVERSAL_CATEGORIES.map((item) => (
-                  <button key={item.id} type="button" onClick={() => { setForm((prev) => ({ ...prev, categoryId: item.id, subcategoryId: "", dynamicFields: {}, priceUnit: PRICE_UNITS_BY_CATEGORY[item.id]?.[0] ?? "per item" })); setErrors((prev) => ({ ...prev, category: "", subcategory: "" })); setSelector(null); }} className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.categoryId === item.id ? "bg-brand/5 text-brand" : ""}`}>
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-xl">{item.icon}</span>
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setForm((prev) => ({
+                        ...prev,
+                        categoryId: item.id,
+                        subcategoryId: "",
+                        dynamicFields: {},
+                        priceUnit: PRICE_UNITS_BY_CATEGORY[item.id]?.[0] ?? "per item",
+                      }));
+                      setErrors((prev) => ({ ...prev, category: "", subcategory: "" }));
+                      setSelector(null);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.categoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
+                  >
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-xl">
+                      {item.icon}
+                    </span>
                     <span className="min-w-0 flex-1 text-sm font-bold">{item.name}</span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </button>
@@ -995,9 +1239,22 @@ function PostProduct() {
             {selector === "subcategory" && (
               <div className="max-h-[68vh] overflow-y-auto p-3">
                 {category?.subcategories.map((item) => (
-                  <button key={item.id} type="button" onClick={() => { setForm((prev) => ({ ...prev, subcategoryId: item.id, dynamicFields: {} })); setErrors((prev) => ({ ...prev, subcategory: "" })); setSelector(null); }} className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.subcategoryId === item.id ? "bg-brand/5 text-brand" : ""}`}>
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, subcategoryId: item.id, dynamicFields: {} }));
+                      setErrors((prev) => ({ ...prev, subcategory: "" }));
+                      setSelector(null);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.subcategoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
+                  >
                     <span className="text-sm font-bold">{item.name}</span>
-                    {form.subcategoryId === item.id ? <Check className="h-4 w-4 text-brand" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                    {form.subcategoryId === item.id ? (
+                      <Check className="h-4 w-4 text-brand" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -1006,9 +1263,21 @@ function PostProduct() {
             {selector === "priceUnit" && (
               <div className="max-h-[68vh] overflow-y-auto p-3">
                 {priceUnits.map((unit) => (
-                  <button key={unit} type="button" onClick={() => { setForm((prev) => ({ ...prev, priceUnit: unit })); setSelector(null); }} className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.priceUnit === unit ? "bg-brand/5 text-brand" : ""}`}>
+                  <button
+                    key={unit}
+                    type="button"
+                    onClick={() => {
+                      setForm((prev) => ({ ...prev, priceUnit: unit }));
+                      setSelector(null);
+                    }}
+                    className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.priceUnit === unit ? "bg-brand/5 text-brand" : ""}`}
+                  >
                     <span className="text-sm font-bold capitalize">{unit}</span>
-                    {form.priceUnit === unit ? <Check className="h-4 w-4 text-brand" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                    {form.priceUnit === unit ? (
+                      <Check className="h-4 w-4 text-brand" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -1020,7 +1289,14 @@ function PostProduct() {
                   <FieldLabel label="State" />
                   <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto rounded-2xl border border-border p-2 sm:grid-cols-3">
                     {LOCATIONS.map((state) => (
-                      <button key={state} type="button" onClick={() => setForm((prev) => ({ ...prev, state, lga: "", city: "" }))} className={`rounded-xl border px-2 py-2.5 text-xs font-bold transition ${form.state === state ? "border-brand bg-brand/5 text-brand" : "border-border bg-background"}`}>{state}</button>
+                      <button
+                        key={state}
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, state, lga: "", city: "" }))}
+                        className={`rounded-xl border px-2 py-2.5 text-xs font-bold transition ${form.state === state ? "border-brand bg-brand/5 text-brand" : "border-border bg-background"}`}
+                      >
+                        {state}
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -1028,15 +1304,33 @@ function PostProduct() {
                   <FieldLabel label="LGA" />
                   <div className="grid grid-cols-2 gap-2">
                     {lgaOptions.map((lga) => (
-                      <button key={lga} type="button" onClick={() => setForm((prev) => ({ ...prev, lga }))} className={`rounded-xl border px-3 py-3 text-left text-xs font-bold transition ${form.lga === lga ? "border-brand bg-brand/5 text-brand" : "border-border bg-background"}`}>{lga}</button>
+                      <button
+                        key={lga}
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, lga }))}
+                        className={`rounded-xl border px-3 py-3 text-left text-xs font-bold transition ${form.lga === lga ? "border-brand bg-brand/5 text-brand" : "border-border bg-background"}`}
+                      >
+                        {lga}
+                      </button>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <FieldLabel label="City / Area" />
-                  <input value={form.city} onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))} placeholder="e.g. Kofar Mata, Ikeja, Maitama" className="w-full rounded-2xl border border-border bg-background p-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20" />
+                  <input
+                    value={form.city}
+                    onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
+                    placeholder="e.g. Kofar Mata, Ikeja, Maitama"
+                    className="w-full rounded-2xl border border-border bg-background p-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+                  />
                 </div>
-                <button type="button" onClick={() => setSelector(null)} className="w-full rounded-2xl bg-brand py-3.5 text-sm font-black text-brand-foreground shadow-lg shadow-brand/20">Save location</button>
+                <button
+                  type="button"
+                  onClick={() => setSelector(null)}
+                  className="w-full rounded-2xl bg-brand py-3.5 text-sm font-black text-brand-foreground shadow-lg shadow-brand/20"
+                >
+                  Save location
+                </button>
               </div>
             )}
           </div>
@@ -1044,9 +1338,24 @@ function PostProduct() {
       )}
 
       {previewPhoto && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-5" onClick={() => setPreviewPhoto(null)}>
-          <button type="button" onClick={() => setPreviewPhoto(null)} className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white" aria-label="Close photo preview"><X className="h-6 w-6" /></button>
-          <img src={previewPhoto} alt="Full listing preview" className="max-h-[85vh] max-w-full rounded-2xl object-contain" onClick={(event) => event.stopPropagation()} />
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-5"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewPhoto(null)}
+            className="absolute right-4 top-4 rounded-full bg-white/10 p-2 text-white"
+            aria-label="Close photo preview"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={previewPhoto}
+            alt="Full listing preview"
+            className="max-h-[85vh] max-w-full rounded-2xl object-contain"
+            onClick={(event) => event.stopPropagation()}
+          />
         </div>
       )}
 
@@ -1066,7 +1375,6 @@ function PostProduct() {
     </AppShell>
   );
 }
-
 
 function FieldLabel({ label, icon }: { label: string; icon?: ReactNode }) {
   return (
@@ -1096,8 +1404,14 @@ function SelectorRow({
       onClick={onClick}
       className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-card px-4 text-left transition hover:border-brand/60 active:scale-[0.995] ${invalid ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
     >
-      {icon && <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">{icon}</span>}
-      <span className={`min-w-0 flex-1 truncate text-sm font-semibold ${value ? "text-foreground" : "text-muted-foreground"}`}>
+      {icon && (
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+          {icon}
+        </span>
+      )}
+      <span
+        className={`min-w-0 flex-1 truncate text-sm font-semibold ${value ? "text-foreground" : "text-muted-foreground"}`}
+      >
         {value || placeholder}
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -1112,4 +1426,3 @@ function InlineError({ message }: { message: string }) {
     </p>
   );
 }
-

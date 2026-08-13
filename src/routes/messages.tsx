@@ -20,7 +20,10 @@ export const Route = createFileRoute("/messages")({
   head: () => ({
     meta: [
       { title: "Chats — FarmX" },
-      { name: "description", content: "Marketplace conversations between FarmX buyers and sellers." },
+      {
+        name: "description",
+        content: "Marketplace conversations between FarmX buyers and sellers.",
+      },
       { property: "og:title", content: "FarmX Chats" },
       { property: "og:description", content: "Communicate safely about FarmX listings." },
     ],
@@ -67,9 +70,15 @@ function MessagesInbox() {
   const counts = useMemo(
     () => ({
       all: conversations.filter((conversation) => !conversation.blocked).length,
-      unread: conversations.filter((conversation) => !conversation.blocked && unreadCount(conversation) > 0).length,
-      buying: conversations.filter((conversation) => !conversation.blocked && conversation.direction === "buying").length,
-      selling: conversations.filter((conversation) => !conversation.blocked && conversation.direction === "selling").length,
+      unread: conversations.filter(
+        (conversation) => !conversation.blocked && unreadCount(conversation) > 0,
+      ).length,
+      buying: conversations.filter(
+        (conversation) => !conversation.blocked && conversation.direction === "buying",
+      ).length,
+      selling: conversations.filter(
+        (conversation) => !conversation.blocked && conversation.direction === "selling",
+      ).length,
     }),
     [conversations],
   );
@@ -81,9 +90,13 @@ function MessagesInbox() {
       <div className="mx-auto max-w-2xl space-y-4 pb-8">
         <header className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">FarmX marketplace</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
+              FarmX marketplace
+            </p>
             <h1 className="mt-1 text-2xl font-black tracking-tight">Chats</h1>
-            <p className="mt-1 text-xs text-muted-foreground">Talk directly with buyers and sellers about real listings.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Talk directly with buyers and sellers about real listings.
+            </p>
           </div>
           <Link
             to="/market"
@@ -102,7 +115,10 @@ function MessagesInbox() {
             </div>
             <div>
               <p className="text-xs font-black">Safe marketplace conversations</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Discuss the listing, verify the person, and inspect the item before any private transaction. FarmX does not process buyer-to-seller payments here.</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                Discuss the listing, verify the person, and inspect the item before any private
+                transaction. FarmX does not process buyer-to-seller payments here.
+              </p>
             </div>
           </div>
         </div>
@@ -136,9 +152,13 @@ function MessagesInbox() {
 
         <div className="flex items-center justify-between px-1">
           <p className="text-[11px] font-semibold text-muted-foreground">
-            {totalUnread > 0 ? `${totalUnread} unread message${totalUnread === 1 ? "" : "s"}` : "All caught up"}
+            {totalUnread > 0
+              ? `${totalUnread} unread message${totalUnread === 1 ? "" : "s"}`
+              : "All caught up"}
           </p>
-          <span className="text-[10px] font-bold text-muted-foreground">{list.length} conversation{list.length === 1 ? "" : "s"}</span>
+          <span className="text-[10px] font-bold text-muted-foreground">
+            {list.length} conversation{list.length === 1 ? "" : "s"}
+          </span>
         </div>
 
         {list.length === 0 ? (
@@ -169,24 +189,53 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
       >
         <div className="relative shrink-0">
           <Avatar conversation={conversation} />
-          {conversation.peer.online && <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" aria-label="Online" />}
+          {conversation.peer.online && (
+            <span
+              className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-card bg-emerald-500"
+              aria-label="Online"
+            />
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-1.5">
-              <p className={`truncate text-sm ${unread ? "font-black" : "font-bold"}`}>{conversation.peer.name}</p>
-              {conversation.peer.verified && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-brand" aria-label="Verified" />}
-              {conversation.muted && <BellOff className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Muted" />}
+              <p className={`truncate text-sm ${unread ? "font-black" : "font-bold"}`}>
+                {conversation.peer.name}
+              </p>
+              {conversation.peer.verified && (
+                <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-brand" aria-label="Verified" />
+              )}
+              {conversation.muted && (
+                <BellOff className="h-3 w-3 shrink-0 text-muted-foreground" aria-label="Muted" />
+              )}
             </div>
-            <span className={`shrink-0 text-[10px] ${unread ? "font-black text-brand" : "text-muted-foreground"}`}>{timeAgo(conversation.updatedAt)}</span>
+            <span
+              className={`shrink-0 text-[10px] ${unread ? "font-black text-brand" : "text-muted-foreground"}`}
+            >
+              {timeAgo(conversation.updatedAt)}
+            </span>
           </div>
           <div className="mt-1 flex min-w-0 items-center gap-1.5">
-            <span className="truncate text-[10px] font-semibold text-brand">{conversation.product?.name ?? "FarmX conversation"}</span>
-            {conversation.product && <span className="shrink-0 text-[9px] text-muted-foreground">· {conversation.direction === "selling" ? "Selling" : "Buying"}</span>}
+            <span className="truncate text-[10px] font-semibold text-brand">
+              {conversation.product?.name ?? "FarmX conversation"}
+            </span>
+            {conversation.product && (
+              <span className="shrink-0 text-[9px] text-muted-foreground">
+                · {conversation.direction === "selling" ? "Selling" : "Buying"}
+              </span>
+            )}
           </div>
           <div className="mt-1 flex items-center justify-between gap-3">
-            <p className={`truncate text-xs ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{lastMessagePreview(last)}</p>
-            {unread > 0 && <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-black text-brand-foreground">{unread}</span>}
+            <p
+              className={`truncate text-xs ${unread ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+            >
+              {lastMessagePreview(last)}
+            </p>
+            {unread > 0 && (
+              <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-black text-brand-foreground">
+                {unread}
+              </span>
+            )}
           </div>
         </div>
       </Link>
@@ -199,17 +248,34 @@ function Avatar({ conversation }: { conversation: Conversation }) {
   return avatar.startsWith("http") ? (
     <img src={avatar} alt="" className="h-12 w-12 rounded-2xl border border-border object-cover" />
   ) : (
-    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-xl">{avatar || <UserRound className="h-5 w-5 text-brand" />}</div>
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-xl">
+      {avatar || <UserRound className="h-5 w-5 text-brand" />}
+    </div>
   );
 }
 
 function EmptyState({ hasSearch }: { hasSearch: boolean }) {
   return (
     <div className="rounded-3xl border border-dashed border-border bg-card px-6 py-16 text-center">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/10 text-brand"><MessageCircle className="h-7 w-7" /></div>
-      <h2 className="mt-4 text-base font-black">{hasSearch ? "No chats found" : "No conversations yet"}</h2>
-      <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">{hasSearch ? "Try another name, listing title or message." : "Start a conversation with a seller or buyer from a FarmX listing."}</p>
-      {!hasSearch && <Link to="/market" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-lg shadow-brand/15"><ShoppingBag className="h-3.5 w-3.5" /> Browse Market</Link>}
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/10 text-brand">
+        <MessageCircle className="h-7 w-7" />
+      </div>
+      <h2 className="mt-4 text-base font-black">
+        {hasSearch ? "No chats found" : "No conversations yet"}
+      </h2>
+      <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
+        {hasSearch
+          ? "Try another name, listing title or message."
+          : "Start a conversation with a seller or buyer from a FarmX listing."}
+      </p>
+      {!hasSearch && (
+        <Link
+          to="/market"
+          className="mt-5 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-lg shadow-brand/15"
+        >
+          <ShoppingBag className="h-3.5 w-3.5" /> Browse Market
+        </Link>
+      )}
     </div>
   );
 }
@@ -222,7 +288,8 @@ function lastMessagePreview(message: Message | undefined) {
   if (!message) return "No messages yet";
   if (message.kind === "image") return "Image";
   if (message.kind === "product") return `Listing: ${message.product?.name ?? "FarmX listing"}`;
-  if (message.kind === "delivery") return `Delivery update: ${message.delivery?.status ?? "Updated"}`;
+  if (message.kind === "delivery")
+    return `Delivery update: ${message.delivery?.status ?? "Updated"}`;
   if (message.kind === "coupon") return `Coupon: ${message.coupon?.code ?? "Shared"}`;
   return message.text ?? "Message";
 }

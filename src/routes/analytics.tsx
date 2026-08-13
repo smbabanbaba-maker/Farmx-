@@ -13,7 +13,15 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { getAnalyticsRepository } from "@/lib/analytics-repository";
-import type { UserAnalytics, SellerAnalytics, JobSeekerAnalytics, EmployerAnalytics, AdminAnalytics, AnalyticsRole, TimeRange } from "@/lib/analytics.types";
+import type {
+  UserAnalytics,
+  SellerAnalytics,
+  JobSeekerAnalytics,
+  EmployerAnalytics,
+  AdminAnalytics,
+  AnalyticsRole,
+  TimeRange,
+} from "@/lib/analytics.types";
 
 export const Route = createFileRoute("/analytics")({
   component: AnalyticsDashboard,
@@ -65,7 +73,9 @@ function AnalyticsDashboard() {
       <div className="space-y-6 pb-16">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs text-muted-foreground">Performance insights and real-time activity metrics.</p>
+            <p className="text-xs text-muted-foreground">
+              Performance insights and real-time activity metrics.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <select
@@ -114,10 +124,22 @@ function AnalyticsDashboard() {
             {role === "seller" && sellerStats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard title="Active Listings" value={sellerStats.activeListings} icon={ShoppingBag} />
+                  <StatCard
+                    title="Active Listings"
+                    value={sellerStats.activeListings}
+                    icon={ShoppingBag}
+                  />
                   <StatCard title="Total Views" value={sellerStats.totalViews} icon={Eye} />
-                  <StatCard title="Saves & Shares" value={sellerStats.totalSaves + sellerStats.totalShares} icon={Bookmark} />
-                  <StatCard title="Customer Inquiries" value={sellerStats.totalInquiries} icon={MessageSquare} />
+                  <StatCard
+                    title="Saves & Shares"
+                    value={sellerStats.totalSaves + sellerStats.totalShares}
+                    icon={Bookmark}
+                  />
+                  <StatCard
+                    title="Customer Inquiries"
+                    value={sellerStats.totalInquiries}
+                    icon={MessageSquare}
+                  />
                 </div>
 
                 <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
@@ -129,9 +151,17 @@ function AnalyticsDashboard() {
                       const max = Math.max(...sellerStats.viewsOverTime.map((x) => x.count), 10);
                       const heightPercent = Math.round((v.count / max) * 100);
                       return (
-                        <div key={v.date} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
-                          <span className="text-[10px] font-bold text-muted-foreground">{v.count}</span>
-                          <div style={{ height: `${heightPercent}%` }} className="w-full rounded-t-xl bg-brand transition-all hover:bg-brand/80" />
+                        <div
+                          key={v.date}
+                          className="flex-1 flex flex-col items-center gap-2 h-full justify-end"
+                        >
+                          <span className="text-[10px] font-bold text-muted-foreground">
+                            {v.count}
+                          </span>
+                          <div
+                            style={{ height: `${heightPercent}%` }}
+                            className="w-full rounded-t-xl bg-brand transition-all hover:bg-brand/80"
+                          />
                           <span className="text-[10px] font-bold">{v.date}</span>
                         </div>
                       );
@@ -143,10 +173,15 @@ function AnalyticsDashboard() {
                   <h3 className="text-sm font-black">Top Performing Listings</h3>
                   <div className="space-y-3">
                     {sellerStats.topListings.map((l) => (
-                      <div key={l.id} className="flex items-center justify-between rounded-2xl border border-border p-3">
+                      <div
+                        key={l.id}
+                        className="flex items-center justify-between rounded-2xl border border-border p-3"
+                      >
                         <div>
                           <p className="text-xs font-black">{l.title}</p>
-                          <p className="text-[10px] text-muted-foreground">₦{l.price.toLocaleString()}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            ₦{l.price.toLocaleString()}
+                          </p>
                         </div>
                         <span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-black text-brand">
                           {l.views} views
@@ -160,9 +195,17 @@ function AnalyticsDashboard() {
 
             {role === "user" && userStats && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatCard title="Listings Posted" value={userStats.listingsPosted} icon={ShoppingBag} />
+                <StatCard
+                  title="Listings Posted"
+                  value={userStats.listingsPosted}
+                  icon={ShoppingBag}
+                />
                 <StatCard title="Jobs Applied" value={userStats.jobsApplied} icon={Briefcase} />
-                <StatCard title="Courses Enrolled" value={userStats.coursesEnrolled} icon={GraduationCap} />
+                <StatCard
+                  title="Courses Enrolled"
+                  value={userStats.coursesEnrolled}
+                  icon={GraduationCap}
+                />
                 <StatCard title="Certificates" value={userStats.certificatesEarned} icon={Award} />
               </div>
             )}
@@ -170,8 +213,16 @@ function AnalyticsDashboard() {
             {role === "job_seeker" && jobSeekerStats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard title="Applications" value={jobSeekerStats.totalApplications} icon={Briefcase} />
-                  <StatCard title="Shortlisted" value={jobSeekerStats.shortlisted} icon={TrendingUp} />
+                  <StatCard
+                    title="Applications"
+                    value={jobSeekerStats.totalApplications}
+                    icon={Briefcase}
+                  />
+                  <StatCard
+                    title="Shortlisted"
+                    value={jobSeekerStats.shortlisted}
+                    icon={TrendingUp}
+                  />
                   <StatCard title="Interviews" value={jobSeekerStats.interviews} icon={Users} />
                   <StatCard title="Selected" value={jobSeekerStats.selected} icon={Award} />
                 </div>
@@ -181,7 +232,9 @@ function AnalyticsDashboard() {
                     {Object.entries(jobSeekerStats.applicationsByStatus).map(([st, count]) => (
                       <div key={st} className="rounded-2xl border border-border p-3 text-center">
                         <p className="text-lg font-black text-brand">{count}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">{st}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">
+                          {st}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -193,15 +246,26 @@ function AnalyticsDashboard() {
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <StatCard title="Active Jobs" value={employerStats.activeJobs} icon={Briefcase} />
-                  <StatCard title="Total Applications" value={employerStats.totalApplications} icon={Users} />
+                  <StatCard
+                    title="Total Applications"
+                    value={employerStats.totalApplications}
+                    icon={Users}
+                  />
                   <StatCard title="Interviews" value={employerStats.interviews} icon={TrendingUp} />
-                  <StatCard title="Hiring Rate" value={`${employerStats.hiringRate}%`} icon={Award} />
+                  <StatCard
+                    title="Hiring Rate"
+                    value={`${employerStats.hiringRate}%`}
+                    icon={Award}
+                  />
                 </div>
                 <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
                   <h3 className="text-sm font-black">Job Performance</h3>
                   <div className="space-y-3">
                     {employerStats.jobPerformance.map((jp) => (
-                      <div key={jp.id} className="flex items-center justify-between rounded-2xl border border-border p-3">
+                      <div
+                        key={jp.id}
+                        className="flex items-center justify-between rounded-2xl border border-border p-3"
+                      >
                         <p className="text-xs font-black">{jp.title}</p>
                         <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
                           <span>{jp.views} views</span>
@@ -217,20 +281,40 @@ function AnalyticsDashboard() {
             {role === "admin" && adminStats && (
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard title="Total Users" value={adminStats.totalUsers.toLocaleString()} icon={Users} />
-                  <StatCard title="Active Listings" value={adminStats.activeListings.toLocaleString()} icon={ShoppingBag} />
+                  <StatCard
+                    title="Total Users"
+                    value={adminStats.totalUsers.toLocaleString()}
+                    icon={Users}
+                  />
+                  <StatCard
+                    title="Active Listings"
+                    value={adminStats.activeListings.toLocaleString()}
+                    icon={ShoppingBag}
+                  />
                   <StatCard title="Active Jobs" value={adminStats.activeJobs} icon={Briefcase} />
-                  <StatCard title="Learn Enrollments" value={adminStats.learnEnrollments.toLocaleString()} icon={GraduationCap} />
+                  <StatCard
+                    title="Learn Enrollments"
+                    value={adminStats.learnEnrollments.toLocaleString()}
+                    icon={GraduationCap}
+                  />
                 </div>
                 <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
                   <h3 className="text-sm font-black">Platform Growth Trends</h3>
                   <div className="space-y-3">
                     {adminStats.growthChart.map((g) => (
-                      <div key={g.date} className="flex items-center justify-between rounded-2xl border border-border p-3 text-xs">
+                      <div
+                        key={g.date}
+                        className="flex items-center justify-between rounded-2xl border border-border p-3 text-xs"
+                      >
                         <span className="font-black">{g.date}</span>
                         <div className="flex items-center gap-4">
-                          <span className="text-muted-foreground">Users: <strong className="text-foreground">{g.users.toLocaleString()}</strong></span>
-                          <span className="text-brand font-bold">Listings: {g.listings.toLocaleString()}</span>
+                          <span className="text-muted-foreground">
+                            Users:{" "}
+                            <strong className="text-foreground">{g.users.toLocaleString()}</strong>
+                          </span>
+                          <span className="text-brand font-bold">
+                            Listings: {g.listings.toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -245,11 +329,22 @@ function AnalyticsDashboard() {
   );
 }
 
-function StatCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: any }) {
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+}: {
+  title: string;
+  value: string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: any;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-4 space-y-2 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{title}</span>
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+          {title}
+        </span>
         <div className="rounded-full bg-brand/10 p-2 text-brand">
           <Icon className="h-4 w-4" />
         </div>

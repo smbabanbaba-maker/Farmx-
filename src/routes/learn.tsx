@@ -412,7 +412,12 @@ function CourseCard({
     <article
       className={`group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-md ${compact ? "min-w-[260px] max-w-[260px]" : ""}`}
     >
-      <Link to="/learn/$courseId" params={{ courseId: course.id }} search={{ q: "", category: undefined }} className="block">
+      <Link
+        to="/learn/$courseId"
+        params={{ courseId: course.id }}
+        search={{ q: "", category: undefined }}
+        className="block"
+      >
         <div className="relative flex h-36 items-center justify-center bg-gradient-to-br from-brand/15 via-accent to-brand/5 text-6xl">
           <span aria-hidden="true">{course.coverImage}</span>
           <div className="absolute left-3 top-3 flex flex-wrap gap-1">

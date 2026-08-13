@@ -21,23 +21,12 @@ export type JobCategory =
   | "Other";
 
 export type JobType =
-  | "Full-time"
-  | "Part-time"
-  | "Contract"
-  | "Temporary"
-  | "Internship"
-  | "Volunteer"
-  | "Freelance";
+  "Full-time" | "Part-time" | "Contract" | "Temporary" | "Internship" | "Volunteer" | "Freelance";
 
 export type WorkMode = "On-site" | "Remote" | "Hybrid";
 
 export type ExperienceLevel =
-  | "No Experience"
-  | "Entry Level"
-  | "Junior"
-  | "Intermediate"
-  | "Senior"
-  | "Expert";
+  "No Experience" | "Entry Level" | "Junior" | "Intermediate" | "Senior" | "Expert";
 
 export type SalaryType =
   | "Negotiable"
@@ -52,13 +41,7 @@ export type SalaryType =
 export type JobStatus = "draft" | "published" | "paused" | "closed" | "expired";
 
 export type ApplicationStatus =
-  | "Applied"
-  | "Under Review"
-  | "Shortlisted"
-  | "Interview"
-  | "Selected"
-  | "Rejected"
-  | "Withdrawn";
+  "Applied" | "Under Review" | "Shortlisted" | "Interview" | "Selected" | "Rejected" | "Withdrawn";
 
 export interface JobEmployer {
   name: string;

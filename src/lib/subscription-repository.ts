@@ -1,4 +1,9 @@
-import type { SubscriptionPlan, UserSubscription, SubscriptionTier, SubscriptionStatus } from "./subscription.types";
+import type {
+  SubscriptionPlan,
+  UserSubscription,
+  SubscriptionTier,
+  SubscriptionStatus,
+} from "./subscription.types";
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
@@ -167,7 +172,15 @@ const STORAGE_SUB = "farmx_user_subscription_v1";
 export class SubscriptionRepository {
   async getUserSubscription(userId: string): Promise<UserSubscription> {
     if (typeof window === "undefined") {
-      return { userId, tier: "FREE", status: "FREE", startDate: new Date().toISOString(), renewalDate: new Date().toISOString(), remainingDays: 0, autoRenew: false };
+      return {
+        userId,
+        tier: "FREE",
+        status: "FREE",
+        startDate: new Date().toISOString(),
+        renewalDate: new Date().toISOString(),
+        remainingDays: 0,
+        autoRenew: false,
+      };
     }
     try {
       const stored = localStorage.getItem(`${STORAGE_SUB}_${userId}`);
@@ -175,10 +188,23 @@ export class SubscriptionRepository {
     } catch {
       /* fallback */
     }
-    return { userId, tier: "FREE", status: "FREE", startDate: new Date().toISOString(), renewalDate: new Date().toISOString(), remainingDays: 0, autoRenew: false };
+    return {
+      userId,
+      tier: "FREE",
+      status: "FREE",
+      startDate: new Date().toISOString(),
+      renewalDate: new Date().toISOString(),
+      remainingDays: 0,
+      autoRenew: false,
+    };
   }
 
-  async updateUserSubscription(userId: string, tier: SubscriptionTier, status: SubscriptionStatus, reference?: string): Promise<UserSubscription> {
+  async updateUserSubscription(
+    userId: string,
+    tier: SubscriptionTier,
+    status: SubscriptionStatus,
+    reference?: string,
+  ): Promise<UserSubscription> {
     const startDate = new Date().toISOString();
     const renewalDate = new Date(Date.now() + 30 * 86400000).toISOString();
     const sub: UserSubscription = {

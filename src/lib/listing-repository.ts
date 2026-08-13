@@ -8,6 +8,7 @@ export type ListingFormState = {
   videoLink?: string;
   title: string;
   description: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dynamicFields: Record<string, any>;
   price: number | null;
   priceType: "fixed" | "negotiable" | "request" | "free";
@@ -43,12 +44,12 @@ function createPreviewRepository(): ListingRepository {
   return {
     mode: "preview",
     uploadPhoto: async (file) => {
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
       return { objectKey: `preview-${Date.now()}-${file.name}` };
     },
     publish: async (data) => {
       console.log("Preview Publish:", data);
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise((r) => setTimeout(r, 1500));
       return { id: `listing-${Date.now()}` };
     },
     saveDraft: (data) => {
@@ -65,7 +66,7 @@ function createPreviewRepository(): ListingRepository {
       if (typeof window !== "undefined") {
         localStorage.removeItem(DRAFT_KEY);
       }
-    }
+    },
   };
 }
 
@@ -77,13 +78,13 @@ function createProductionRepository(): ListingRepository {
     },
     publish: async (data) => {
       const promoDays = data.promoId === "premium" ? 30 : data.promoId === "top" ? 7 : 0;
-      
+
       const result = await publishListing({
         data: {
           title: data.title,
           category: data.categoryId,
           subcategory: data.subcategoryId,
-          photos: data.photos.map(p => p.objectKey!).filter(Boolean),
+          photos: data.photos.map((p) => p.objectKey!).filter(Boolean),
           videoLink: data.videoLink,
           location: `${data.city}, ${data.state}`,
           description: data.description,
@@ -100,8 +101,8 @@ function createProductionRepository(): ListingRepository {
             lga: data.lga,
             contactName: data.contactName,
             contactPhone: data.contactPhone,
-          }
-        }
+          },
+        },
       });
       return { id: result.listingId };
     },
@@ -119,7 +120,7 @@ function createProductionRepository(): ListingRepository {
       if (typeof window !== "undefined") {
         localStorage.removeItem(DRAFT_KEY);
       }
-    }
+    },
   };
 }
 
@@ -129,7 +130,9 @@ export async function getListingRepository(): Promise<ListingRepository> {
   if (!repositoryPromise) {
     const apiBaseUrl = getApiBaseUrl();
     const preview = import.meta.env.VITE_LISTING_PREVIEW !== "false" || !apiBaseUrl;
-    repositoryPromise = Promise.resolve(preview ? createPreviewRepository() : createProductionRepository());
+    repositoryPromise = Promise.resolve(
+      preview ? createPreviewRepository() : createProductionRepository(),
+    );
   }
   return repositoryPromise;
 }

@@ -117,8 +117,14 @@ const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.repl
 /* These rules only flag incoming content that has actually arrived. They never create a reply or a fake conversation. */
 const FRAUD_RULES: { re: RegExp; reason: string }[] = [
   { re: /\b(advance|upfront|deposit)\s*(payment|fee)?\b/i, reason: "Asks for advance payment" },
-  { re: /\b(western\s*union|moneygram|bitcoin|btc|usdt|crypto|gift\s*card)\b/i, reason: "Untraceable payment method" },
-  { re: /\b(account\s*number|bank\s*details|send\s*money|transfer\s*to)\b/i, reason: "Off-platform bank transfer" },
+  {
+    re: /\b(western\s*union|moneygram|bitcoin|btc|usdt|crypto|gift\s*card)\b/i,
+    reason: "Untraceable payment method",
+  },
+  {
+    re: /\b(account\s*number|bank\s*details|send\s*money|transfer\s*to)\b/i,
+    reason: "Off-platform bank transfer",
+  },
   { re: /\b(otp|pin|password|bvn|nin)\b/i, reason: "Requests private credentials" },
   { re: /\b(clearing|customs|delivery)\s*fee\b/i, reason: "Fake clearing/delivery fee" },
 ];
@@ -176,7 +182,13 @@ export type MessageContext = {
   setMuted: (id: string, muted: boolean) => void;
   deleteConversation: (id: string) => void;
   searchMessages: (q: string) => { conversation: Conversation; message: Message }[];
-  submitReport: (report: { conversationId?: string; messageId?: string; seller: string; reason: string; details: string }) => Report;
+  submitReport: (report: {
+    conversationId?: string;
+    messageId?: string;
+    seller: string;
+    reason: string;
+    details: string;
+  }) => Report;
   canCall: (id: string) => boolean;
 };
 
@@ -219,7 +231,9 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
   const loadRemoteStore = useCallback(async () => {
     if (!API_BASE || typeof window === "undefined") return;
     try {
-      const response = await fetch(`${API_BASE}/v1/messages/conversations`, { credentials: "include" });
+      const response = await fetch(`${API_BASE}/v1/messages/conversations`, {
+        credentials: "include",
+      });
       if (!response.ok) return;
       const remote = (await response.json()) as Partial<StoreShape>;
       if (Array.isArray(remote.conversations)) {
@@ -234,15 +248,32 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
                 eventId: `message:${conversation.id}:${message.id}`,
                 title: "New message",
                 body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
-                actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+                actor: {
+                  id: conversation.peer.id,
+                  name: conversation.peer.name,
+                  avatar: conversation.peer.avatar,
+                  username: conversation.peer.username,
+                },
                 conversationId: conversation.id,
-                listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+                listing: conversation.product
+                  ? {
+                      id: conversation.product.id,
+                      title: conversation.product.name,
+                      price: conversation.product.price,
+                      image: conversation.product.image,
+                      location: conversation.product.location,
+                    }
+                  : undefined,
                 targetUrl: `/messages/${conversation.id}`,
               });
             }
           }
         }
-        persist({ conversations: remote.conversations, reports: remote.reports ?? [], typing: remote.typing ?? {} });
+        persist({
+          conversations: remote.conversations,
+          reports: remote.reports ?? [],
+          typing: remote.typing ?? {},
+        });
       }
     } catch {
       // The preview/local store remains available when the configured service is offline.
@@ -269,7 +300,9 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     }
 
     void loadRemoteStore();
-    const refreshTimer = API_BASE ? window.setInterval(() => void loadRemoteStore(), 15000) : undefined;
+    const refreshTimer = API_BASE
+      ? window.setInterval(() => void loadRemoteStore(), 15000)
+      : undefined;
     return () => {
       window.removeEventListener("storage", onStorage);
       if (refreshTimer) window.clearInterval(refreshTimer);
@@ -278,49 +311,58 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     };
   }, [loadRemoteStore]);
 
-  const append = useCallback((id: string, msg: Omit<Message, "id" | "createdAt" | "read">) => {
-    const now = Date.now();
-    const reasons = msg.from === "them" ? scanFraud(msg.text) : [];
-    const incomingWarning: Message | null = reasons.length
-      ? {
-          id: `warning_${now}`,
-          from: "them",
-          kind: "system",
-          text: `Safety warning: ${reasons.join(", ")}. Do not pay privately or share OTP, PIN, BVN or NIN.`,
-          createdAt: now + 1,
-          read: false,
-          flagged: true,
-          flagReason: reasons[0],
-        }
-      : null;
-    const message: Message = {
-      ...msg,
-      id: `message_${now}_${Math.random().toString(36).slice(2, 7)}`,
-      createdAt: now,
-      read: msg.from === "me",
-      status: msg.from === "me" ? "sent" : undefined,
-      flagged: reasons.length > 0 || undefined,
-      flagReason: reasons[0],
-    };
-    const current = storeRef.current;
-    const conversations = current.conversations.map((conversation) =>
-      conversation.id === id
+  const append = useCallback(
+    (id: string, msg: Omit<Message, "id" | "createdAt" | "read">) => {
+      const now = Date.now();
+      const reasons = msg.from === "them" ? scanFraud(msg.text) : [];
+      const incomingWarning: Message | null = reasons.length
         ? {
-            ...conversation,
-            messages: incomingWarning ? [...conversation.messages, message, incomingWarning] : [...conversation.messages, message],
-            spam: reasons.length ? true : conversation.spam,
-            autoSpam: reasons.length ? true : conversation.autoSpam,
-            fraudReasons: reasons.length ? Array.from(new Set([...(conversation.fraudReasons ?? []), ...reasons])) : conversation.fraudReasons,
-            updatedAt: now,
+            id: `warning_${now}`,
+            from: "them",
+            kind: "system",
+            text: `Safety warning: ${reasons.join(", ")}. Do not pay privately or share OTP, PIN, BVN or NIN.`,
+            createdAt: now + 1,
+            read: false,
+            flagged: true,
+            flagReason: reasons[0],
           }
-        : conversation,
-    );
-    persist({ ...current, conversations });
-  }, [persist]);
+        : null;
+      const message: Message = {
+        ...msg,
+        id: `message_${now}_${Math.random().toString(36).slice(2, 7)}`,
+        createdAt: now,
+        read: msg.from === "me",
+        status: msg.from === "me" ? "sent" : undefined,
+        flagged: reasons.length > 0 || undefined,
+        flagReason: reasons[0],
+      };
+      const current = storeRef.current;
+      const conversations = current.conversations.map((conversation) =>
+        conversation.id === id
+          ? {
+              ...conversation,
+              messages: incomingWarning
+                ? [...conversation.messages, message, incomingWarning]
+                : [...conversation.messages, message],
+              spam: reasons.length ? true : conversation.spam,
+              autoSpam: reasons.length ? true : conversation.autoSpam,
+              fraudReasons: reasons.length
+                ? Array.from(new Set([...(conversation.fraudReasons ?? []), ...reasons]))
+                : conversation.fraudReasons,
+              updatedAt: now,
+            }
+          : conversation,
+      );
+      persist({ ...current, conversations });
+    },
+    [persist],
+  );
 
   const value = useMemo<MessageContext>(() => {
     const totalUnread = store.conversations.reduce(
-      (sum, conversation) => sum + conversation.messages.filter((message) => message.from === "them" && !message.read).length,
+      (sum, conversation) =>
+        sum +
+        conversation.messages.filter((message) => message.from === "them" && !message.read).length,
       0,
     );
 
@@ -332,13 +374,25 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       openConversationWith: (peer, product) => {
         const targetPeer = peerKey(peer);
         const existing = store.conversations.find(
-          (conversation) => peerKey(conversation.peer) === targetPeer && (conversation.product?.id ?? conversation.listingId) === product?.id,
+          (conversation) =>
+            peerKey(conversation.peer) === targetPeer &&
+            (conversation.product?.id ?? conversation.listingId) === product?.id,
         );
         if (existing) return existing.id;
         const now = Date.now();
         const id = `conversation_${now}_${Math.random().toString(36).slice(2, 7)}`;
         const initialMessage: Message[] = product
-          ? [{ id: `message_${now}`, from: "me", kind: "product", product, createdAt: now, read: true, status: "sent" }]
+          ? [
+              {
+                id: `message_${now}`,
+                from: "me",
+                kind: "product",
+                product,
+                createdAt: now,
+                read: true,
+                status: "sent",
+              },
+            ]
           : [];
         const conversation: Conversation = {
           id,
@@ -359,7 +413,8 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       },
       sendImage: (id, image) => append(id, { from: "me", kind: "image", image }),
       sendProduct: (id, product) => append(id, { from: "me", kind: "product", product }),
-      sendCoupon: (id, code, percent) => append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
+      sendCoupon: (id, code, percent) =>
+        append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
       sendDelivery: (id, update) => append(id, { from: "me", kind: "delivery", delivery: update }),
       receiveText: (id, text) => {
         append(id, { from: "them", kind: "text", text });
@@ -370,9 +425,22 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
             eventId: `message:${id}:${Date.now()}`,
             title: "New message",
             body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
-            actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+            actor: {
+              id: conversation.peer.id,
+              name: conversation.peer.name,
+              avatar: conversation.peer.avatar,
+              username: conversation.peer.username,
+            },
             conversationId: id,
-            listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+            listing: conversation.product
+              ? {
+                  id: conversation.product.id,
+                  title: conversation.product.name,
+                  price: conversation.product.price,
+                  image: conversation.product.image,
+                  location: conversation.product.location,
+                }
+              : undefined,
             targetUrl: `/messages/${id}`,
           });
         }
@@ -386,9 +454,22 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
             eventId: `image-message:${id}:${Date.now()}`,
             title: "New image message",
             body: `${conversation.peer.name} sent you an image.`,
-            actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+            actor: {
+              id: conversation.peer.id,
+              name: conversation.peer.name,
+              avatar: conversation.peer.avatar,
+              username: conversation.peer.username,
+            },
             conversationId: id,
-            listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+            listing: conversation.product
+              ? {
+                  id: conversation.product.id,
+                  title: conversation.product.name,
+                  price: conversation.product.price,
+                  image: conversation.product.image,
+                  location: conversation.product.location,
+                }
+              : undefined,
             targetUrl: `/messages/${id}`,
           });
         }
@@ -397,23 +478,62 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       markRead: (id) => {
         const conversations = store.conversations.map((conversation) =>
           conversation.id === id
-            ? { ...conversation, messages: conversation.messages.map((message) => (message.from === "them" ? { ...message, read: true } : message)) }
+            ? {
+                ...conversation,
+                messages: conversation.messages.map((message) =>
+                  message.from === "them" ? { ...message, read: true } : message,
+                ),
+              }
             : conversation,
         );
         persist({ ...store, conversations });
       },
-      setSpam: (id, spam) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, spam, autoSpam: spam ? conversation.autoSpam : false } : conversation) }),
-      setBlocked: (id, blocked) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, blocked } : conversation) }),
-      setMuted: (id, muted) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, muted } : conversation) }),
-      deleteConversation: (id) => persist({ ...store, conversations: store.conversations.filter((conversation) => conversation.id !== id) }),
+      setSpam: (id, spam) =>
+        persist({
+          ...store,
+          conversations: store.conversations.map((conversation) =>
+            conversation.id === id
+              ? { ...conversation, spam, autoSpam: spam ? conversation.autoSpam : false }
+              : conversation,
+          ),
+        }),
+      setBlocked: (id, blocked) =>
+        persist({
+          ...store,
+          conversations: store.conversations.map((conversation) =>
+            conversation.id === id ? { ...conversation, blocked } : conversation,
+          ),
+        }),
+      setMuted: (id, muted) =>
+        persist({
+          ...store,
+          conversations: store.conversations.map((conversation) =>
+            conversation.id === id ? { ...conversation, muted } : conversation,
+          ),
+        }),
+      deleteConversation: (id) =>
+        persist({
+          ...store,
+          conversations: store.conversations.filter((conversation) => conversation.id !== id),
+        }),
       searchMessages: (query) => {
         const term = query.trim().toLowerCase();
         if (!term) return [];
         const results: { conversation: Conversation; message: Message }[] = [];
         for (const conversation of store.conversations) {
-          const conversationMatches = [conversation.peer.name, conversation.peer.username, conversation.product?.name].filter(Boolean).some((value) => value!.toLowerCase().includes(term));
+          const conversationMatches = [
+            conversation.peer.name,
+            conversation.peer.username,
+            conversation.product?.name,
+          ]
+            .filter(Boolean)
+            .some((value) => value!.toLowerCase().includes(term));
           for (const message of conversation.messages) {
-            if (conversationMatches || message.text?.toLowerCase().includes(term) || message.product?.name.toLowerCase().includes(term)) {
+            if (
+              conversationMatches ||
+              message.text?.toLowerCase().includes(term) ||
+              message.product?.name.toLowerCase().includes(term)
+            ) {
               results.push({ conversation, message });
             }
           }
@@ -422,7 +542,18 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       },
       submitReport: ({ conversationId, messageId, seller, reason, details }) => {
         const now = Date.now();
-        const report: Report = { id: `report_${now}`, conversationId, messageId, seller, reason, details, status: "submitted", createdAt: now, updatedAt: now, reference: `FX-${now.toString(36).toUpperCase().slice(-6)}` };
+        const report: Report = {
+          id: `report_${now}`,
+          conversationId,
+          messageId,
+          seller,
+          reason,
+          details,
+          status: "submitted",
+          createdAt: now,
+          updatedAt: now,
+          reference: `FX-${now.toString(36).toUpperCase().slice(-6)}`,
+        };
         persist({ ...store, reports: [report, ...store.reports] });
         return report;
       },
@@ -442,8 +573,21 @@ export function useMessages() {
   return context;
 }
 
-export const REPORT_REASONS = ["Spam", "Scam", "Harassment", "Fraudulent listing", "Abusive content", "Other"] as const;
+export const REPORT_REASONS = [
+  "Spam",
+  "Scam",
+  "Harassment",
+  "Fraudulent listing",
+  "Abusive content",
+  "Other",
+] as const;
 
 export function reportStatusLabel(status: ReportStatus) {
-  return status === "submitted" ? "Submitted" : status === "under_review" ? "Under review" : status === "action_taken" ? "Action taken" : "Dismissed";
+  return status === "submitted"
+    ? "Submitted"
+    : status === "under_review"
+      ? "Under review"
+      : status === "action_taken"
+        ? "Action taken"
+        : "Dismissed";
 }

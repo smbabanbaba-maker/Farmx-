@@ -10,7 +10,8 @@ const seedJobs: JobPost[] = [
     title: "Senior Agricultural Extension Officer",
     company: "GreenFields Agro Allied Ltd",
     employerId: "emp-1",
-    description: "Lead farmer outreach programs, provide technical advisory on modern crop management, and supervise field trials across multiple states.",
+    description:
+      "Lead farmer outreach programs, provide technical advisory on modern crop management, and supervise field trials across multiple states.",
     category: "Agriculture",
     subcategory: "Agronomy",
     location: "Kano",
@@ -24,8 +25,16 @@ const seedJobs: JobPost[] = [
     experienceLevel: "Senior",
     educationRequirement: "B.Sc in Agronomy or Agricultural Science",
     skillsRequired: ["Crop Management", "Farmer Training", "Data Collection", "Communication"],
-    responsibilities: ["Coordinate agronomy training workshops", "Monitor crop yield experiments", "Report regional agricultural metrics"],
-    requirements: ["Minimum 4 years experience in farm extension", "Strong Hausa and English communication", "Valid driver's license"],
+    responsibilities: [
+      "Coordinate agronomy training workshops",
+      "Monitor crop yield experiments",
+      "Report regional agricultural metrics",
+    ],
+    requirements: [
+      "Minimum 4 years experience in farm extension",
+      "Strong Hausa and English communication",
+      "Valid driver's license",
+    ],
     benefits: ["Health insurance", "Transport allowance", "Performance bonus"],
     vacancies: 2,
     deadline: "2026-09-30",
@@ -47,7 +56,8 @@ const seedJobs: JobPost[] = [
     title: "Solar Irrigation Technician",
     company: "SunPower Agro Systems",
     employerId: "emp-2",
-    description: "Install, configure, and maintain solar-powered borehole and drip irrigation systems for commercial farms.",
+    description:
+      "Install, configure, and maintain solar-powered borehole and drip irrigation systems for commercial farms.",
     category: "Solar / Renewable Energy",
     subcategory: "Solar Installation",
     location: "Kaduna",
@@ -60,8 +70,15 @@ const seedJobs: JobPost[] = [
     experienceLevel: "Intermediate",
     educationRequirement: "OND / HND in Electrical Engineering or related",
     skillsRequired: ["Solar Panel Wiring", "Inverter Configuration", "Water Pump Maintenance"],
-    responsibilities: ["Deploy solar water pumps on client farms", "Troubleshoot electrical faults", "Train farmers on system usage"],
-    requirements: ["2+ years solar installation experience", "Willingness to travel to rural farming clusters"],
+    responsibilities: [
+      "Deploy solar water pumps on client farms",
+      "Troubleshoot electrical faults",
+      "Train farmers on system usage",
+    ],
+    requirements: [
+      "2+ years solar installation experience",
+      "Willingness to travel to rural farming clusters",
+    ],
     benefits: ["Tools provided", "Field accommodation"],
     vacancies: 3,
     deadline: "2026-10-15",
@@ -83,7 +100,8 @@ const seedJobs: JobPost[] = [
     title: "Poultry Farm Supervisor",
     company: "Golden Eggs Integrated Farms",
     employerId: "emp-3",
-    description: "Supervise daily feeding, biosecurity protocols, egg collection, and vaccination schedules for a 20,000-bird layer farm.",
+    description:
+      "Supervise daily feeding, biosecurity protocols, egg collection, and vaccination schedules for a 20,000-bird layer farm.",
     category: "Poultry",
     subcategory: "Layers Management",
     location: "Ibadan",
@@ -97,7 +115,11 @@ const seedJobs: JobPost[] = [
     experienceLevel: "Junior",
     educationRequirement: "ND in Animal Science or related",
     skillsRequired: ["Biosecurity", "Feed Management", "Vaccination", "Record Keeping"],
-    responsibilities: ["Manage daily feeding cycles", "Monitor flock health and mortality", "Supervise sorting and packaging of eggs"],
+    responsibilities: [
+      "Manage daily feeding cycles",
+      "Monitor flock health and mortality",
+      "Supervise sorting and packaging of eggs",
+    ],
     requirements: ["1+ year poultry farm experience", "Live-in readiness on farm property"],
     vacancies: 1,
     deadline: "2026-09-15",
@@ -119,7 +141,8 @@ const seedJobs: JobPost[] = [
     title: "Logistics & Fleet Dispatcher",
     company: "AgroHaul Express",
     employerId: "emp-4",
-    description: "Coordinate grain and produce transit from northern farming hubs to southern wholesale markets.",
+    description:
+      "Coordinate grain and produce transit from northern farming hubs to southern wholesale markets.",
     category: "Drivers / Logistics",
     subcategory: "Fleet Dispatch",
     location: "Abuja",
@@ -132,7 +155,11 @@ const seedJobs: JobPost[] = [
     salaryCurrency: "₦",
     experienceLevel: "Intermediate",
     skillsRequired: ["Route Planning", "Driver Coordination", "Waybill Management", "GPS Tracking"],
-    responsibilities: ["Dispatch trucks according to delivery schedules", "Track transit status in real time", "Resolve logistics bottlenecks"],
+    responsibilities: [
+      "Dispatch trucks according to delivery schedules",
+      "Track transit status in real time",
+      "Resolve logistics bottlenecks",
+    ],
     requirements: ["Experience in agricultural logistics", "Proficiency with dispatch software"],
     vacancies: 2,
     deadline: "2026-10-01",
@@ -152,14 +179,26 @@ const seedJobs: JobPost[] = [
 ];
 
 export interface JobRepository {
-  getJobs(options?: { category?: JobCategory; search?: string; state?: string; jobType?: string }): Promise<JobPost[]>;
+  getJobs(options?: {
+    category?: JobCategory;
+    search?: string;
+    state?: string;
+    jobType?: string;
+  }): Promise<JobPost[]>;
   getJobById(id: string): Promise<JobPost | null>;
   createJob(job: Omit<JobPost, "id" | "createdAt" | "updatedAt" | "stats">): Promise<JobPost>;
   updateJob(id: string, updates: Partial<JobPost>): Promise<JobPost>;
   deleteJob(id: string): Promise<void>;
   getApplications(userId?: string, employerId?: string): Promise<JobApplication[]>;
-  applyForJob(input: Omit<JobApplication, "id" | "appliedAt" | "updatedAt" | "status">): Promise<JobApplication>;
-  updateApplicationStatus(applicationId: string, status: JobApplication["status"], notes?: string, interview?: JobApplication["interview"]): Promise<JobApplication>;
+  applyForJob(
+    input: Omit<JobApplication, "id" | "appliedAt" | "updatedAt" | "status">,
+  ): Promise<JobApplication>;
+  updateApplicationStatus(
+    applicationId: string,
+    status: JobApplication["status"],
+    notes?: string,
+    interview?: JobApplication["interview"],
+  ): Promise<JobApplication>;
   getSavedJobIds(userId: string): Promise<string[]>;
   toggleSaveJob(userId: string, jobId: string): Promise<boolean>;
 }
@@ -184,14 +223,26 @@ class PreviewJobRepository implements JobRepository {
     }
   }
 
-  async getJobs(options?: { category?: JobCategory; search?: string; state?: string; jobType?: string }): Promise<JobPost[]> {
+  async getJobs(options?: {
+    category?: JobCategory;
+    search?: string;
+    state?: string;
+    jobType?: string;
+  }): Promise<JobPost[]> {
     let jobs = this.getStorage<JobPost[]>(STORAGE_JOBS, seedJobs);
     if (options?.category) jobs = jobs.filter((j) => j.category === options.category);
-    if (options?.state) jobs = jobs.filter((j) => j.state.toLowerCase() === options.state!.toLowerCase());
+    if (options?.state)
+      jobs = jobs.filter((j) => j.state.toLowerCase() === options.state!.toLowerCase());
     if (options?.jobType) jobs = jobs.filter((j) => j.jobType === options.jobType);
     if (options?.search) {
       const q = options.search.toLowerCase();
-      jobs = jobs.filter((j) => j.title.toLowerCase().includes(q) || j.company.toLowerCase().includes(q) || j.description.toLowerCase().includes(q) || j.skillsRequired.some((s) => s.toLowerCase().includes(q)));
+      jobs = jobs.filter(
+        (j) =>
+          j.title.toLowerCase().includes(q) ||
+          j.company.toLowerCase().includes(q) ||
+          j.description.toLowerCase().includes(q) ||
+          j.skillsRequired.some((s) => s.toLowerCase().includes(q)),
+      );
     }
     return jobs.filter((j) => j.status === "published");
   }
@@ -201,7 +252,9 @@ class PreviewJobRepository implements JobRepository {
     return jobs.find((j) => j.id === id) || null;
   }
 
-  async createJob(job: Omit<JobPost, "id" | "createdAt" | "updatedAt" | "stats">): Promise<JobPost> {
+  async createJob(
+    job: Omit<JobPost, "id" | "createdAt" | "updatedAt" | "stats">,
+  ): Promise<JobPost> {
     const jobs = this.getStorage<JobPost[]>(STORAGE_JOBS, seedJobs);
     const newJob: JobPost = {
       ...job,
@@ -241,7 +294,9 @@ class PreviewJobRepository implements JobRepository {
     return apps;
   }
 
-  async applyForJob(input: Omit<JobApplication, "id" | "appliedAt" | "updatedAt" | "status">): Promise<JobApplication> {
+  async applyForJob(
+    input: Omit<JobApplication, "id" | "appliedAt" | "updatedAt" | "status">,
+  ): Promise<JobApplication> {
     const apps = this.getStorage<JobApplication[]>(STORAGE_APPLICATIONS, []);
     const existing = apps.find((a) => a.jobId === input.jobId && a.userId === input.userId);
     if (existing) throw new Error("You have already applied for this position.");
@@ -257,7 +312,12 @@ class PreviewJobRepository implements JobRepository {
     return newApp;
   }
 
-  async updateApplicationStatus(applicationId: string, status: JobApplication["status"], notes?: string, interview?: JobApplication["interview"]): Promise<JobApplication> {
+  async updateApplicationStatus(
+    applicationId: string,
+    status: JobApplication["status"],
+    notes?: string,
+    interview?: JobApplication["interview"],
+  ): Promise<JobApplication> {
     const apps = this.getStorage<JobApplication[]>(STORAGE_APPLICATIONS, []);
     const index = apps.findIndex((a) => a.id === applicationId);
     if (index === -1) throw new Error("Application not found");
