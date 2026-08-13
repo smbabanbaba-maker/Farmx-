@@ -1,0 +1,7 @@
+# FarmX Chats verification
+
+The `/messages` preview loaded as a professional Chats inbox with FarmX marketplace header, New chat/Market action, safety notice, search field, All/Unread/Buying/Selling tabs, unread summary, and honest empty state when the local real-message store has no conversations. The bottom navigation remains Home, Market, Post, Chats, Community, Profile.
+
+The `/product/1` listing detail loaded with a real `Chat seller` button, listing seller GreenFields Ltd, listing location Kano, Kano, and an existing quick chat composer. The listing entry now passes listing ID/title/price/image/location, seller username, verification, and closed-status context into the conversation-opening contract.
+The `Chat seller` flow opened `/messages/{conversationId}` with a non-sent prefilled draft query, a compact listing context card linking to `/product/1`, a shared listing message, safety notice, quick replies, attachment button, and send button. Because the preview seller has no public phone number, the Call control correctly rendered disabled with `Seller has disabled calls` rather than pretending an in-app call exists. More menu exposed Mute notifications, Block user, Report user, Delete conversation, and My reports; destructive actions are confirmation-gated.
+Clicking `Chat seller` again from the same listing reopened the same conversation URL (`conversation_1786630607896_5qerm`) instead of creating a duplicate, confirming listing-aware deduplication in preview mode.

@@ -131,17 +131,23 @@ function ProductPage() {
     }
     const conversationId = openConversationWith(
       {
+        id: listing.seller.username,
+        username: listing.seller.username,
         name: listing.seller.name,
         avatar: listing.seller.photo,
         verified,
         location: listing.seller.location,
+        callsEnabled: callsEnabled && listing.seller.phoneVerified,
       },
       {
         id: listing.id,
         name: listing.title,
         price: listing.price ?? 0,
-        image: listing.imagePlaceholder,
+        image: listing.images[0] ?? listing.imagePlaceholder,
         seller: listing.seller.name,
+        location: `${listing.city}, ${listing.state}`,
+        sellerUsername: listing.seller.username,
+        closed: listing.status !== "published",
       },
     );
     navigate({

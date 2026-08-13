@@ -9,9 +9,8 @@ import {
   type ReactNode,
 } from "react";
 
-export type MessageKind = "text" | "product" | "delivery" | "coupon" | "system";
-
-export type DeliveryState = "sent" | "delivered" | "seen";
+export type MessageKind = "text" | "product" | "image" | "delivery" | "coupon" | "system";
+export type DeliveryState = "sending" | "sent" | "delivered" | "seen" | "read" | "failed";
 
 export interface ProductRef {
   id: string;
@@ -19,6 +18,19 @@ export interface ProductRef {
   price: number;
   image: string;
   seller: string;
+  location?: string;
+  sellerId?: string;
+  sellerUsername?: string;
+  closed?: boolean;
+}
+
+export interface MediaAttachment {
+  url: string;
+  name?: string;
+  objectKey?: string;
+  thumbnailUrl?: string;
+  uploading?: boolean;
+  error?: string;
 }
 
 export interface DeliveryUpdate {
@@ -32,31 +44,44 @@ export interface Message {
   kind: MessageKind;
   text?: string;
   product?: ProductRef;
+  image?: MediaAttachment;
   delivery?: DeliveryUpdate;
   coupon?: { code: string; percent: number };
   createdAt: number;
   read: boolean;
-  /** Outgoing receipt state (only meaningful for from === "me") */
   status?: DeliveryState;
   deliveredAt?: number;
   seenAt?: number;
-  /** Anti-fraud flag on an incoming message */
   flagged?: boolean;
   flagReason?: string;
 }
 
+export interface ConversationPeer {
+  id?: string;
+  username?: string;
+  name: string;
+  avatar: string;
+  verified: boolean;
+  location?: string;
+  lastSeen?: string;
+  phone?: string;
+  online?: boolean;
+  callsEnabled?: boolean;
+  messagePermission?: "everyone" | "farmx_members" | "followers";
+}
+
 export interface Conversation {
   id: string;
-  peer: {
-    name: string;
-    avatar: string; // emoji or url
-    verified: boolean;
-    location?: string;
-    lastSeen?: string;
-  };
+  buyerId?: string;
+  sellerId?: string;
+  listingId?: string;
+  direction?: "buying" | "selling";
+  peer: ConversationPeer;
   product?: ProductRef;
   productClosed?: boolean;
   spam?: boolean;
+  blocked?: boolean;
+  muted?: boolean;
   autoSpam?: boolean;
   fraudReasons?: string[];
   messages: Message[];
@@ -68,6 +93,7 @@ export type ReportStatus = "submitted" | "under_review" | "action_taken" | "dism
 export interface Report {
   id: string;
   conversationId?: string;
+  messageId?: string;
   seller: string;
   reason: string;
   details: string;
@@ -77,507 +103,296 @@ export interface Report {
   reference: string;
 }
 
-interface StoreShape {
+type StoreShape = {
   conversations: Conversation[];
   reports: Report[];
   typing: Record<string, boolean>;
-}
+};
 
-const STORAGE_KEY = "farmx-messages-v2";
-const CHANNEL = "farmx-messages-sync";
+const STORAGE_KEY = "farmx-messages-v3";
+const CHANNEL = "farmx-messages-sync-v3";
+const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 
-/* ------------------------------ anti-fraud ------------------------------ */
-
+/* These rules only flag incoming content that has actually arrived. They never create a reply or a fake conversation. */
 const FRAUD_RULES: { re: RegExp; reason: string }[] = [
   { re: /\b(advance|upfront|deposit)\s*(payment|fee)?\b/i, reason: "Asks for advance payment" },
-  {
-    re: /\b(western\s*union|moneygram|bitcoin|btc|usdt|crypto|gift\s*card)\b/i,
-    reason: "Untraceable payment method",
-  },
-  {
-    re: /\b(account\s*number|bank\s*details|send\s*money|transfer\s*to)\b/i,
-    reason: "Off-platform bank transfer",
-  },
+  { re: /\b(western\s*union|moneygram|bitcoin|btc|usdt|crypto|gift\s*card)\b/i, reason: "Untraceable payment method" },
+  { re: /\b(account\s*number|bank\s*details|send\s*money|transfer\s*to)\b/i, reason: "Off-platform bank transfer" },
   { re: /\b(otp|pin|password|bvn|nin)\b/i, reason: "Requests private credentials" },
-  {
-    re: /\b(whatsapp|telegram|call\s*me\s*on)\b.*\b(\+?\d[\d\s-]{7,})\b/i,
-    reason: "Moves chat off-platform",
-  },
   { re: /\b(clearing|customs|delivery)\s*fee\b/i, reason: "Fake clearing/delivery fee" },
-  {
-    re: /\b(you\s*(have\s*)?won|lottery|double\s*your\s*money|investment\s*returns?)\b/i,
-    reason: "Too-good-to-be-true offer",
-  },
-  { re: /https?:\/\/(bit\.ly|tinyurl|t\.co|cutt\.ly)\S+/i, reason: "Shortened/suspicious link" },
 ];
 
 export function scanFraud(text: string | undefined): string[] {
   if (!text) return [];
-  return FRAUD_RULES.filter((r) => r.re.test(text)).map((r) => r.reason);
+  return FRAUD_RULES.filter((rule) => rule.re.test(text)).map((rule) => rule.reason);
 }
 
-function sellerReplyFor(text: string, location?: string) {
-  const message = text.toLowerCase();
-  if (message.includes("last price") || message.includes("offer")) {
-    return "The listed price is the best price for now, but you can send your offer and I will consider it.";
-  }
-  if (message.includes("available")) {
-    return "Yes, it is still available. Please let me know the quantity you need.";
-  }
-  if (message.includes("location")) {
-    return `I am available in ${location ?? "the listed location"}. Pickup and delivery can be arranged.`;
-  }
-  if (message.includes("call")) {
-    return "Sure. Please use the request call back button and I will contact you shortly.";
-  }
-  return "Thanks for your message. I am online and will reply with the details shortly.";
+function emptyStore(): StoreShape {
+  return { conversations: [], reports: [], typing: {} };
 }
 
-/* --------------------------------- seed --------------------------------- */
-
-function seed(): StoreShape {
-  const now = Date.now();
-  return {
-    reports: [],
-    typing: {},
-    conversations: [
-      {
-        id: "c_green",
-        peer: {
-          name: "GreenFields Ltd",
-          avatar: "🌾",
-          verified: true,
-          location: "Kano",
-          lastSeen: "online",
-        },
-        product: {
-          id: "1",
-          name: "Maize (100kg)",
-          price: 45000,
-          image: "🌽",
-          seller: "GreenFields Ltd",
-        },
-        updatedAt: now - 1000 * 60 * 12,
-        messages: [
-          {
-            id: "m1",
-            from: "them",
-            kind: "product",
-            product: {
-              id: "1",
-              name: "Maize (100kg)",
-              price: 45000,
-              image: "🌽",
-              seller: "GreenFields Ltd",
-            },
-            createdAt: now - 1000 * 60 * 60,
-            read: true,
-          },
-          {
-            id: "m2",
-            from: "them",
-            kind: "text",
-            text: "Sannu! Muna da sabo 100kg na masara. Kana buƙata?",
-            createdAt: now - 1000 * 60 * 59,
-            read: true,
-          },
-          {
-            id: "m3",
-            from: "me",
-            kind: "text",
-            text: "Toh, nawa ne farashi na ƙarshe?",
-            createdAt: now - 1000 * 60 * 40,
-            read: true,
-            status: "seen",
-            deliveredAt: now - 1000 * 60 * 40,
-            seenAt: now - 1000 * 60 * 39,
-          },
-          {
-            id: "m4",
-            from: "them",
-            kind: "text",
-            text: "₦45,000 kai tsaye. Delivery Kano free.",
-            createdAt: now - 1000 * 60 * 12,
-            read: false,
-          },
-        ],
-      },
-      {
-        id: "c_delta",
-        peer: {
-          name: "Delta Agro",
-          avatar: "🌱",
-          verified: true,
-          location: "Asaba",
-          lastSeen: "2h ago",
-        },
-        product: { id: "3", name: "Rice Paddy", price: 65000, image: "🌾", seller: "Delta Agro" },
-        productClosed: true,
-        updatedAt: now - 1000 * 60 * 60 * 3,
-        messages: [
-          {
-            id: "d1",
-            from: "me",
-            kind: "text",
-            text: "Hello, is the rice paddy still available?",
-            createdAt: now - 1000 * 60 * 60 * 4,
-            read: true,
-            status: "delivered",
-            deliveredAt: now - 1000 * 60 * 60 * 4,
-          },
-          {
-            id: "d2",
-            from: "them",
-            kind: "delivery",
-            delivery: { status: "shipped", note: "Left warehouse. ETA 2 days." },
-            createdAt: now - 1000 * 60 * 60 * 3,
-            read: false,
-          },
-        ],
-      },
-      {
-        id: "c_unknown",
-        peer: {
-          name: "QuickCash Deals",
-          avatar: "💸",
-          verified: false,
-          location: "Unknown",
-          lastSeen: "3d ago",
-        },
-        updatedAt: now - 1000 * 60 * 60 * 26,
-        spam: true,
-        autoSpam: true,
-        fraudReasons: ["Asks for advance payment"],
-        messages: [
-          {
-            id: "s1",
-            from: "them",
-            kind: "text",
-            text: "Send ₦20,000 deposit now to reserve stock.",
-            createdAt: now - 1000 * 60 * 60 * 26,
-            read: false,
-            flagged: true,
-            flagReason: "Asks for advance payment",
-          },
-        ],
-      },
-    ],
-  };
+function readLocalStore(): StoreShape | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoreShape>;
+    return {
+      conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],
+      reports: Array.isArray(parsed.reports) ? parsed.reports : [],
+      typing: parsed.typing ?? {},
+    };
+  } catch {
+    return null;
+  }
 }
 
-/* -------------------------------- context ------------------------------- */
+function peerKey(peer: ConversationPeer) {
+  return peer.id ?? peer.username ?? peer.name.trim().toLowerCase();
+}
 
-type Ctx = {
+function canCall(peer: ConversationPeer) {
+  return peer.callsEnabled !== false;
+}
+
+export type MessageContext = {
   conversations: Conversation[];
   reports: Report[];
   totalUnread: number;
   getConversation: (id: string) => Conversation | undefined;
-  openConversationWith: (peer: Conversation["peer"], product?: ProductRef) => string;
+  openConversationWith: (peer: ConversationPeer, product?: ProductRef) => string;
   sendText: (id: string, text: string) => void;
+  sendImage: (id: string, image: MediaAttachment) => void;
   sendProduct: (id: string, product: ProductRef) => void;
   sendCoupon: (id: string, code: string, percent: number) => void;
   sendDelivery: (id: string, update: DeliveryUpdate) => void;
   receiveText: (id: string, text: string) => void;
+  receiveImage: (id: string, image: MediaAttachment) => void;
   isTyping: (id: string) => boolean;
   markRead: (id: string) => void;
   setSpam: (id: string, spam: boolean) => void;
+  setBlocked: (id: string, blocked: boolean) => void;
+  setMuted: (id: string, muted: boolean) => void;
   deleteConversation: (id: string) => void;
   searchMessages: (q: string) => { conversation: Conversation; message: Message }[];
-  submitReport: (r: {
-    conversationId?: string;
-    seller: string;
-    reason: string;
-    details: string;
-  }) => Report;
+  submitReport: (report: { conversationId?: string; messageId?: string; seller: string; reason: string; details: string }) => Report;
+  canCall: (id: string) => boolean;
 };
 
-const MessagesCtx = createContext<Ctx | null>(null);
+const MessagesCtx = createContext<MessageContext | null>(null);
 
 export function MessagesProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<StoreShape>({ conversations: [], reports: [], typing: {} });
+  const [store, setStore] = useState<StoreShape>(() => readLocalStore() ?? emptyStore());
   const storeRef = useRef(store);
   storeRef.current = store;
-  const chanRef = useRef<BroadcastChannel | null>(null);
-
-  const read = (): StoreShape | null => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as StoreShape;
-      return {
-        conversations: parsed.conversations ?? [],
-        reports: parsed.reports ?? [],
-        typing: parsed.typing ?? {},
-      };
-    } catch {
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    setStore(read() ?? seed());
-
-    // Realtime sync between open tabs/windows
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        const next = read();
-        if (next) setStore(next);
-      }
-    };
-    window.addEventListener("storage", onStorage);
-
-    let chan: BroadcastChannel | null = null;
-    if (typeof BroadcastChannel !== "undefined") {
-      chan = new BroadcastChannel(CHANNEL);
-      chan.onmessage = (ev) => {
-        if (ev.data?.type === "sync" && ev.data.store) setStore(ev.data.store as StoreShape);
-      };
-      chanRef.current = chan;
-    }
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      chan?.close();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const channelRef = useRef<BroadcastChannel | null>(null);
 
   const persist = useCallback((next: StoreShape) => {
     setStore(next);
     storeRef.current = next;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Storage may be unavailable in a private or restricted browser context.
+      }
     }
     try {
-      chanRef.current?.postMessage({ type: "sync", store: next });
+      channelRef.current?.postMessage({ type: "sync", store: next });
     } catch {
-      /* ignore */
+      // BroadcastChannel is best-effort only.
+    }
+    if (API_BASE && typeof window !== "undefined" && navigator.onLine) {
+      void fetch(`${API_BASE}/v1/messages/sync`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversations: next.conversations, reports: next.reports }),
+      }).catch(() => {
+        // Keep the local copy when the production API is temporarily unavailable.
+      });
     }
   }, []);
 
-  // Receipt ticker: sent -> delivered -> seen (simulated peer activity)
-  useEffect(() => {
-    const t = setInterval(() => {
-      const s = storeRef.current;
-      const now = Date.now();
-      let changed = false;
-      const conversations = s.conversations.map((c) => {
-        if (c.spam) return c;
-        const messages = c.messages.map((m) => {
-          if (m.from !== "me") return m;
-          const st = m.status ?? "sent";
-          if (st === "sent" && now - m.createdAt > 1500) {
-            changed = true;
-            return { ...m, status: "delivered" as const, deliveredAt: now };
-          }
-          if (st === "delivered" && now - m.createdAt > 5000) {
-            changed = true;
-            return { ...m, status: "seen" as const, seenAt: now };
-          }
-          return m;
-        });
-        return changed ? { ...c, messages } : c;
-      });
-      if (changed) persist({ ...s, conversations });
-    }, 1200);
-    return () => clearInterval(t);
+  const loadRemoteStore = useCallback(async () => {
+    if (!API_BASE || typeof window === "undefined") return;
+    try {
+      const response = await fetch(`${API_BASE}/v1/messages/conversations`, { credentials: "include" });
+      if (!response.ok) return;
+      const remote = (await response.json()) as Partial<StoreShape>;
+      if (Array.isArray(remote.conversations)) {
+        persist({ conversations: remote.conversations, reports: remote.reports ?? [], typing: remote.typing ?? {} });
+      }
+    } catch {
+      // The preview/local store remains available when the configured service is offline.
+    }
   }, [persist]);
 
-  const value = useMemo<Ctx>(() => {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      const next = readLocalStore();
+      if (next) setStore(next);
+    };
+    window.addEventListener("storage", onStorage);
+
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel(CHANNEL);
+      channel.onmessage = (event) => {
+        if (event.data?.type === "sync" && event.data.store) {
+          setStore(event.data.store as StoreShape);
+        }
+      };
+      channelRef.current = channel;
+    }
+
+    void loadRemoteStore();
+    const refreshTimer = API_BASE ? window.setInterval(() => void loadRemoteStore(), 15000) : undefined;
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      if (refreshTimer) window.clearInterval(refreshTimer);
+      channelRef.current?.close();
+      channelRef.current = null;
+    };
+  }, [loadRemoteStore]);
+
+  const append = useCallback((id: string, msg: Omit<Message, "id" | "createdAt" | "read">) => {
+    const now = Date.now();
+    const reasons = msg.from === "them" ? scanFraud(msg.text) : [];
+    const incomingWarning: Message | null = reasons.length
+      ? {
+          id: `warning_${now}`,
+          from: "them",
+          kind: "system",
+          text: `Safety warning: ${reasons.join(", ")}. Do not pay privately or share OTP, PIN, BVN or NIN.`,
+          createdAt: now + 1,
+          read: false,
+          flagged: true,
+          flagReason: reasons[0],
+        }
+      : null;
+    const message: Message = {
+      ...msg,
+      id: `message_${now}_${Math.random().toString(36).slice(2, 7)}`,
+      createdAt: now,
+      read: msg.from === "me",
+      status: msg.from === "me" ? "sent" : undefined,
+      flagged: reasons.length > 0 || undefined,
+      flagReason: reasons[0],
+    };
+    const current = storeRef.current;
+    const conversations = current.conversations.map((conversation) =>
+      conversation.id === id
+        ? {
+            ...conversation,
+            messages: incomingWarning ? [...conversation.messages, message, incomingWarning] : [...conversation.messages, message],
+            spam: reasons.length ? true : conversation.spam,
+            autoSpam: reasons.length ? true : conversation.autoSpam,
+            fraudReasons: reasons.length ? Array.from(new Set([...(conversation.fraudReasons ?? []), ...reasons])) : conversation.fraudReasons,
+            updatedAt: now,
+          }
+        : conversation,
+    );
+    persist({ ...current, conversations });
+  }, [persist]);
+
+  const value = useMemo<MessageContext>(() => {
     const totalUnread = store.conversations.reduce(
-      (sum, c) => sum + c.messages.filter((m) => m.from === "them" && !m.read).length,
+      (sum, conversation) => sum + conversation.messages.filter((message) => message.from === "them" && !message.read).length,
       0,
     );
-
-    const append = (id: string, msg: Omit<Message, "id" | "createdAt" | "read">) => {
-      const now = Date.now();
-      const reasons = msg.from === "them" ? scanFraud(msg.text) : [];
-      const message: Message = {
-        ...msg,
-        id: `m_${now}_${Math.random().toString(36).slice(2, 7)}`,
-        createdAt: now,
-        read: msg.from === "me",
-        status: msg.from === "me" ? "sent" : undefined,
-        flagged: reasons.length > 0 || undefined,
-        flagReason: reasons[0],
-      };
-      const conversations = store.conversations.map((c) => {
-        if (c.id !== id) return c;
-        const messages = [...c.messages, message];
-        if (reasons.length > 0) {
-          const warn: Message = {
-            id: `m_${now}_warn`,
-            from: "them",
-            kind: "system",
-            text: `⚠️ Automatic anti-fraud lock: ${reasons.join(", ")}. This chat was moved to Spam. Never pay in advance.`,
-            createdAt: now + 1,
-            read: false,
-          };
-          return {
-            ...c,
-            messages: [...messages, warn],
-            spam: true,
-            autoSpam: true,
-            fraudReasons: Array.from(new Set([...(c.fraudReasons ?? []), ...reasons])),
-            updatedAt: now,
-          };
-        }
-        return { ...c, messages, updatedAt: now };
-      });
-      persist({ ...store, conversations });
-    };
-
-    const scheduleLiveReply = (id: string, text: string) => {
-      const current = storeRef.current;
-      const conversation = current.conversations.find((item) => item.id === id);
-      if (!conversation || conversation.spam || conversation.productClosed) return;
-
-      persist({ ...current, typing: { ...current.typing, [id]: true } });
-      window.setTimeout(
-        () => {
-          const latest = storeRef.current;
-          const active = latest.conversations.find((item) => item.id === id);
-          if (!active || active.spam) return;
-          const now = Date.now();
-          const reply: Message = {
-            id: `m_${now}_${Math.random().toString(36).slice(2, 7)}`,
-            from: "them",
-            kind: "text",
-            text: sellerReplyFor(text, active.peer.location),
-            createdAt: now,
-            read: false,
-          };
-          persist({
-            ...latest,
-            typing: { ...latest.typing, [id]: false },
-            conversations: latest.conversations.map((item) =>
-              item.id === id
-                ? { ...item, messages: [...item.messages, reply], updatedAt: now }
-                : item,
-            ),
-          });
-        },
-        900 + Math.floor(Math.random() * 700),
-      );
-    };
 
     return {
       conversations: [...store.conversations].sort((a, b) => b.updatedAt - a.updatedAt),
       reports: [...store.reports].sort((a, b) => b.createdAt - a.createdAt),
       totalUnread,
-      getConversation: (id) => store.conversations.find((c) => c.id === id),
+      getConversation: (id) => store.conversations.find((conversation) => conversation.id === id),
       openConversationWith: (peer, product) => {
+        const targetPeer = peerKey(peer);
         const existing = store.conversations.find(
-          (c) => c.peer.name === peer.name && c.product?.id === product?.id,
+          (conversation) => peerKey(conversation.peer) === targetPeer && (conversation.product?.id ?? conversation.listingId) === product?.id,
         );
         if (existing) return existing.id;
-        const id = `c_${Date.now()}`;
         const now = Date.now();
-        const initial: Message[] = product
-          ? [
-              {
-                id: `m_${now}`,
-                from: "me",
-                kind: "product",
-                product,
-                createdAt: now,
-                read: true,
-                status: "sent",
-              },
-            ]
+        const id = `conversation_${now}_${Math.random().toString(36).slice(2, 7)}`;
+        const initialMessage: Message[] = product
+          ? [{ id: `message_${now}`, from: "me", kind: "product", product, createdAt: now, read: true, status: "sent" }]
           : [];
-        const conv: Conversation = { id, peer, product, messages: initial, updatedAt: now };
-        persist({ ...store, conversations: [conv, ...store.conversations] });
+        const conversation: Conversation = {
+          id,
+          sellerId: product?.sellerId,
+          listingId: product?.id,
+          direction: "buying",
+          peer,
+          product,
+          productClosed: product?.closed,
+          messages: initialMessage,
+          updatedAt: now,
+        };
+        persist({ ...store, conversations: [conversation, ...store.conversations] });
         return id;
       },
       sendText: (id, text) => {
-        append(id, { from: "me", kind: "text", text });
-        scheduleLiveReply(id, text);
+        if (text.trim()) append(id, { from: "me", kind: "text", text: text.trim() });
       },
+      sendImage: (id, image) => append(id, { from: "me", kind: "image", image }),
       sendProduct: (id, product) => append(id, { from: "me", kind: "product", product }),
-      sendCoupon: (id, code, percent) =>
-        append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
+      sendCoupon: (id, code, percent) => append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
       sendDelivery: (id, update) => append(id, { from: "me", kind: "delivery", delivery: update }),
       receiveText: (id, text) => append(id, { from: "them", kind: "text", text }),
+      receiveImage: (id, image) => append(id, { from: "them", kind: "image", image }),
       isTyping: (id) => Boolean(store.typing[id]),
       markRead: (id) => {
-        const conversations = store.conversations.map((c) =>
-          c.id === id ? { ...c, messages: c.messages.map((m) => ({ ...m, read: true })) } : c,
+        const conversations = store.conversations.map((conversation) =>
+          conversation.id === id
+            ? { ...conversation, messages: conversation.messages.map((message) => (message.from === "them" ? { ...message, read: true } : message)) }
+            : conversation,
         );
         persist({ ...store, conversations });
       },
-      setSpam: (id, spam) => {
-        persist({
-          ...store,
-          conversations: store.conversations.map((c) =>
-            c.id === id ? { ...c, spam, autoSpam: spam ? c.autoSpam : false } : c,
-          ),
-        });
-      },
-      deleteConversation: (id) => {
-        persist({ ...store, conversations: store.conversations.filter((c) => c.id !== id) });
-      },
-      searchMessages: (q) => {
-        const term = q.trim().toLowerCase();
+      setSpam: (id, spam) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, spam, autoSpam: spam ? conversation.autoSpam : false } : conversation) }),
+      setBlocked: (id, blocked) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, blocked } : conversation) }),
+      setMuted: (id, muted) => persist({ ...store, conversations: store.conversations.map((conversation) => conversation.id === id ? { ...conversation, muted } : conversation) }),
+      deleteConversation: (id) => persist({ ...store, conversations: store.conversations.filter((conversation) => conversation.id !== id) }),
+      searchMessages: (query) => {
+        const term = query.trim().toLowerCase();
         if (!term) return [];
-        const out: { conversation: Conversation; message: Message }[] = [];
-        for (const c of store.conversations) {
-          for (const m of c.messages) {
-            if (
-              m.text?.toLowerCase().includes(term) ||
-              m.product?.name.toLowerCase().includes(term)
-            ) {
-              out.push({ conversation: c, message: m });
+        const results: { conversation: Conversation; message: Message }[] = [];
+        for (const conversation of store.conversations) {
+          const conversationMatches = [conversation.peer.name, conversation.peer.username, conversation.product?.name].filter(Boolean).some((value) => value!.toLowerCase().includes(term));
+          for (const message of conversation.messages) {
+            if (conversationMatches || message.text?.toLowerCase().includes(term) || message.product?.name.toLowerCase().includes(term)) {
+              results.push({ conversation, message });
             }
           }
         }
-        return out.sort((a, b) => b.message.createdAt - a.message.createdAt).slice(0, 30);
+        return results.sort((a, b) => b.message.createdAt - a.message.createdAt).slice(0, 30);
       },
-      submitReport: ({ conversationId, seller, reason, details }) => {
+      submitReport: ({ conversationId, messageId, seller, reason, details }) => {
         const now = Date.now();
-        const report: Report = {
-          id: `r_${now}`,
-          conversationId,
-          seller,
-          reason,
-          details,
-          status: "submitted",
-          createdAt: now,
-          updatedAt: now,
-          reference: `FX-${now.toString(36).toUpperCase().slice(-6)}`,
-        };
+        const report: Report = { id: `report_${now}`, conversationId, messageId, seller, reason, details, status: "submitted", createdAt: now, updatedAt: now, reference: `FX-${now.toString(36).toUpperCase().slice(-6)}` };
         persist({ ...store, reports: [report, ...store.reports] });
         return report;
       },
+      canCall: (id) => {
+        const conversation = store.conversations.find((item) => item.id === id);
+        return conversation ? canCall(conversation.peer) : false;
+      },
     };
-  }, [store, persist]);
+  }, [append, persist, store]);
 
   return <MessagesCtx.Provider value={value}>{children}</MessagesCtx.Provider>;
 }
 
 export function useMessages() {
-  const ctx = useContext(MessagesCtx);
-  if (!ctx) throw new Error("useMessages must be used inside MessagesProvider");
-  return ctx;
+  const context = useContext(MessagesCtx);
+  if (!context) throw new Error("useMessages must be used inside MessagesProvider");
+  return context;
 }
 
-export const REPORT_REASONS = [
-  "Scam or fraud",
-  "Asked for advance payment",
-  "Fake or misleading ad",
-  "Abusive language",
-  "Counterfeit goods",
-  "Spam / repeated messages",
-  "Other",
-] as const;
+export const REPORT_REASONS = ["Spam", "Scam", "Harassment", "Fraudulent listing", "Abusive content", "Other"] as const;
 
-export function reportStatusLabel(s: ReportStatus) {
-  return s === "submitted"
-    ? "Submitted"
-    : s === "under_review"
-      ? "Under review"
-      : s === "action_taken"
-        ? "Action taken"
-        : "Dismissed";
+export function reportStatusLabel(status: ReportStatus) {
+  return status === "submitted" ? "Submitted" : status === "under_review" ? "Under review" : status === "action_taken" ? "Action taken" : "Dismissed";
 }
