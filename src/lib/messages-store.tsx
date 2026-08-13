@@ -1,3 +1,4 @@
+import { useNotifications } from "@/lib/notifications-store";
 import {
   createContext,
   useCallback,
@@ -182,6 +183,7 @@ export type MessageContext = {
 const MessagesCtx = createContext<MessageContext | null>(null);
 
 export function MessagesProvider({ children }: { children: ReactNode }) {
+  const { createNotification } = useNotifications();
   const [store, setStore] = useState<StoreShape>(() => readLocalStore() ?? emptyStore());
   const storeRef = useRef(store);
   storeRef.current = store;
@@ -221,12 +223,31 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       if (!response.ok) return;
       const remote = (await response.json()) as Partial<StoreShape>;
       if (Array.isArray(remote.conversations)) {
+        const previous = storeRef.current.conversations;
+        for (const conversation of remote.conversations) {
+          const before = previous.find((item) => item.id === conversation.id);
+          const knownIds = new Set((before?.messages ?? []).map((message) => message.id));
+          for (const message of conversation.messages ?? []) {
+            if (message.from === "them" && !knownIds.has(message.id) && !conversation.muted) {
+              createNotification({
+                type: "messages",
+                eventId: `message:${conversation.id}:${message.id}`,
+                title: "New message",
+                body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
+                actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+                conversationId: conversation.id,
+                listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+                targetUrl: `/messages/${conversation.id}`,
+              });
+            }
+          }
+        }
         persist({ conversations: remote.conversations, reports: remote.reports ?? [], typing: remote.typing ?? {} });
       }
     } catch {
       // The preview/local store remains available when the configured service is offline.
     }
-  }, [persist]);
+  }, [createNotification, persist]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -340,8 +361,38 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       sendProduct: (id, product) => append(id, { from: "me", kind: "product", product }),
       sendCoupon: (id, code, percent) => append(id, { from: "me", kind: "coupon", coupon: { code, percent } }),
       sendDelivery: (id, update) => append(id, { from: "me", kind: "delivery", delivery: update }),
-      receiveText: (id, text) => append(id, { from: "them", kind: "text", text }),
-      receiveImage: (id, image) => append(id, { from: "them", kind: "image", image }),
+      receiveText: (id, text) => {
+        append(id, { from: "them", kind: "text", text });
+        const conversation = store.conversations.find((item) => item.id === id);
+        if (conversation && !conversation.muted) {
+          createNotification({
+            type: "messages",
+            eventId: `message:${id}:${Date.now()}`,
+            title: "New message",
+            body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
+            actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+            conversationId: id,
+            listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+            targetUrl: `/messages/${id}`,
+          });
+        }
+      },
+      receiveImage: (id, image) => {
+        append(id, { from: "them", kind: "image", image });
+        const conversation = store.conversations.find((item) => item.id === id);
+        if (conversation && !conversation.muted) {
+          createNotification({
+            type: "messages",
+            eventId: `image-message:${id}:${Date.now()}`,
+            title: "New image message",
+            body: `${conversation.peer.name} sent you an image.`,
+            actor: { id: conversation.peer.id, name: conversation.peer.name, avatar: conversation.peer.avatar, username: conversation.peer.username },
+            conversationId: id,
+            listing: conversation.product ? { id: conversation.product.id, title: conversation.product.name, price: conversation.product.price, image: conversation.product.image, location: conversation.product.location } : undefined,
+            targetUrl: `/messages/${id}`,
+          });
+        }
+      },
       isTyping: (id) => Boolean(store.typing[id]),
       markRead: (id) => {
         const conversations = store.conversations.map((conversation) =>
@@ -380,7 +431,7 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
         return conversation ? canCall(conversation.peer) : false;
       },
     };
-  }, [append, persist, store]);
+  }, [append, createNotification, persist, store]);
 
   return <MessagesCtx.Provider value={value}>{children}</MessagesCtx.Provider>;
 }

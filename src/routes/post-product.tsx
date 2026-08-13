@@ -7,6 +7,7 @@ import { useLocation } from "@/lib/location";
 import type { PaymentPurpose } from "@/lib/paystack";
 import { useSubscription } from "@/lib/subscription";
 import { useCommerce } from "@/lib/commerce-store";
+import { useNotifications } from "@/lib/notifications-store";
 import { useCompany } from "@/lib/company-store";
 import {
   UNIVERSAL_CATEGORIES,
@@ -82,6 +83,7 @@ function PostProduct() {
   const navigate = useNavigate();
   const { location: currentLoc } = useLocation();
   const { canPost, consumeListing } = useSubscription();
+  const { createNotification } = useNotifications();
   const { state: companyState } = useCompany();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -333,7 +335,15 @@ function PostProduct() {
     setLoading(true);
     setErrors({});
     try {
-      await repository.publish(form);
+      const published = await repository.publish(form);
+      createNotification({
+        type: "listings",
+        eventId: `listing-published:${published.id}`,
+        title: "Listing published",
+        body: `${form.title.trim()} is now live on FarmX.`,
+        listing: { id: published.id, title: form.title.trim(), price: form.price, image: form.photos[0]?.url, location: `${form.city}, ${form.state}` },
+        targetUrl: `/product/${published.id}`,
+      });
       consumeListing();
       repository.clearDraft();
       setDone(true);

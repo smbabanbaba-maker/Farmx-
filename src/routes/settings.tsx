@@ -96,6 +96,7 @@ function SettingsPage() {
         "farmx-messages-v2",
         "farmx-messages-v3",
         "farmx-notifications-v1",
+        "farmx-notifications-v2",
       ].forEach((key) => localStorage.removeItem(key));
     } catch {
       /* no local storage available */

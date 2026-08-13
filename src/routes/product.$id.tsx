@@ -6,6 +6,7 @@ import type { MarketListing } from "@/lib/market-dev-data";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import { usePrefs } from "@/lib/prefs";
 import { useMessages } from "@/lib/messages-store";
+import { useNotifications } from "@/lib/notifications-store";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -47,6 +48,7 @@ function ProductPage() {
   const { isSaved, toggleSaved, toggleFollow, isFollowing, hideAd, hideSeller, toggles } =
     usePrefs();
   const { openConversationWith } = useMessages();
+  const { createNotification } = useNotifications();
   const [repository, setRepository] = useState<MarketRepository | null>(null);
   const [listing, setListing] = useState<MarketListing | null>(null);
   const [related, setRelated] = useState<MarketListing[]>([]);
@@ -197,6 +199,14 @@ function ProductPage() {
       });
     setReportOpen(false);
     setReportDescription("");
+    createNotification({
+      type: "system",
+      eventId: `listing-report:${listing.id}:${Date.now()}`,
+      title: "Report submitted",
+      body: "FarmX received your listing report and will review it.",
+      priority: "important",
+      targetUrl: "/reports",
+    });
     setNote("Report received. FarmX will review this listing.");
   };
 
