@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "translation:check": "node scripts/check-translations.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

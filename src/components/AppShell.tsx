@@ -33,8 +33,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
     { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
-    { to: "/messages", icon: MessageSquare, label: "Chats", badge: totalUnread },
-    { to: "/post-product", icon: Plus, label: "Post", badge: 0 },
+    { to: "/messages", icon: MessageSquare, label: t("chats"), badge: totalUnread },
+    { to: "/post-product", icon: Plus, label: t("post"), badge: 0 },
     { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
     { to: "/community", icon: Users, label: t("community"), badge: 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
@@ -56,8 +56,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               className="relative p-2 rounded-full hover:bg-accent"
               aria-label={
                 unreadNotifications > 0
-                  ? `${unreadNotifications} unread notifications`
-                  : "Notifications"
+                  ? `${unreadNotifications} ${t("notifications")}`
+                  : t("notifications")
               }
             >
               <Bell className="h-5 w-5" />
@@ -70,7 +70,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
             <button
               onClick={() => setMenuOpen(true)}
               className="p-2 rounded-full hover:bg-accent"
-              aria-label="Menu"
+              aria-label={t("menu")}
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -95,7 +95,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 <Link
                   key={tab.to}
                   to={tab.to}
-                  aria-label="Post kaya"
+                  aria-label={t("postNewAd")}
                   className="relative flex min-w-0 min-h-14 flex-col items-center justify-center px-0.5 py-1.5"
                 >
                   <span className="h-11 w-11 -mt-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow-lg border-4 border-background">
@@ -219,7 +219,7 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
           onClick={onClose}
           className="mb-2 flex w-full items-center justify-center rounded-lg border border-brand py-2.5 text-sm font-semibold text-brand"
         >
-          Open full settings
+          {t("openFullSettings")}
         </Link>
         <button
           onClick={logOut}

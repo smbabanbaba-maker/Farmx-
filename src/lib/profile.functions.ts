@@ -20,6 +20,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
 const roles = ["farmer", "seller", "buyer", "employer", "agricultural_business"] as const;
+const profileLanguageSchema = z.enum(["en", "ha", "ig", "yo", "kr"]);
 
 const profileSchema = z.object({
   fullName: z.string().trim().min(2).max(80),
@@ -39,6 +40,7 @@ const profileSchema = z.object({
   email: z.string().email().max(120),
   agriculturalInterests: z.array(z.string().trim().min(2).max(40)).max(10),
   skills: z.array(z.string().trim().min(2).max(40)).max(10),
+  preferredLanguage: profileLanguageSchema.optional(),
   photoKey: z
     .string()
     .regex(/^profiles\/[a-z0-9-]+\/avatar\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/i)
@@ -440,6 +442,30 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     );
 
     return { profile: item };
+  });
+
+export const saveMyLanguagePreference = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ preferredLanguage: profileLanguageSchema }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    const client = createDocumentClient(config.region);
+    await client.send(
+      new UpdateCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET preferredLanguage = :preferredLanguage, updatedAt = :updatedAt",
+        ExpressionAttributeValues: {
+          ":preferredLanguage": data.preferredLanguage,
+          ":updatedAt": new Date().toISOString(),
+        },
+        ConditionExpression: "attribute_exists(pk)",
+      }),
+    );
+    return { preferredLanguage: data.preferredLanguage };
   });
 
 export const createProfilePhotoUpload = createServerFn({ method: "POST" })

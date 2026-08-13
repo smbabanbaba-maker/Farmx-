@@ -1,18 +1,18 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { getMyProfile, saveMyLanguagePreference } from "@/lib/profile.functions";
 
-export type Lang = "en" | "ha" | "yo" | "ig" | "ar" | "fr" | "ku";
+export type Lang = "en" | "ha" | "ig" | "yo" | "kr";
 
-export const LANGUAGES: { code: Lang; label: string }[] = [
-  { code: "en", label: "English" },
-  { code: "ha", label: "Hausa" },
-  { code: "yo", label: "Yoruba" },
-  { code: "ig", label: "Igbo" },
-  { code: "ar", label: "العربية" },
-  { code: "fr", label: "Français" },
-  { code: "ku", label: "Kurdî" },
+export const LANGUAGES: { code: Lang; label: string; locale: string }[] = [
+  { code: "en", label: "English", locale: "en-NG" },
+  { code: "ha", label: "Hausa", locale: "ha-NG" },
+  { code: "ig", label: "Igbo", locale: "ig-NG" },
+  { code: "yo", label: "Yorùbá", locale: "yo-NG" },
+  // ISO 639-1 `kr` is Kanuri; FarmX uses the standard Latin-script LTR UI.
+  { code: "kr", label: "Kanuri", locale: "kr-NG" },
 ];
 
-export const RTL_LANGS: Lang[] = ["ar"];
+export const RTL_LANGS: Lang[] = [];
 
 type Dict = Record<string, string>;
 
@@ -27,6 +27,7 @@ const en: Dict = {
   profile: "Profile",
   messages: "Messages",
   post: "Post",
+  chats: "Chats",
   news: "Latest News",
   weather: "Weather",
   learn: "Learn",
@@ -60,6 +61,24 @@ const en: Dict = {
   yes: "Yes",
   no: "No",
   notSure: "Not sure",
+  close: "Close",
+  continue: "Continue",
+  menu: "Menu",
+  openFullSettings: "Open full settings",
+  loading: "Loading…",
+  retry: "Try again",
+  success: "Success",
+  error: "Something went wrong",
+  requiredField: "This field is required.",
+  unauthorized: "You are not authorized to perform this action.",
+  notFound: "The requested item was not found.",
+  noResults: "No results found.",
+  helpSupport: "Help & Support",
+  kycNeedName: "Please enter your full name.",
+  kycNeedId: "Please enter a valid ID number.",
+  kycNeedEmail: "Please enter a valid email address.",
+  kycNeedPhone: "Please enter a valid phone number.",
+  kycNeedDoc: "Please upload your verification document.",
 
   // profile sidebar
   myAds: "My ads",
@@ -249,6 +268,7 @@ const en: Dict = {
 };
 
 const ha: Dict = {
+  ...en,
   home: "Gida",
   market: "Kasuwa",
   wallet: "Jaka",
@@ -465,6 +485,7 @@ const ha: Dict = {
 };
 
 const yo: Dict = {
+  ...en,
   home: "Ile",
   market: "Ọjà",
   wallet: "Àpò",
@@ -618,6 +639,7 @@ const yo: Dict = {
 };
 
 const ig: Dict = {
+  ...en,
   home: "Ụlọ",
   market: "Ahịa",
   wallet: "Obere akpa",
@@ -1229,10 +1251,108 @@ const ku: Dict = {
   payWithEscrow: "Bi escrow bide",
 };
 
-const T: Record<Lang, Dict> = { en, ha, yo, ig, ar, fr, ku };
+// Kanuri uses ISO 639-1 `kr`; the standard Latin-script FarmX UI remains LTR.
+// The English spread keeps the application key-complete while the Kanuri glossary is reviewed.
+const kr: Dict = {
+  ...en,
+  home: "Gana",
+  market: "Kasuwu",
+  wallet: "Kudi",
+  jobs: "Ayyuka",
+  community: "Cimma",
+  profile: "Bayani",
+  messages: "Peyam",
+  chats: "Peyam",
+  post: "Sanya",
+  notifications: "Sanarwa",
+  settings: "Saituna",
+  language: "Ziman",
+  search: "Nema",
+  save: "Ajiye",
+  cancel: "Soke",
+  back: "Koma",
+  yes: "Eey",
+  no: "A'a",
+  category: "Rukku",
+  subcategory: "Rukku karga",
+  title: "Surna",
+  description: "Bayani",
+  price: "Kudi",
+  location: "Ndi",
+  condition: "Kaltu",
+  quantity: "Adadi",
+  availability: "Samuwa",
+  photos: "Suwo",
+  preview: "Duba",
+  publishListing: "Wallafa talla",
+  saveDraft: "Ajiye daftari",
+  close: "Rufe",
+  continue: "Jadum",
+  menu: "Nda",
+  openFullSettings: "Buɗe cikakken saituna",
+  kycNeedName: "Sanya cikakken suna.",
+  kycNeedId: "Sanya lambar ID mai inganci.",
+  kycNeedEmail: "Sanya adireshin imel mai inganci.",
+  kycNeedPhone: "Sanya lambar waya mai inganci.",
+  kycNeedDoc: "Loda takardar tabbatarwa.",
+};
 
-type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string; dir: "ltr" | "rtl" };
-const I18nCtx = createContext<Ctx>({ lang: "en", setLang: () => {}, t: (k) => k, dir: "ltr" });
+const T: Record<Lang, Dict> = { en, ha, yo, ig, kr };
+
+export type TranslationVars = Record<string, string | number>;
+type Ctx = {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: string, vars?: TranslationVars) => string;
+  plural: (key: string, count: number, vars?: TranslationVars) => string;
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+  formatDate: (value: Date | string | number, options?: Intl.DateTimeFormatOptions) => string;
+  missingKeys: string[];
+  fallbackKeys: string[];
+  dir: "ltr" | "rtl";
+};
+const I18nCtx = createContext<Ctx>({
+  lang: "en",
+  setLang: () => {},
+  t: (key) => key,
+  plural: (key) => key,
+  formatNumber: (value) => String(value),
+  formatDate: (value) => String(value),
+  missingKeys: [],
+  fallbackKeys: [],
+  dir: "ltr",
+});
+
+function localeFor(lang: Lang) {
+  return LANGUAGES.find((entry) => entry.code === lang)?.locale ?? "en-NG";
+}
+
+function interpolate(template: string, vars?: TranslationVars) {
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (match, name: string) =>
+    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match,
+  );
+}
+
+function missingTranslationKeys() {
+  const keys = Object.keys(en);
+  return LANGUAGES.flatMap(({ code }) =>
+    code === "en" ? [] : keys.filter((key) => !T[code][key]).map((key) => `${code}.${key}`),
+  );
+}
+
+export function getMissingTranslationKeys() {
+  return missingTranslationKeys();
+}
+
+export function getTranslationDictionary(lang: Lang): Readonly<Dict> {
+  return T[lang];
+}
+
+export function getEnglishFallbackKeys(lang: Lang) {
+  if (lang === "en") return [];
+  return Object.keys(en).filter((key) => T[lang][key] === en[key]);
+}
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
@@ -1241,6 +1361,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const saved = (typeof window !== "undefined" &&
       localStorage.getItem("farmx-lang")) as Lang | null;
     if (saved && T[saved]) setLangState(saved);
+
+    void getMyProfile()
+      .then(({ profile }) => {
+        const preferred = profile?.preferredLanguage;
+        if (preferred && T[preferred]) {
+          setLangState(preferred);
+          if (typeof window !== "undefined") localStorage.setItem("farmx-lang", preferred);
+        }
+      })
+      .catch(() => {
+        // Public/unauthenticated sessions use the local preference.
+      });
   }, []);
 
   useEffect(() => {
@@ -1249,15 +1381,45 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = RTL_LANGS.includes(lang) ? "rtl" : "ltr";
   }, [lang]);
 
-  const setLang = (l: Lang) => {
-    setLangState(l);
-    if (typeof window !== "undefined") localStorage.setItem("farmx-lang", l);
+  const setLang = (next: Lang) => {
+    setLangState(next);
+    if (typeof window !== "undefined") localStorage.setItem("farmx-lang", next);
+    void saveMyLanguagePreference({ data: { preferredLanguage: next } }).catch(() => {
+      // Local persistence remains available when the user is signed out or offline.
+    });
   };
 
-  const t = (k: string) => T[lang]?.[k] ?? en[k] ?? k;
+  const locale = localeFor(lang);
+  const missingKeys = useMemo(() => missingTranslationKeys(), []);
+  const fallbackKeys = useMemo(() => getEnglishFallbackKeys(lang), [lang]);
+  useEffect(() => {
+    if (import.meta.env.DEV && fallbackKeys.length > 0) {
+      console.warn(`[FarmX i18n] ${lang} uses English fallback keys`, fallbackKeys);
+    }
+  }, [fallbackKeys, lang]);
+  const t = (key: string, vars?: TranslationVars) =>
+    interpolate(T[lang]?.[key] ?? en[key] ?? key, vars);
+  const plural = (key: string, count: number, vars?: TranslationVars) => {
+    const category = new Intl.PluralRules(locale).select(count);
+    const candidate = `${key}.${category}`;
+    return t(T[lang]?.[candidate] || en[candidate] ? candidate : key, {
+      count,
+      ...vars,
+    });
+  };
+  const formatNumber = (value: number, options?: Intl.NumberFormatOptions) =>
+    new Intl.NumberFormat(locale, options).format(value);
+  const formatDate = (value: Date | string | number, options?: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat(locale, options).format(new Date(value));
   const dir = RTL_LANGS.includes(lang) ? "rtl" : "ltr";
 
-  return <I18nCtx.Provider value={{ lang, setLang, t, dir }}>{children}</I18nCtx.Provider>;
+  return (
+    <I18nCtx.Provider
+      value={{ lang, setLang, t, plural, formatNumber, formatDate, missingKeys, fallbackKeys, dir }}
+    >
+      {children}
+    </I18nCtx.Provider>
+  );
 }
 
 export const useI18n = () => useContext(I18nCtx);
