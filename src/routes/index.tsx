@@ -12,9 +12,6 @@ import {
   Briefcase,
   GraduationCap,
   BarChart3,
-  Truck,
-  Package,
-  UsersRound,
   Cloud,
   Droplets,
   Sun,
@@ -42,9 +39,6 @@ function Dashboard() {
     { to: "/jobs", icon: Briefcase, label: t("jobs") },
     { to: "/learn", icon: GraduationCap, label: t("learn") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
-    { to: "/fleet", icon: Truck, label: t("fleet") },
-    { to: "/inventory", icon: Package, label: t("inventory") },
-    { to: "/staff", icon: UsersRound, label: t("staff") },
   ] as const;
 
   const visibleShortcuts = shortcutsExpanded ? dashIcons : dashIcons.slice(0, 4);
@@ -154,11 +148,18 @@ function Dashboard() {
           </div>
         </section>
 
-        <section aria-label="Search FarmX" className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+        <section
+          aria-label="Search FarmX"
+          className="rounded-2xl border border-border bg-card p-3 shadow-sm"
+        >
           <div className="mb-2 flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-brand">Search FarmX</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Products, services, businesses, jobs and Community</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-brand">
+                Search FarmX
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Products, services, businesses, jobs and Community
+              </p>
             </div>
           </div>
           <FarmXSearchBar compact location={location} />
@@ -255,7 +256,7 @@ function Dashboard() {
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold">Ayyuka a {location}</h2>
-            <Link to="/jobs" className="text-xs text-brand font-semibold">
+            <Link to="/jobs" search={{ q: "", category: undefined, tab: "explore" }} className="text-xs text-brand font-semibold">
               See all
             </Link>
           </div>

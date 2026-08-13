@@ -1,44 +1,260 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import {
+  TrendingUp,
+  Eye,
+  Bookmark,
+  MessageSquare,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Users,
+  ShoppingBag,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { TrendingUp, DollarSign, Users, Package } from "lucide-react";
+import { getAnalyticsRepository } from "@/lib/analytics-repository";
+import type { UserAnalytics, SellerAnalytics, JobSeekerAnalytics, EmployerAnalytics, AdminAnalytics, AnalyticsRole, TimeRange } from "@/lib/analytics.types";
 
-export const Route = createFileRoute("/analytics")({ component: Analytics });
+export const Route = createFileRoute("/analytics")({
+  component: AnalyticsDashboard,
+});
 
-function Analytics() {
-  const stats = [
-    { icon: DollarSign, label: "Revenue", value: "₦1.2M", change: "+12%" },
-    { icon: Package, label: "Orders", value: "348", change: "+8%" },
-    { icon: Users, label: "Followers", value: "12.4k", change: "+4%" },
-    { icon: TrendingUp, label: "Growth", value: "18%", change: "+2%" },
-  ];
+function AnalyticsDashboard() {
+  const [role, setRole] = useState<AnalyticsRole>("seller");
+  const [range, setRange] = useState<TimeRange>("30d");
+  const [userStats, setUserStats] = useState<UserAnalytics | null>(null);
+  const [sellerStats, setSellerStats] = useState<SellerAnalytics | null>(null);
+  const [jobSeekerStats, setJobSeekerStats] = useState<JobSeekerAnalytics | null>(null);
+  const [employerStats, setEmployerStats] = useState<EmployerAnalytics | null>(null);
+  const [adminStats, setAdminStats] = useState<AdminAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const repo = await getAnalyticsRepository();
+        const [u, s, j, e, a] = await Promise.all([
+          repo.getUserAnalytics("preview-user", range),
+          repo.getSellerAnalytics("preview-user", range),
+          repo.getJobSeekerAnalytics("preview-user", range),
+          repo.getEmployerAnalytics("preview-user", range),
+          repo.getAdminAnalytics(range),
+        ]);
+        if (cancelled) return;
+        setUserStats(u);
+        setSellerStats(s);
+        setJobSeekerStats(j);
+        setEmployerStats(e);
+        setAdminStats(a);
+      } catch {
+        /* ignore */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [range]);
+
   return (
     <AppShell title="Analytics">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          {stats.map((s) => (
-            <div key={s.label} className="p-4 rounded-xl bg-card border border-border">
-              <s.icon className="h-5 w-5 text-brand" />
-              <p className="text-xs text-muted-foreground mt-2">{s.label}</p>
-              <p className="text-xl font-bold">{s.value}</p>
-              <p className="text-xs text-green-600 dark:text-green-400 font-semibold">
-                {s.change} this month
-              </p>
-            </div>
-          ))}
-        </div>
-        <div className="p-4 rounded-xl bg-card border border-border">
-          <p className="font-bold mb-3">Sales trend</p>
-          <div className="flex items-end gap-2 h-32">
-            {[40, 65, 45, 80, 55, 90, 70].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-gradient-to-t from-brand to-brand/40 rounded-t"
-                style={{ height: `${h}%` }}
-              />
-            ))}
+      <div className="space-y-6 pb-16">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs text-muted-foreground">Performance insights and real-time activity metrics.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={range}
+              onChange={(e) => setRange(e.target.value as TimeRange)}
+              className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-bold"
+            >
+              <option value="today">Today</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+              <option value="12m">Last 12 Months</option>
+            </select>
           </div>
         </div>
+
+        <div className="flex overflow-x-auto border-b border-border gap-2 pb-1 text-xs font-black">
+          {[
+            { id: "seller", label: "Seller Stats" },
+            { id: "user", label: "Personal Activity" },
+            { id: "job_seeker", label: "Job Applications" },
+            { id: "employer", label: "Employer Hiring" },
+            { id: "admin", label: "Platform Admin" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setRole(tab.id as AnalyticsRole)}
+              className={`whitespace-nowrap rounded-xl px-4 py-2 transition ${role === tab.id ? "bg-brand text-brand-foreground" : "bg-card border border-border hover:border-brand/50 text-muted-foreground"}`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {loading ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-28 animate-pulse rounded-2xl bg-muted" />
+              ))}
+            </div>
+            <div className="h-64 animate-pulse rounded-3xl bg-muted" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {role === "seller" && sellerStats && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatCard title="Active Listings" value={sellerStats.activeListings} icon={ShoppingBag} />
+                  <StatCard title="Total Views" value={sellerStats.totalViews} icon={Eye} />
+                  <StatCard title="Saves & Shares" value={sellerStats.totalSaves + sellerStats.totalShares} icon={Bookmark} />
+                  <StatCard title="Customer Inquiries" value={sellerStats.totalInquiries} icon={MessageSquare} />
+                </div>
+
+                <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
+                  <h3 className="text-sm font-black flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-brand" /> Weekly Listing Views
+                  </h3>
+                  <div className="flex items-end gap-3 h-40 pt-6">
+                    {sellerStats.viewsOverTime.map((v) => {
+                      const max = Math.max(...sellerStats.viewsOverTime.map((x) => x.count), 10);
+                      const heightPercent = Math.round((v.count / max) * 100);
+                      return (
+                        <div key={v.date} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                          <span className="text-[10px] font-bold text-muted-foreground">{v.count}</span>
+                          <div style={{ height: `${heightPercent}%` }} className="w-full rounded-t-xl bg-brand transition-all hover:bg-brand/80" />
+                          <span className="text-[10px] font-bold">{v.date}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
+                  <h3 className="text-sm font-black">Top Performing Listings</h3>
+                  <div className="space-y-3">
+                    {sellerStats.topListings.map((l) => (
+                      <div key={l.id} className="flex items-center justify-between rounded-2xl border border-border p-3">
+                        <div>
+                          <p className="text-xs font-black">{l.title}</p>
+                          <p className="text-[10px] text-muted-foreground">₦{l.price.toLocaleString()}</p>
+                        </div>
+                        <span className="rounded-full bg-brand/10 px-3 py-1 text-[10px] font-black text-brand">
+                          {l.views} views
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {role === "user" && userStats && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatCard title="Listings Posted" value={userStats.listingsPosted} icon={ShoppingBag} />
+                <StatCard title="Jobs Applied" value={userStats.jobsApplied} icon={Briefcase} />
+                <StatCard title="Courses Enrolled" value={userStats.coursesEnrolled} icon={GraduationCap} />
+                <StatCard title="Certificates" value={userStats.certificatesEarned} icon={Award} />
+              </div>
+            )}
+
+            {role === "job_seeker" && jobSeekerStats && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatCard title="Applications" value={jobSeekerStats.totalApplications} icon={Briefcase} />
+                  <StatCard title="Shortlisted" value={jobSeekerStats.shortlisted} icon={TrendingUp} />
+                  <StatCard title="Interviews" value={jobSeekerStats.interviews} icon={Users} />
+                  <StatCard title="Selected" value={jobSeekerStats.selected} icon={Award} />
+                </div>
+                <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
+                  <h3 className="text-sm font-black">Application Breakdown</h3>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {Object.entries(jobSeekerStats.applicationsByStatus).map(([st, count]) => (
+                      <div key={st} className="rounded-2xl border border-border p-3 text-center">
+                        <p className="text-lg font-black text-brand">{count}</p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold">{st}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {role === "employer" && employerStats && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatCard title="Active Jobs" value={employerStats.activeJobs} icon={Briefcase} />
+                  <StatCard title="Total Applications" value={employerStats.totalApplications} icon={Users} />
+                  <StatCard title="Interviews" value={employerStats.interviews} icon={TrendingUp} />
+                  <StatCard title="Hiring Rate" value={`${employerStats.hiringRate}%`} icon={Award} />
+                </div>
+                <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
+                  <h3 className="text-sm font-black">Job Performance</h3>
+                  <div className="space-y-3">
+                    {employerStats.jobPerformance.map((jp) => (
+                      <div key={jp.id} className="flex items-center justify-between rounded-2xl border border-border p-3">
+                        <p className="text-xs font-black">{jp.title}</p>
+                        <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
+                          <span>{jp.views} views</span>
+                          <span className="text-brand">{jp.applications} applications</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {role === "admin" && adminStats && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <StatCard title="Total Users" value={adminStats.totalUsers.toLocaleString()} icon={Users} />
+                  <StatCard title="Active Listings" value={adminStats.activeListings.toLocaleString()} icon={ShoppingBag} />
+                  <StatCard title="Active Jobs" value={adminStats.activeJobs} icon={Briefcase} />
+                  <StatCard title="Learn Enrollments" value={adminStats.learnEnrollments.toLocaleString()} icon={GraduationCap} />
+                </div>
+                <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
+                  <h3 className="text-sm font-black">Platform Growth Trends</h3>
+                  <div className="space-y-3">
+                    {adminStats.growthChart.map((g) => (
+                      <div key={g.date} className="flex items-center justify-between rounded-2xl border border-border p-3 text-xs">
+                        <span className="font-black">{g.date}</span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground">Users: <strong className="text-foreground">{g.users.toLocaleString()}</strong></span>
+                          <span className="text-brand font-bold">Listings: {g.listings.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </AppShell>
+  );
+}
+
+function StatCard({ title, value, icon: Icon }: { title: string; value: string | number; icon: any }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 space-y-2 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{title}</span>
+        <div className="rounded-full bg-brand/10 p-2 text-brand">
+          <Icon className="h-4 w-4" />
+        </div>
+      </div>
+      <p className="text-xl font-black">{value}</p>
+    </div>
   );
 }

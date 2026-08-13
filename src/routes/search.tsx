@@ -579,8 +579,10 @@ function SearchResults({
             {result.jobs.map((job) => (
               <Link
                 key={job.id}
-                to="/jobs"
-                className="rounded-2xl border border-border bg-card p-4 hover:border-brand/50"
+                to="/jobs/$id"
+                params={{ id: job.id }}
+                search={{ q: "", category: undefined, tab: "explore" }}
+                className="rounded-2xl border border-border bg-card p-4 hover:border-brand/50 block"
               >
                 <div className="flex items-start gap-3">
                   <div className="rounded-xl bg-brand/10 p-2 text-brand">

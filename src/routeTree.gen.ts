@@ -25,6 +25,7 @@ import { Route as MarketRouteImport } from './routes/market'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -39,6 +40,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
+import { Route as JobsIdRouteImport } from './routes/jobs.$id'
 import { Route as LearnCourseIdRouteImport } from './routes/learn.$courseId'
 import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
 import { Route as MarketSearchRouteImport } from './routes/market.search'
@@ -129,6 +131,11 @@ const OrdersRoute = OrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PostProductRoute = PostProductRouteImport.update({
   id: '/post-product',
   path: '/post-product',
@@ -199,6 +206,11 @@ const EditAdIdRoute = EditAdIdRouteImport.update({
   path: '/edit-ad/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const JobsIdRoute = JobsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => JobsRoute,
+} as any)
 const LearnCourseIdRoute = LearnCourseIdRouteImport.update({
   id: '/$courseId',
   path: '/$courseId',
@@ -256,12 +268,13 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRoute
+  '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/plans': typeof PlansRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -276,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -297,12 +311,13 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRoute
+  '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/plans': typeof PlansRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -317,6 +332,7 @@ export interface FileRoutesByTo {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -339,12 +355,13 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRoute
+  '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
+  '/plans': typeof PlansRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -359,6 +376,7 @@ export interface FileRoutesById {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/jobs/$id': typeof JobsIdRoute
   '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -388,6 +406,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/orders'
+    | '/plans'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -402,6 +421,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/jobs/$id'
     | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
@@ -429,6 +449,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/orders'
+    | '/plans'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -443,6 +464,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/jobs/$id'
     | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
@@ -470,6 +492,7 @@ export interface FileRouteTypes {
     | '/messages'
     | '/notifications'
     | '/orders'
+    | '/plans'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -484,6 +507,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/jobs/$id'
     | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
@@ -506,12 +530,13 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   FleetRoute: typeof FleetRoute
   InventoryRoute: typeof InventoryRoute
-  JobsRoute: typeof JobsRoute
+  JobsRoute: typeof JobsRouteWithChildren
   LearnRoute: typeof LearnRouteWithChildren
   MarketRoute: typeof MarketRouteWithChildren
   MessagesRoute: typeof MessagesRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
+  PlansRoute: typeof PlansRoute
   PostProductRoute: typeof PostProductRoute
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
@@ -645,6 +670,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/post-product': {
       id: '/post-product'
       path: '/post-product'
@@ -743,6 +775,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditAdIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/jobs/$id': {
+      id: '/jobs/$id'
+      path: '/$id'
+      fullPath: '/jobs/$id'
+      preLoaderRoute: typeof JobsIdRouteImport
+      parentRoute: typeof JobsRoute
+    }
     '/learn/$courseId': {
       id: '/learn/$courseId'
       path: '/$courseId'
@@ -821,6 +860,16 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
   CommunityRouteChildren,
 )
 
+interface JobsRouteChildren {
+  JobsIdRoute: typeof JobsIdRoute
+}
+
+const JobsRouteChildren: JobsRouteChildren = {
+  JobsIdRoute: JobsIdRoute,
+}
+
+const JobsRouteWithChildren = JobsRoute._addFileChildren(JobsRouteChildren)
+
 interface LearnRouteChildren {
   LearnCourseIdRoute: typeof LearnCourseIdRoute
 }
@@ -869,12 +918,13 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   FleetRoute: FleetRoute,
   InventoryRoute: InventoryRoute,
-  JobsRoute: JobsRoute,
+  JobsRoute: JobsRouteWithChildren,
   LearnRoute: LearnRouteWithChildren,
   MarketRoute: MarketRouteWithChildren,
   MessagesRoute: MessagesRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
+  PlansRoute: PlansRoute,
   PostProductRoute: PostProductRoute,
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,

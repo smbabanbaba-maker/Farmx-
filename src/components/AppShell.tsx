@@ -4,6 +4,7 @@ import {
   Home,
   ShoppingBag,
   Wallet,
+  Briefcase,
   Plus,
   MessageSquare,
   Users,
@@ -33,7 +34,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
     { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
-
+    { to: "/wallet", icon: Wallet, label: "Wallet", badge: 0 },
+    { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
     { to: "/post-product", icon: Plus, label: "Post", badge: 0 },
     { to: "/messages", icon: MessageSquare, label: "Chats", badge: totalUnread },
     { to: "/community", icon: Users, label: t("community"), badge: 0 },
@@ -85,8 +87,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
 
       <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border">
-        <div className="mx-auto max-w-2xl grid grid-cols-6">
+      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur border-t border-border">
+        <div className="mx-auto max-w-2xl grid grid-cols-8">
           {tabs.map((tab) => {
             const active = tab.to === "/" ? pathname === "/" : pathname.startsWith(tab.to);
             const Icon = tab.icon;
@@ -96,13 +98,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                   key={tab.to}
                   to={tab.to}
                   aria-label="Post kaya"
-                  className="relative flex flex-col items-center justify-center py-1.5"
+                  className="relative flex min-w-0 min-h-14 flex-col items-center justify-center px-0.5 py-1.5"
                 >
                   <span className="h-11 w-11 -mt-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow-lg border-4 border-background">
                     <Plus className="h-6 w-6 stroke-[3]" />
                   </span>
                   <span
-                    className={`text-[10px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
+                    className={`max-w-full truncate text-[9px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
                   >
                     {tab.label}
                   </span>
@@ -113,7 +115,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`relative flex flex-col items-center gap-0.5 py-2 text-[10px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
+                className={`relative flex min-w-0 min-h-14 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[9px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
               >
                 <div className="relative">
                   <Icon className={`h-5 w-5 ${active ? "stroke-[2.5]" : ""}`} />
