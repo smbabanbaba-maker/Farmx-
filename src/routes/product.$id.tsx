@@ -352,11 +352,20 @@ function ProductPage() {
             <Spec label="Category" value={listing.category} />
             <Spec label="Subcategory" value={listing.subcategory} />
             <Spec label="Condition" value={listing.condition} />
-            <Spec
-              label="Quantity"
-              value={`${listing.quantity} ${listing.unit.replace("per ", "")}`}
-            />
             <Spec label="Availability" value={listing.availability} />
+            {listing.quantity > 0 && (
+              <Spec
+                label="Quantity"
+                value={`${listing.quantity} ${listing.unit.replace("per ", "")}`}
+              />
+            )}
+            
+            {/* Universal Dynamic Fields */}
+            {listing.metadata && Object.entries(listing.metadata).map(([key, value]) => {
+              if (!value || ["priceType", "priceUnit", "negotiation", "availability", "quantity", "unit", "lga", "contactName", "contactPhone", "promoId", "videoLink"].includes(key)) return null;
+              return <Spec key={key} label={key.replace(/-/g, " ")} value={String(value)} />;
+            })}
+            
             <Spec label="Listed" value={new Date(listing.createdAt).toLocaleDateString()} />
           </div>
           <p className="mt-4 border-t border-border pt-4 text-sm leading-6 text-muted-foreground">

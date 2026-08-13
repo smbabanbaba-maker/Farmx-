@@ -124,10 +124,10 @@ function Market() {
                 <Sparkles className="h-3.5 w-3.5" /> FarmX classified marketplace
               </p>
               <h1 className="mt-2 text-2xl font-black tracking-tight">
-                Find what your farm needs.
+                Find what you need.
               </h1>
               <p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">
-                Discover agricultural products, equipment, livestock, services, and trusted
+                Discover vehicles, property, electronics, agriculture, services, and trusted
                 businesses. Contact sellers directly—FarmX does not process private product
                 payments.
               </p>
@@ -244,7 +244,7 @@ function Market() {
             <div>
               <h2 className="text-base font-black">Browse categories</h2>
               <p className="text-[10px] text-muted-foreground">
-                Everything for modern agriculture.
+                Everything for you, your farm and business.
               </p>
             </div>
             <Link to="/market/categories" className="text-[11px] font-bold text-brand">

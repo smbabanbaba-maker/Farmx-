@@ -1,5 +1,5 @@
 import {
-  AGRICULTURAL_CATEGORIES,
+  ALL_CATEGORIES,
   getMarketCategory,
   getMarketListing,
   marketSeedListings,
@@ -232,7 +232,7 @@ function createPreviewRepository(): MarketRepository {
     mode: "preview",
     getListings: async (query) => applyQuery(list(), query),
     getListingById: async (id) => getMarketListing(id) ?? null,
-    getCategories: async () => AGRICULTURAL_CATEGORIES,
+    getCategories: async () => ALL_CATEGORIES,
     getFeaturedListings: async () =>
       list().filter((listing) => listing.featured && listing.status === "published"),
     getSponsoredListings: async () =>
@@ -333,7 +333,7 @@ function createPreviewRepository(): MarketRepository {
     },
     getSnapshot: async () => {
       const state = readLocalState();
-      return { listings: list(), categories: AGRICULTURAL_CATEGORIES, ...state };
+      return { listings: list(), categories: ALL_CATEGORIES, ...state };
     },
   };
 }

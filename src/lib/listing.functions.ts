@@ -3,26 +3,20 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
 
-const imageKeySchema = z.string().regex(/^products\/[a-z0-9][a-z0-9._/-]*$/i);
+const imageKeySchema = z.string();
 
 const listingSchema = z.object({
-  title: z.string().trim().min(10).max(70),
+  title: z.string().trim().min(5).max(100),
   category: z.string().trim().min(2).max(80),
-  brand: z.string().trim().max(80).optional(),
-  photos: z.array(imageKeySchema).min(1).max(5),
+  subcategory: z.string().trim().min(2).max(80),
+  photos: z.array(imageKeySchema).min(1).max(10),
   videoLink: z.string().url().optional().or(z.literal("")),
-  region: z.string().trim().min(2).max(80),
-  type: z.string().trim().min(2).max(80),
-  condition: z.string().trim().min(2).max(80),
-  description: z.string().trim().min(1).max(850),
-  price: z.number().positive(),
-  bulkPrice: z.number().positive().optional(),
-  negotiation: z.enum(["Yes", "No", "Not sure"]),
-  delivery: z.array(z.string().trim().min(2).max(40)).min(1).max(4),
-  contactName: z.string().trim().min(2).max(80),
-  phone: z.string().regex(/^\d{7,15}$/),
-  promoDays: z.union([z.literal(0), z.literal(7), z.literal(30)]),
+  location: z.string().trim().min(2).max(100),
+  description: z.string().trim().min(1).max(2000),
+  price: z.number().nullable(),
+  metadata: z.record(z.any()).optional(),
   sellerId: z.string().trim().min(1).max(128).default("demo-user"),
+  promoDays: z.number().default(0),
 });
 
 export type ListingInput = z.infer<typeof listingSchema>;
@@ -68,19 +62,13 @@ export const publishListing = createServerFn({ method: "POST" })
           updatedAt: now,
           title: data.title,
           category: data.category,
-          brand: data.brand || undefined,
+          subcategory: data.subcategory,
           imageKeys: data.photos,
           videoLink: data.videoLink || undefined,
-          region: data.region,
-          productType: data.type,
-          condition: data.condition,
+          location: data.location,
           description: data.description,
           price: data.price,
-          bulkPrice: data.bulkPrice,
-          negotiation: data.negotiation,
-          delivery: data.delivery,
-          contactName: data.contactName,
-          phone: data.phone,
+          metadata: data.metadata,
           promoDays: data.promoDays,
           promoExpiresAt,
           gsi1pk: `LISTING_STATUS#ACTIVE`,

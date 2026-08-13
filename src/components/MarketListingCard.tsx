@@ -117,6 +117,9 @@ export function MarketListingCard({
                 <MessageCircle className="h-3 w-3" />
                 {listing.stats.inquiries}
               </span>
+              <span className="rounded-full bg-brand/5 text-brand px-1.5 py-0.5 font-bold">
+                {listing.category}
+              </span>
               <span className="rounded-full bg-muted px-1.5 py-0.5 capitalize">
                 {listing.condition}
               </span>
