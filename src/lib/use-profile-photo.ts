@@ -12,6 +12,12 @@ export function useProfilePhoto(objectKey?: string) {
         active = false;
       };
     }
+    if (objectKey.startsWith("data:image/")) {
+      setUrl(objectKey);
+      return () => {
+        active = false;
+      };
+    }
 
     void getMyProfilePhotoUrl({ data: { objectKey } })
       .then((result) => {

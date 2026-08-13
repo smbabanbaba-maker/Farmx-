@@ -36,6 +36,7 @@ import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
+import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
@@ -176,6 +177,11 @@ const CSlugRoute = CSlugRouteImport.update({
   path: '/c/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EditAdIdRoute = EditAdIdRouteImport.update({
+  id: '/edit-ad/$id',
+  path: '/edit-ad/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MessagesIdRoute = MessagesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -225,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/edit-ad/$id': typeof EditAdIdRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/edit-ad/$id': typeof EditAdIdRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/edit-ad/$id': typeof EditAdIdRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/edit-ad/$id'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/edit-ad/$id'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
@@ -393,6 +404,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/edit-ad/$id'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
@@ -427,6 +439,7 @@ export interface RootRouteChildren {
   VerifyRoute: typeof VerifyRoute
   WalletRoute: typeof WalletRoute
   CSlugRoute: typeof CSlugRoute
+  EditAdIdRoute: typeof EditAdIdRoute
   ProductIdRoute: typeof ProductIdRoute
   ProfileCenterSectionRoute: typeof ProfileCenterSectionRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -623,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/edit-ad/$id': {
+      id: '/edit-ad/$id'
+      path: '/edit-ad/$id'
+      fullPath: '/edit-ad/$id'
+      preLoaderRoute: typeof EditAdIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/messages/$id': {
       id: '/messages/$id'
       path: '/$id'
@@ -694,6 +714,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyRoute: VerifyRoute,
   WalletRoute: WalletRoute,
   CSlugRoute: CSlugRoute,
+  EditAdIdRoute: EditAdIdRoute,
   ProductIdRoute: ProductIdRoute,
   ProfileCenterSectionRoute: ProfileCenterSectionRoute,
   UUsernameRoute: UUsernameRoute,

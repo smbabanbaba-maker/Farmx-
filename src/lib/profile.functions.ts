@@ -91,6 +91,21 @@ export type ProfileStats = {
   reviews: number | null;
 };
 
+function hasProfileProductionConfig() {
+  return Boolean(
+    process.env.AWS_REGION &&
+    process.env.FARMX_PROFILE_TABLE &&
+    process.env.FARMX_LISTINGS_TABLE &&
+    process.env.FARMX_MEDIA_BUCKET &&
+    (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
+    (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
+  );
+}
+
+export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
+  mode: hasProfileProductionConfig() ? ("production" as const) : ("preview" as const),
+}));
+
 function getConfig() {
   const region = process.env.AWS_REGION;
   const profileTable = process.env.FARMX_PROFILE_TABLE;

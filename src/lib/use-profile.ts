@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import { getMyProfile, type FarmXProfile, type ProfileStats } from "@/lib/profile.functions";
+import type { FarmXProfile, ProfileStats } from "@/lib/profile.functions";
+import { getProfileRepository, type ProfileDataMode } from "@/lib/profile-repository";
 
 export type ProfileLoadState =
-  | { status: "loading"; profile: null; stats: null; error: null }
-  | { status: "ready"; profile: FarmXProfile | null; stats: ProfileStats; error: null }
-  | { status: "error"; profile: null; stats: null; error: string };
+  | { status: "loading"; profile: null; stats: null; error: null; mode: ProfileDataMode | null }
+  | {
+      status: "ready";
+      profile: FarmXProfile | null;
+      stats: ProfileStats;
+      error: null;
+      mode: ProfileDataMode;
+    }
+  | { status: "error"; profile: null; stats: null; error: string; mode: ProfileDataMode | null };
 
 const loadingState: ProfileLoadState = {
   status: "loading",
   profile: null,
   stats: null,
   error: null,
+  mode: null,
 };
 
 export function useProfileData() {
@@ -19,12 +27,14 @@ export function useProfileData() {
   const refresh = useCallback(async () => {
     setState(loadingState);
     try {
-      const data = await getMyProfile();
+      const repository = await getProfileRepository();
+      const data = await repository.getProfile();
       setState({
         status: "ready",
         profile: data.profile,
         stats: data.stats,
         error: null,
+        mode: repository.mode,
       });
     } catch (error) {
       setState({
@@ -32,6 +42,7 @@ export function useProfileData() {
         profile: null,
         stats: null,
         error: error instanceof Error ? error.message : "Unable to load your profile.",
+        mode: null,
       });
     }
   }, []);

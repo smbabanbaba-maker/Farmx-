@@ -8,6 +8,7 @@ import {
   type FarmXProfile,
 } from "@/lib/profile.functions";
 import { useProfileData } from "@/lib/use-profile";
+import { getProfileRepository } from "@/lib/profile-repository";
 import {
   ArrowLeft,
   Camera,
@@ -46,7 +47,7 @@ const blankProfile: ProfileDraft = {
 
 function EditProfile() {
   const navigate = useNavigate();
-  const { status, profile, error, refresh } = useProfileData();
+  const { status, profile, error, refresh, mode } = useProfileData();
   const [form, setForm] = useState<ProfileDraft>(blankProfile);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [interestText, setInterestText] = useState("");
@@ -91,19 +92,28 @@ function EditProfile() {
     setFormError(null);
     try {
       const compressed = await compressProfilePhoto(file);
-      const { objectKey, uploadUrl } = await createProfilePhotoUpload({
-        data: { contentType: "image/webp" },
-      });
-      const response = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "content-type": "image/webp" },
-        body: compressed,
-      });
-      if (!response.ok) throw new Error("Photo upload was not accepted by secure storage.");
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
-      setPhotoPreview(URL.createObjectURL(compressed));
-      update("photoKey", objectKey);
-      setNotice("Profile photo uploaded. Save your profile to use it.");
+      const repository = await getProfileRepository();
+      if (repository.mode === "preview") {
+        const previewDataUrl = await blobToDataUrl(compressed);
+        if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+        setPhotoPreview(previewDataUrl);
+        update("photoKey", previewDataUrl);
+        setNotice("Preview photo added. Save your Profile to keep it in development preview.");
+      } else {
+        const { objectKey, uploadUrl } = await createProfilePhotoUpload({
+          data: { contentType: "image/webp" },
+        });
+        const response = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: { "content-type": "image/webp" },
+          body: compressed,
+        });
+        if (!response.ok) throw new Error("Photo upload was not accepted by secure storage.");
+        if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+        setPhotoPreview(URL.createObjectURL(compressed));
+        update("photoKey", objectKey);
+        setNotice("Profile photo uploaded. Save your profile to use it.");
+      }
     } catch (uploadError) {
       setFormError(
         uploadError instanceof Error ? uploadError.message : "Unable to upload profile photo.",
@@ -116,11 +126,22 @@ function EditProfile() {
   const removePhoto = async () => {
     setFormError(null);
     try {
-      if (profile?.photoKey && form.photoKey === profile.photoKey) {
+      const repository = await getProfileRepository();
+      if (
+        repository.mode === "production" &&
+        profile?.photoKey &&
+        form.photoKey === profile.photoKey
+      ) {
         await removeMyProfilePhoto();
         await refresh();
       }
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      if (repository.mode === "preview") {
+        await repository.updatePreview((state) => {
+          state.profile.photoKey = undefined;
+          state.profile.updatedAt = new Date().toISOString();
+        });
+      }
+      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
       update("photoKey", undefined);
       setNotice("Profile photo removed successfully.");
@@ -152,13 +173,12 @@ function EditProfile() {
     setFormError(null);
     setNotice(null);
     try {
-      await saveMyProfile({
-        data: {
-          ...form,
-          username: form.username.toLowerCase(),
-          agriculturalInterests: interests,
-          skills,
-        },
+      const repository = await getProfileRepository();
+      await repository.saveProfile({
+        ...form,
+        username: form.username.toLowerCase(),
+        agriculturalInterests: interests,
+        skills,
       });
       await refresh();
       setNotice("Your FarmX Profile was saved successfully.");
@@ -215,6 +235,12 @@ function EditProfile() {
           <ArrowLeft className="h-4 w-4" /> Back to profile
         </Link>
 
+        {mode === "preview" && (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+            Preview data mode — your Profile changes are stored in this browser until AWS services
+            are configured.
+          </p>
+        )}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-4">
             <button
@@ -572,6 +598,15 @@ function parseTags(value: string) {
         .filter(Boolean),
     ),
   ].slice(0, 10);
+}
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Unable to prepare preview image."));
+    reader.readAsDataURL(blob);
+  });
 }
 
 async function compressProfilePhoto(file: File): Promise<Blob> {

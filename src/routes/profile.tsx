@@ -9,6 +9,7 @@ import {
   ChevronRight,
   CircleHelp,
   Heart,
+  History,
   LayoutDashboard,
   MessageSquareText,
   MoreHorizontal,
@@ -109,6 +110,12 @@ const sections = [
     label: "Business profile",
     description: "Your public agricultural business information",
     icon: Building2,
+  },
+  {
+    id: "activity",
+    label: "Profile activity",
+    description: "Your adverts, services and account history",
+    icon: History,
   },
   {
     id: "safety",

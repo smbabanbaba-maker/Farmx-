@@ -1,15 +1,34 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicProfile, getPublicProfilePhotoUrl } from "@/lib/profile.functions";
-import { BadgeCheck, MapPin, ShieldCheck, UserRound } from "lucide-react";
+import { getProfileRepository } from "@/lib/profile-repository";
+import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/u/$username")({ component: PublicProfile });
 
-type PublicData = Awaited<ReturnType<typeof getPublicProfile>>;
+type PublicProfileData = {
+  profile: {
+    fullName: string;
+    username: string;
+    role: string;
+    bio: string;
+    state: string;
+    location: string;
+    agriculturalInterests: string[];
+    photoKey?: string;
+    verification: string;
+  };
+  stats: {
+    activeAds: number;
+    followers: number | null;
+    rating: number | null;
+    reviews: number | null;
+  };
+};
 
 function PublicProfile() {
   const { username } = Route.useParams();
-  const [data, setData] = useState<PublicData | null>(null);
+  const [data, setData] = useState<PublicProfileData | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,27 +37,45 @@ function PublicProfile() {
     setData(null);
     setPhotoUrl(null);
     setError(null);
-
-    void getPublicProfile({ data: { username } })
-      .then(async (result) => {
+    void (async () => {
+      try {
+        const repository = await getProfileRepository();
+        if (repository.mode === "preview") {
+          const snapshot = await repository.getSnapshot();
+          const profile = snapshot.profile;
+          if (profile.username !== username || profile.privacy.profileVisibility !== "public")
+            throw new Error("This FarmX profile is unavailable.");
+          if (!active) return;
+          setData({
+            profile,
+            stats: {
+              activeAds: snapshot.stats.activeAds,
+              followers: snapshot.stats.followers,
+              rating: snapshot.stats.rating,
+              reviews: snapshot.stats.reviews,
+            },
+          });
+          if (profile.photoKey?.startsWith("data:image/")) setPhotoUrl(profile.photoKey);
+          return;
+        }
+        const result = await getPublicProfile({ data: { username } });
         if (!active) return;
         setData(result);
         if (result.profile.photoKey) {
           const photo = await getPublicProfilePhotoUrl({ data: { username } });
           if (active) setPhotoUrl(photo.downloadUrl);
         }
-      })
-      .catch((reason) => {
+      } catch (reason) {
         if (active)
           setError(reason instanceof Error ? reason.message : "This FarmX profile is unavailable.");
-      });
-
+      }
+    })();
     return () => {
       active = false;
     };
   }, [username]);
 
-  if (error) {
+  if (error)
     return (
       <PublicShell>
         <section className="rounded-2xl border border-border bg-card p-7 text-center">
@@ -54,15 +91,12 @@ function PublicProfile() {
         </section>
       </PublicShell>
     );
-  }
-
-  if (!data) {
+  if (!data)
     return (
       <PublicShell>
         <div className="h-72 animate-pulse rounded-2xl bg-muted" />
       </PublicShell>
     );
-  }
 
   const { profile, stats } = data;
   const initials = profile.fullName
@@ -71,7 +105,6 @@ function PublicProfile() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-
   return (
     <PublicShell>
       <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -116,9 +149,9 @@ function PublicProfile() {
         </div>
       </section>
       <section className="grid grid-cols-3 gap-2">
-        <PublicMetric label="Active ads" value={stats.activeAds} />
-        {stats.followers !== null && <PublicMetric label="Followers" value={stats.followers} />}
-        {stats.reviews !== null && <PublicMetric label="Reviews" value={stats.reviews} />}
+        <Metric label="Active ads" value={stats.activeAds} />
+        {stats.followers !== null && <Metric label="Followers" value={stats.followers} />}
+        {stats.reviews !== null && <Metric label="Reviews" value={stats.reviews} />}
       </section>
       <section className="rounded-2xl border border-brand/20 bg-brand/5 p-4">
         <p className="text-xs font-bold text-brand">FarmX safety reminder</p>
@@ -146,7 +179,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
     </main>
   );
 }
-function PublicMetric({ label, value }: { label: string; value: number }) {
+function Metric({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-xl border border-border bg-card p-3 text-center">
       <p className="font-black">{value.toLocaleString()}</p>

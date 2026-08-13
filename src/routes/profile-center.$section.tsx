@@ -1,8 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { ProfileServicePanels } from "@/components/ProfileServicePanels";
+import { ProfileTrustPanels } from "@/components/ProfileTrustPanels";
 import { useProfileData } from "@/lib/use-profile";
 import { useMyAds, type MyAd } from "@/lib/use-my-ads";
-import { deleteMyAd, updateMyAdStatus } from "@/lib/profile.functions";
+import { getProfileRepository } from "@/lib/profile-repository";
+import { useProfileSnapshot } from "@/lib/use-profile-snapshot";
 import {
   ArrowLeft,
   BarChart3,
@@ -13,9 +16,13 @@ import {
   Heart,
   LayoutDashboard,
   MapPin,
+  MessageCircle,
   MessageSquareText,
+  Phone,
   Pause,
+  Pencil,
   Play,
+  Share2,
   ShieldCheck,
   Sparkles,
   Star,
@@ -138,6 +145,7 @@ function ProfileCentreSection() {
   const content = CONTENT[section] ?? CONTENT.ads;
   const { status, stats, refresh } = useProfileData();
   const adData = useMyAds(section === "ads");
+  const snapshot = useProfileSnapshot();
   const Icon = content.icon;
 
   return (
@@ -159,6 +167,28 @@ function ProfileCentreSection() {
 
         {section === "ads" ? (
           <MyAdsPanel {...adData} />
+        ) : section === "inquiries" ? (
+          <BuyerInquiriesPanel {...snapshot} />
+        ) : section === "interactions" ? (
+          <InteractionsPanel {...snapshot} />
+        ) : ["promotions", "analytics", "balance", "services", "saved", "network"].includes(
+            section,
+          ) ? (
+          <ProfileServicePanels
+            section={
+              section as "promotions" | "analytics" | "balance" | "services" | "saved" | "network"
+            }
+            snapshot={snapshot}
+          />
+        ) : ["reviews", "verification", "business", "safety", "support", "activity"].includes(
+            section,
+          ) ? (
+          <ProfileTrustPanels
+            section={
+              section as "reviews" | "verification" | "business" | "safety" | "support" | "activity"
+            }
+            snapshot={snapshot}
+          />
         ) : (
           <StandardProfilePanel content={content} status={status} stats={stats} refresh={refresh} />
         )}
@@ -167,15 +197,131 @@ function ProfileCentreSection() {
   );
 }
 
+function BuyerInquiriesPanel({
+  status,
+  data,
+  error,
+  refresh,
+}: ReturnType<typeof useProfileSnapshot>) {
+  if (status === "loading") return <div className="h-52 animate-pulse rounded-2xl bg-muted" />;
+  if (status === "error" || !data) return <ErrorPanel message={error} retry={refresh} />;
+  if (!data.inquiries.length)
+    return <EmptyPanel icon={MessageSquareText} text="No buyer inquiries yet." />;
+  return (
+    <section className="space-y-3">
+      {data.inquiries.map((inquiry) => (
+        <article key={inquiry.id} className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand/10 text-xs font-black text-brand">
+              {inquiry.buyerInitials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-sm font-bold">{inquiry.buyerName}</h2>
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                    About: {inquiry.adTitle}
+                  </p>
+                </div>
+                <Status label={inquiry.status} />
+              </div>
+              <p className="mt-2 text-xs leading-5 text-foreground">“{inquiry.lastMessage}”</p>
+              <p className="mt-2 text-[10px] text-muted-foreground">
+                {formatDate(inquiry.date)} · Last interaction in FarmX chat
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              to="/messages"
+              className="inline-flex items-center gap-1 rounded-lg bg-brand px-3 py-2 text-xs font-bold text-brand-foreground"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Chat
+            </Link>
+            {inquiry.phoneAvailable && (
+              <a
+                href="tel:+2348000000000"
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-bold"
+              >
+                <Phone className="h-3.5 w-3.5" /> Call
+              </a>
+            )}
+            <Link
+              to="/product/$id"
+              params={{ id: inquiry.adId }}
+              className="rounded-lg border border-border px-3 py-2 text-xs font-bold"
+            >
+              View ad
+            </Link>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
+function InteractionsPanel({
+  status,
+  data,
+  error,
+  refresh,
+}: ReturnType<typeof useProfileSnapshot>) {
+  if (status === "loading") return <div className="h-52 animate-pulse rounded-2xl bg-muted" />;
+  if (status === "error" || !data) return <ErrorPanel message={error} retry={refresh} />;
+  if (!data.interactions.length)
+    return <EmptyPanel icon={UsersRound} text="No recent marketplace interactions yet." />;
+  return (
+    <section className="space-y-3">
+      {data.interactions.map((interaction) => (
+        <article
+          key={interaction.id}
+          className="flex gap-3 rounded-2xl border border-border bg-card p-4"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+            <MessageSquareText className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <h2 className="text-sm font-bold">{interaction.title}</h2>
+              <span className="text-[10px] text-muted-foreground">
+                {formatDate(interaction.occurredAt)}
+              </span>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">{interaction.detail}</p>
+            {interaction.kind === "conversation" && (
+              <Link
+                to="/messages"
+                className="mt-3 inline-flex rounded-lg border border-border px-3 py-1.5 text-xs font-bold"
+              >
+                Open chats
+              </Link>
+            )}
+            {interaction.kind === "contacted_ad" && (
+              <Link
+                to="/market"
+                className="mt-3 inline-flex rounded-lg border border-border px-3 py-1.5 text-xs font-bold"
+              >
+                Browse Market
+              </Link>
+            )}
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 function MyAdsPanel({ status, ads, error, refresh }: ReturnType<typeof useMyAds>) {
   const [filter, setFilter] = useState("ALL");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const filtered = useMemo(
-    () => (filter === "ALL" ? ads : ads.filter((ad) => ad.status === filter)),
-    [ads, filter],
-  );
-  const tabs = ["ALL", "ACTIVE", "PAUSED", "SOLD", "UNAVAILABLE", "CLOSED"];
+  const filtered = useMemo(() => {
+    if (filter === "ALL") return ads;
+    if (filter === "CLOSED_SOLD")
+      return ads.filter((ad) => ad.status === "CLOSED" || ad.status === "SOLD");
+    return ads.filter((ad) => ad.status === filter);
+  }, [ads, filter]);
+  const tabs = ["ALL", "ACTIVE", "PENDING", "DRAFT", "EXPIRED", "REJECTED", "CLOSED_SOLD"];
 
   const setStatus = async (
     ad: MyAd,
@@ -184,7 +330,8 @@ function MyAdsPanel({ status, ads, error, refresh }: ReturnType<typeof useMyAds>
     setBusyId(ad.listingId);
     setNotice(null);
     try {
-      await updateMyAdStatus({ data: { listingId: ad.listingId, status: nextStatus } });
+      const repository = await getProfileRepository();
+      await repository.setAdStatus(ad.listingId, nextStatus);
       await refresh();
       setNotice(`${ad.title} is now ${nextStatus.toLowerCase()}.`);
     } catch (actionError) {
@@ -201,7 +348,8 @@ function MyAdsPanel({ status, ads, error, refresh }: ReturnType<typeof useMyAds>
     setBusyId(ad.listingId);
     setNotice(null);
     try {
-      await deleteMyAd({ data: { listingId: ad.listingId } });
+      const repository = await getProfileRepository();
+      await repository.deleteAd(ad.listingId);
       await refresh();
       setNotice("Advert deleted successfully.");
     } catch (actionError) {
@@ -226,7 +374,11 @@ function MyAdsPanel({ status, ads, error, refresh }: ReturnType<typeof useMyAds>
             onClick={() => setFilter(tab)}
             className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold ${filter === tab ? "border-brand bg-brand text-brand-foreground" : "border-border bg-card text-muted-foreground"}`}
           >
-            {tab === "ALL" ? "All" : tab[0] + tab.slice(1).toLowerCase()}
+            {tab === "ALL"
+              ? "All"
+              : tab === "CLOSED_SOLD"
+                ? "Closed / Sold"
+                : tab[0] + tab.slice(1).toLowerCase()}
           </button>
         ))}
       </div>
@@ -304,6 +456,51 @@ function MyAdCard({
         >
           View
         </Link>
+        <Link
+          to="/edit-ad/$id"
+          params={{ id: ad.listingId }}
+          className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold"
+        >
+          <Pencil className="h-3 w-3" />
+          Edit
+        </Link>
+        {ad.status === "EXPIRED" && (
+          <button
+            disabled={busy}
+            onClick={() => void onStatus(ad, "ACTIVE")}
+            className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold"
+          >
+            Renew
+          </button>
+        )}
+        <Link
+          to="/profile-center/$section"
+          params={{ section: "promotions" }}
+          className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold"
+        >
+          Boost
+        </Link>
+        <Link
+          to="/profile-center/$section"
+          params={{ section: "promotions" }}
+          className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold"
+        >
+          Feature
+        </Link>
+        <button
+          onClick={() =>
+            void (navigator.share
+              ? navigator.share({
+                  title: ad.title,
+                  url: `${window.location.origin}/product/${ad.listingId}`,
+                })
+              : navigator.clipboard.writeText(`${window.location.origin}/product/${ad.listingId}`))
+          }
+          className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold"
+        >
+          <Share2 className="h-3 w-3" />
+          Share
+        </button>
         {ad.status === "ACTIVE" ? (
           <button
             disabled={busy}
@@ -434,6 +631,14 @@ function EmptyPanel({
     </section>
   );
 }
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en-NG", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
 function Status({ label }: { label: string }) {
   return (
     <span className="rounded-full bg-muted px-2 py-1 text-[9px] font-black text-muted-foreground">
