@@ -29,6 +29,7 @@ import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as SavedRouteImport } from './routes/saved'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SubscribeRouteImport } from './routes/subscribe'
@@ -38,6 +39,7 @@ import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
+import { Route as LearnCourseIdRouteImport } from './routes/learn.$courseId'
 import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
 import { Route as MarketSearchRouteImport } from './routes/market.search'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
@@ -147,6 +149,11 @@ const SavedRoute = SavedRouteImport.update({
   path: '/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -191,6 +198,11 @@ const EditAdIdRoute = EditAdIdRouteImport.update({
   id: '/edit-ad/$id',
   path: '/edit-ad/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LearnCourseIdRoute = LearnCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => LearnRoute,
 } as any)
 const MarketCategoriesRoute = MarketCategoriesRouteImport.update({
   id: '/categories',
@@ -245,7 +257,7 @@ export interface FileRoutesByFullPath {
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
-  '/learn': typeof LearnRoute
+  '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -254,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
@@ -263,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -284,7 +298,7 @@ export interface FileRoutesByTo {
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
-  '/learn': typeof LearnRoute
+  '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -293,6 +307,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
@@ -302,6 +317,7 @@ export interface FileRoutesByTo {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -324,7 +340,7 @@ export interface FileRoutesById {
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
-  '/learn': typeof LearnRoute
+  '/learn': typeof LearnRouteWithChildren
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -333,6 +349,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
   '/saved': typeof SavedRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
@@ -342,6 +359,7 @@ export interface FileRoutesById {
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -374,6 +392,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/saved'
+    | '/search'
     | '/settings'
     | '/staff'
     | '/subscribe'
@@ -383,6 +402,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -413,6 +433,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/saved'
+    | '/search'
     | '/settings'
     | '/staff'
     | '/subscribe'
@@ -422,6 +443,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -452,6 +474,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reports'
     | '/saved'
+    | '/search'
     | '/settings'
     | '/staff'
     | '/subscribe'
@@ -461,6 +484,7 @@ export interface FileRouteTypes {
     | '/c/$slug'
     | '/community/$id'
     | '/edit-ad/$id'
+    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -483,7 +507,7 @@ export interface RootRouteChildren {
   FleetRoute: typeof FleetRoute
   InventoryRoute: typeof InventoryRoute
   JobsRoute: typeof JobsRoute
-  LearnRoute: typeof LearnRoute
+  LearnRoute: typeof LearnRouteWithChildren
   MarketRoute: typeof MarketRouteWithChildren
   MessagesRoute: typeof MessagesRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
@@ -492,6 +516,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
   SavedRoute: typeof SavedRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   StaffRoute: typeof StaffRoute
   SubscribeRoute: typeof SubscribeRoute
@@ -648,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SavedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -710,6 +742,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/edit-ad/$id'
       preLoaderRoute: typeof EditAdIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/learn/$courseId': {
+      id: '/learn/$courseId'
+      path: '/$courseId'
+      fullPath: '/learn/$courseId'
+      preLoaderRoute: typeof LearnCourseIdRouteImport
+      parentRoute: typeof LearnRoute
     }
     '/market/categories': {
       id: '/market/categories'
@@ -782,6 +821,16 @@ const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
   CommunityRouteChildren,
 )
 
+interface LearnRouteChildren {
+  LearnCourseIdRoute: typeof LearnCourseIdRoute
+}
+
+const LearnRouteChildren: LearnRouteChildren = {
+  LearnCourseIdRoute: LearnCourseIdRoute,
+}
+
+const LearnRouteWithChildren = LearnRoute._addFileChildren(LearnRouteChildren)
+
 interface MarketRouteChildren {
   MarketCategoriesRoute: typeof MarketCategoriesRoute
   MarketSearchRoute: typeof MarketSearchRoute
@@ -821,7 +870,7 @@ const rootRouteChildren: RootRouteChildren = {
   FleetRoute: FleetRoute,
   InventoryRoute: InventoryRoute,
   JobsRoute: JobsRoute,
-  LearnRoute: LearnRoute,
+  LearnRoute: LearnRouteWithChildren,
   MarketRoute: MarketRouteWithChildren,
   MessagesRoute: MessagesRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
@@ -830,6 +879,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,
   SavedRoute: SavedRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   StaffRoute: StaffRoute,
   SubscribeRoute: SubscribeRoute,

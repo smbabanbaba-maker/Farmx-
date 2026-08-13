@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { FarmXSearchBar } from "@/components/FarmXSearchBar";
 import { useI18n } from "@/lib/i18n";
 import { useLocation } from "@/lib/location";
 import { useNotifications } from "@/lib/notifications-store";
@@ -151,6 +152,16 @@ function Dashboard() {
               <p className="mt-1 text-[9px] text-white/60">Updated automatically</p>
             </div>
           </div>
+        </section>
+
+        <section aria-label="Search FarmX" className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-brand">Search FarmX</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Products, services, businesses, jobs and Community</p>
+            </div>
+          </div>
+          <FarmXSearchBar compact location={location} />
         </section>
 
         <section aria-label="Quick access">
