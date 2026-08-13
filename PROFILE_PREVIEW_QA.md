@@ -9,4 +9,3 @@
 ## Test-only preview state
 
 Browser local storage now includes an edited Draft advert title and one scheduled Boost campaign created during QA. This state is local to the preview browser and is not committed as seed data.
-

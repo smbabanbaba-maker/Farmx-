@@ -37,10 +37,13 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
+import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
+import { Route as MarketSearchRouteImport } from './routes/market.search'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as MarketCategoryCategoryRouteImport } from './routes/market.category.$category'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -182,6 +185,16 @@ const EditAdIdRoute = EditAdIdRouteImport.update({
   path: '/edit-ad/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketCategoriesRoute = MarketCategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => MarketRoute,
+} as any)
+const MarketSearchRoute = MarketSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => MarketRoute,
+} as any)
 const MessagesIdRoute = MessagesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -202,6 +215,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketCategoryCategoryRoute = MarketCategoryCategoryRouteImport.update({
+  id: '/category/$category',
+  path: '/category/$category',
+  getParentRoute: () => MarketRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,7 +234,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
   '/learn': typeof LearnRoute
-  '/market': typeof MarketRoute
+  '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -232,10 +250,13 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/market/categories': typeof MarketCategoriesRoute
+  '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -250,7 +271,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
   '/learn': typeof LearnRoute
-  '/market': typeof MarketRoute
+  '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -266,10 +287,13 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/market/categories': typeof MarketCategoriesRoute
+  '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -285,7 +309,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRoute
   '/learn': typeof LearnRoute
-  '/market': typeof MarketRoute
+  '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
@@ -301,10 +325,13 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/edit-ad/$id': typeof EditAdIdRoute
+  '/market/categories': typeof MarketCategoriesRoute
+  '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -337,10 +364,13 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/c/$slug'
     | '/edit-ad/$id'
+    | '/market/categories'
+    | '/market/search'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/market/category/$category'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -371,10 +401,13 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/c/$slug'
     | '/edit-ad/$id'
+    | '/market/categories'
+    | '/market/search'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/market/category/$category'
   id:
     | '__root__'
     | '/'
@@ -405,10 +438,13 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/c/$slug'
     | '/edit-ad/$id'
+    | '/market/categories'
+    | '/market/search'
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/market/category/$category'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -424,7 +460,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   JobsRoute: typeof JobsRoute
   LearnRoute: typeof LearnRoute
-  MarketRoute: typeof MarketRoute
+  MarketRoute: typeof MarketRouteWithChildren
   MessagesRoute: typeof MessagesRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
@@ -643,6 +679,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EditAdIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/market/categories': {
+      id: '/market/categories'
+      path: '/categories'
+      fullPath: '/market/categories'
+      preLoaderRoute: typeof MarketCategoriesRouteImport
+      parentRoute: typeof MarketRoute
+    }
+    '/market/search': {
+      id: '/market/search'
+      path: '/search'
+      fullPath: '/market/search'
+      preLoaderRoute: typeof MarketSearchRouteImport
+      parentRoute: typeof MarketRoute
+    }
     '/messages/$id': {
       id: '/messages/$id'
       path: '/$id'
@@ -671,8 +721,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/market/category/$category': {
+      id: '/market/category/$category'
+      path: '/category/$category'
+      fullPath: '/market/category/$category'
+      preLoaderRoute: typeof MarketCategoryCategoryRouteImport
+      parentRoute: typeof MarketRoute
+    }
   }
 }
+
+interface MarketRouteChildren {
+  MarketCategoriesRoute: typeof MarketCategoriesRoute
+  MarketSearchRoute: typeof MarketSearchRoute
+  MarketCategoryCategoryRoute: typeof MarketCategoryCategoryRoute
+}
+
+const MarketRouteChildren: MarketRouteChildren = {
+  MarketCategoriesRoute: MarketCategoriesRoute,
+  MarketSearchRoute: MarketSearchRoute,
+  MarketCategoryCategoryRoute: MarketCategoryCategoryRoute,
+}
+
+const MarketRouteWithChildren =
+  MarketRoute._addFileChildren(MarketRouteChildren)
 
 interface MessagesRouteChildren {
   MessagesIdRoute: typeof MessagesIdRoute
@@ -699,7 +771,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   JobsRoute: JobsRoute,
   LearnRoute: LearnRoute,
-  MarketRoute: MarketRoute,
+  MarketRoute: MarketRouteWithChildren,
   MessagesRoute: MessagesRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
