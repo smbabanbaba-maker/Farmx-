@@ -4,12 +4,19 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 
 const keySchema = z.object({
-  objectKey: z.string().regex(/^products\/[a-z0-9][a-z0-9._/-]*$/i),
-  contentType: z.enum(["image/jpeg", "image/png", "image/heic", "image/webp"]),
+  objectKey: z.string().regex(/^(products|community)\/[a-z0-9][a-z0-9._/-]*$/i),
+  contentType: z.enum([
+    "image/jpeg",
+    "image/png",
+    "image/heic",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
+  ]),
 });
 
 const viewKeySchema = z.object({
-  objectKey: z.string().regex(/^products\/[a-z0-9][a-z0-9._/-]*$/i),
+  objectKey: z.string().regex(/^(products|community)\/[a-z0-9][a-z0-9._/-]*$/i),
 });
 
 function getStorageConfig() {

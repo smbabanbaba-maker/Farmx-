@@ -36,6 +36,7 @@ import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
+import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
 import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
 import { Route as MarketSearchRouteImport } from './routes/market.search'
@@ -43,6 +44,7 @@ import { Route as MessagesIdRouteImport } from './routes/messages.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as ApiPaymentsWebhookRouteImport } from './routes/api.payments.webhook'
 import { Route as MarketCategoryCategoryRouteImport } from './routes/market.category.$category'
 
 const IndexRoute = IndexRouteImport.update({
@@ -180,6 +182,11 @@ const CSlugRoute = CSlugRouteImport.update({
   path: '/c/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CommunityIdRoute = CommunityIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => CommunityRoute,
+} as any)
 const EditAdIdRoute = EditAdIdRouteImport.update({
   id: '/edit-ad/$id',
   path: '/edit-ad/$id',
@@ -215,6 +222,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaymentsWebhookRoute = ApiPaymentsWebhookRouteImport.update({
+  id: '/api/payments/webhook',
+  path: '/api/payments/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketCategoryCategoryRoute = MarketCategoryCategoryRouteImport.update({
   id: '/category/$category',
   path: '/category/$category',
@@ -225,7 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
@@ -249,6 +261,7 @@ export interface FileRoutesByFullPath {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -256,13 +269,14 @@ export interface FileRoutesByFullPath {
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
@@ -286,6 +300,7 @@ export interface FileRoutesByTo {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -293,6 +308,7 @@ export interface FileRoutesByTo {
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRoutesById {
@@ -300,7 +316,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRoute
+  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
@@ -324,6 +340,7 @@ export interface FileRoutesById {
   '/verify': typeof VerifyRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
+  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
@@ -331,6 +348,7 @@ export interface FileRoutesById {
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/u/$username': typeof UUsernameRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
 }
 export interface FileRouteTypes {
@@ -363,6 +381,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/community/$id'
     | '/edit-ad/$id'
     | '/market/categories'
     | '/market/search'
@@ -370,6 +389,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/api/payments/webhook'
     | '/market/category/$category'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -400,6 +420,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/community/$id'
     | '/edit-ad/$id'
     | '/market/categories'
     | '/market/search'
@@ -407,6 +428,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/api/payments/webhook'
     | '/market/category/$category'
   id:
     | '__root__'
@@ -437,6 +459,7 @@ export interface FileRouteTypes {
     | '/verify'
     | '/wallet'
     | '/c/$slug'
+    | '/community/$id'
     | '/edit-ad/$id'
     | '/market/categories'
     | '/market/search'
@@ -444,6 +467,7 @@ export interface FileRouteTypes {
     | '/product/$id'
     | '/profile-center/$section'
     | '/u/$username'
+    | '/api/payments/webhook'
     | '/market/category/$category'
   fileRoutesById: FileRoutesById
 }
@@ -451,7 +475,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BuyerProtectionRoute: typeof BuyerProtectionRoute
-  CommunityRoute: typeof CommunityRoute
+  CommunityRoute: typeof CommunityRouteWithChildren
   CompanyRoute: typeof CompanyRoute
   DisputesRoute: typeof DisputesRoute
   EditProfileRoute: typeof EditProfileRoute
@@ -479,6 +503,7 @@ export interface RootRouteChildren {
   ProductIdRoute: typeof ProductIdRoute
   ProfileCenterSectionRoute: typeof ProfileCenterSectionRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiPaymentsWebhookRoute: typeof ApiPaymentsWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -672,6 +697,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/community/$id': {
+      id: '/community/$id'
+      path: '/$id'
+      fullPath: '/community/$id'
+      preLoaderRoute: typeof CommunityIdRouteImport
+      parentRoute: typeof CommunityRoute
+    }
     '/edit-ad/$id': {
       id: '/edit-ad/$id'
       path: '/edit-ad/$id'
@@ -721,6 +753,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/payments/webhook': {
+      id: '/api/payments/webhook'
+      path: '/api/payments/webhook'
+      fullPath: '/api/payments/webhook'
+      preLoaderRoute: typeof ApiPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/market/category/$category': {
       id: '/market/category/$category'
       path: '/category/$category'
@@ -730,6 +769,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface CommunityRouteChildren {
+  CommunityIdRoute: typeof CommunityIdRoute
+}
+
+const CommunityRouteChildren: CommunityRouteChildren = {
+  CommunityIdRoute: CommunityIdRoute,
+}
+
+const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
+  CommunityRouteChildren,
+)
 
 interface MarketRouteChildren {
   MarketCategoriesRoute: typeof MarketCategoriesRoute
@@ -762,7 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   BuyerProtectionRoute: BuyerProtectionRoute,
-  CommunityRoute: CommunityRoute,
+  CommunityRoute: CommunityRouteWithChildren,
   CompanyRoute: CompanyRoute,
   DisputesRoute: DisputesRoute,
   EditProfileRoute: EditProfileRoute,
@@ -790,6 +841,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProductIdRoute: ProductIdRoute,
   ProfileCenterSectionRoute: ProfileCenterSectionRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiPaymentsWebhookRoute: ApiPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -20,6 +20,7 @@ import { SubscriptionProvider } from "@/lib/subscription";
 import { PrefsProvider } from "@/lib/prefs";
 import { NotificationsProvider } from "@/lib/notifications-store";
 import { CommerceProvider } from "@/lib/commerce-store";
+import { CommunityProvider } from "@/lib/community-store";
 import { BrandSplash } from "@/components/BrandSplash";
 
 function NotFoundComponent() {
@@ -119,12 +120,14 @@ function RootComponent() {
               <SubscriptionProvider>
                 <PrefsProvider>
                   <NotificationsProvider>
-                    <CommerceProvider>
-                      <MessagesProvider>
-                        <BrandSplash />
-                        <Outlet />
-                      </MessagesProvider>
-                    </CommerceProvider>
+                    <CommunityProvider>
+                      <CommerceProvider>
+                        <MessagesProvider>
+                          <BrandSplash />
+                          <Outlet />
+                        </MessagesProvider>
+                      </CommerceProvider>
+                    </CommunityProvider>
                   </NotificationsProvider>
                 </PrefsProvider>
               </SubscriptionProvider>

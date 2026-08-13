@@ -252,14 +252,25 @@ export const getPublicProfile = createServerFn({ method: "GET" })
       throw new Error("This FarmX profile is unavailable.");
     }
 
-    const listingResult = await client.send(
-      new QueryCommand({
-        TableName: config.listingsTable,
-        IndexName: "GSI2",
-        KeyConditionExpression: "gsi2pk = :owner",
-        ExpressionAttributeValues: { ":owner": `SELLER#${profile.userId}` },
-      }),
-    );
+    const [listingResult, followerResult] = await Promise.all([
+      client.send(
+        new QueryCommand({
+          TableName: config.listingsTable,
+          IndexName: "GSI2",
+          KeyConditionExpression: "gsi2pk = :owner",
+          ExpressionAttributeValues: { ":owner": `SELLER#${profile.userId}` },
+        }),
+      ),
+      client.send(
+        new QueryCommand({
+          TableName: config.profileTable,
+          IndexName: "GSI1",
+          KeyConditionExpression: "gsi1pk = :followers",
+          ExpressionAttributeValues: { ":followers": `PROFILE_FOLLOWERS#${profile.userId}` },
+          Select: "COUNT",
+        }),
+      ),
+    ]);
     const listings = listingResult.Items ?? [];
     const activeAds = listings.filter((listing) => listing.status === "ACTIVE").length;
     return {
@@ -276,7 +287,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
       },
       stats: {
         activeAds,
-        followers: null,
+        followers: followerResult.Count ?? 0,
         rating: null,
         reviews: null,
       },
@@ -316,7 +327,7 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
   const actor = await requireAuthenticatedUser();
   const client = createDocumentClient(config.region);
 
-  const [profileResult, listingResult] = await Promise.all([
+  const [profileResult, listingResult, followerResult, followingResult] = await Promise.all([
     client.send(
       new GetCommand({
         TableName: config.profileTable,
@@ -331,6 +342,23 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
         ExpressionAttributeValues: { ":owner": `SELLER#${actor.userId}` },
       }),
     ),
+    client.send(
+      new QueryCommand({
+        TableName: config.profileTable,
+        IndexName: "GSI1",
+        KeyConditionExpression: "gsi1pk = :followers",
+        ExpressionAttributeValues: { ":followers": `PROFILE_FOLLOWERS#${actor.userId}` },
+        Select: "COUNT",
+      }),
+    ),
+    client.send(
+      new QueryCommand({
+        TableName: config.profileTable,
+        KeyConditionExpression: "pk = :user AND begins_with(sk, :following)",
+        ExpressionAttributeValues: { ":user": `USER#${actor.userId}`, ":following": "FOLLOWING#" },
+        Select: "COUNT",
+      }),
+    ),
   ]);
 
   const listings = listingResult.Items ?? [];
@@ -343,8 +371,8 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
     totalAdViews: listings.reduce((total, listing) => total + Number(listing.viewCount ?? 0), 0),
     buyerInquiries: null,
     savedAds: null,
-    followers: null,
-    following: null,
+    followers: followerResult.Count ?? 0,
+    following: followingResult.Count ?? 0,
     rating: null,
     reviews: null,
   };

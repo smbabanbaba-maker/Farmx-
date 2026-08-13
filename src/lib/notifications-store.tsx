@@ -8,6 +8,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  getCommunityNotifications,
+  markCommunityNotificationRead,
+} from "@/lib/community.functions";
 
 export type NotificationCategory =
   | "messages"
@@ -50,7 +54,10 @@ export interface AppNotification {
   link?: string;
 }
 
-export type NotificationInput = Omit<AppNotification, "id" | "at" | "read" | "category" | "type"> & {
+export type NotificationInput = Omit<
+  AppNotification,
+  "id" | "at" | "read" | "category" | "type"
+> & {
   type: NotificationCategory;
   category?: NotificationCategory;
   /** Idempotency key from the originating domain event. */
@@ -95,19 +102,31 @@ type State = {
   error: string | null;
 };
 
-const emptyState: State = { items: [], channels: DEFAULT_CHANNELS, pushEnabled: false, loaded: false, error: null };
+const emptyState: State = {
+  items: [],
+  channels: DEFAULT_CHANNELS,
+  pushEnabled: false,
+  loaded: false,
+  error: null,
+};
 
 function categoryFor(input: { type?: NotificationCategory; category?: NotificationCategory }) {
   if (input.category) return input.category;
   switch (input.type) {
-    case "message": return "messages";
-    case "promo": return "promotions";
-    case "kyc": return "account";
+    case "message":
+      return "messages";
+    case "promo":
+      return "promotions";
+    case "kyc":
+      return "account";
     case "order":
-    case "escrow": return "listings";
+    case "escrow":
+      return "listings";
     case "dispute":
-    case "billing": return "account";
-    default: return input.type ?? "system";
+    case "billing":
+      return "account";
+    default:
+      return input.type ?? "system";
   }
 }
 
@@ -134,7 +153,9 @@ function readLocalState(): State | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<State>;
     const items = Array.isArray(parsed.items)
-      ? parsed.items.map((item) => normalizeItem(item as Partial<AppNotification>)).filter((item): item is AppNotification => Boolean(item))
+      ? parsed.items
+          .map((item) => normalizeItem(item as Partial<AppNotification>))
+          .filter((item): item is AppNotification => Boolean(item))
       : [];
     return {
       items,
@@ -149,7 +170,10 @@ function readLocalState(): State | null {
 }
 
 function eventKey(input: NotificationInput) {
-  return input.eventId ?? `${input.type}|${input.targetUrl ?? input.link ?? ""}|${input.conversationId ?? ""}|${input.listing?.id ?? ""}|${input.title}|${input.body}`;
+  return (
+    input.eventId ??
+    `${input.type}|${input.targetUrl ?? input.link ?? ""}|${input.conversationId ?? ""}|${input.listing?.id ?? ""}|${input.title}|${input.body}`
+  );
 }
 
 function publicTarget(input: AppNotification) {
@@ -217,18 +241,44 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const local = readLocalState();
     if (local) setState(local);
-    if (!API_BASE || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       setState((current) => ({ ...current, loaded: true, error: null }));
       return;
     }
     try {
-      const response = await fetch(`${API_BASE}/v1/notifications?limit=${MAX}`, { credentials: "include" });
-      if (!response.ok) throw new Error("Notification request failed");
-      const remote = (await response.json()) as { items?: Partial<AppNotification>[]; channels?: Record<string, boolean> };
-      const items = (remote.items ?? []).map(normalizeItem).filter((item): item is AppNotification => Boolean(item));
-      setState((current) => ({ ...current, items, channels: { ...current.channels, ...(remote.channels ?? {}) }, loaded: true, error: null }));
+      let remote: { items?: Partial<AppNotification>[]; channels?: Record<string, boolean> };
+      if (API_BASE) {
+        const response = await fetch(`${API_BASE}/v1/notifications?limit=${MAX}`, {
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Notification request failed");
+        remote = (await response.json()) as {
+          items?: Partial<AppNotification>[];
+          channels?: Record<string, boolean>;
+        };
+      } else {
+        remote = {
+          items: (await getCommunityNotifications({
+            data: { limit: MAX },
+          })) as Partial<AppNotification>[],
+        };
+      }
+      const items = (remote.items ?? [])
+        .map(normalizeItem)
+        .filter((item): item is AppNotification => Boolean(item));
+      setState((current) => ({
+        ...current,
+        items,
+        channels: { ...current.channels, ...(remote.channels ?? {}) },
+        loaded: true,
+        error: null,
+      }));
     } catch {
-      setState((current) => ({ ...current, loaded: true, error: local ? null : "Unable to load notifications." }));
+      setState((current) => ({
+        ...current,
+        loaded: true,
+        error: local ? null : "Unable to load notifications.",
+      }));
     }
   }, []);
 
@@ -261,73 +311,133 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
-  const notify = useCallback((input: NotificationInput) => {
-    const current = stateRef.current;
-    const category = categoryFor(input);
-    if (current.channels[category] === false || current.channels[input.type] === false) return;
-    const key = eventKey(input);
-    const duplicate = current.items.find((item) => item.eventId === key);
-    if (duplicate) return;
-    const now = Date.now();
-    const item: AppNotification = {
-      ...input,
-      id: `notification_${now}_${Math.random().toString(36).slice(2, 8)}`,
-      eventId: key,
-      category,
-      type: input.type,
-      at: now,
-      read: false,
-      targetUrl: publicTarget(input as AppNotification),
-    };
-    const next: State = { ...current, items: [item, ...current.items].slice(0, MAX), loaded: true, error: null };
-    persist(next);
-    if (current.pushEnabled && typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification(item.title, { body: item.body, icon: "/farmx-logo.png", tag: item.eventId });
-      } catch {
-        // Browser notifications are best-effort.
+  const notify = useCallback(
+    (input: NotificationInput) => {
+      const current = stateRef.current;
+      const category = categoryFor(input);
+      if (current.channels[category] === false || current.channels[input.type] === false) return;
+      const key = eventKey(input);
+      const duplicate = current.items.find((item) => item.eventId === key);
+      if (duplicate) return;
+      const now = Date.now();
+      const item: AppNotification = {
+        ...input,
+        id: `notification_${now}_${Math.random().toString(36).slice(2, 8)}`,
+        eventId: key,
+        category,
+        type: input.type,
+        at: now,
+        read: false,
+        targetUrl: publicTarget(input as AppNotification),
+      };
+      const next: State = {
+        ...current,
+        items: [item, ...current.items].slice(0, MAX),
+        loaded: true,
+        error: null,
+      };
+      persist(next);
+      if (
+        current.pushEnabled &&
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        try {
+          new Notification(item.title, {
+            body: item.body,
+            icon: "/farmx-logo.png",
+            tag: item.eventId,
+          });
+        } catch {
+          // Browser notifications are best-effort.
+        }
       }
-    }
-  }, [persist]);
+    },
+    [persist],
+  );
 
-  const value = useMemo<NotificationsContext>(() => ({
-    items: state.items.filter((item) => !item.archived).sort((a, b) => b.at - a.at),
-    unread: state.items.filter((item) => !item.archived && !item.read).length,
-    loading: !state.loaded,
-    error: state.error,
-    channels: state.channels,
-    pushEnabled: state.pushEnabled,
-    pushSupported: permission !== "unsupported",
-    permission,
-    refresh,
-    retry: refresh,
-    enablePush: async () => {
-      if (typeof window === "undefined" || !("Notification" in window)) return false;
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      const enabled = result === "granted";
-      persist({ ...stateRef.current, pushEnabled: enabled });
-      return enabled;
-    },
-    disablePush: () => persist({ ...stateRef.current, pushEnabled: false }),
-    setChannel: (key, value) => persist({ ...stateRef.current, channels: { ...stateRef.current.channels, [key]: value } }),
-    notify,
-    createNotification: notify,
-    markRead: (id) => {
-      const now = Date.now();
-      persist({ ...stateRef.current, items: stateRef.current.items.map((item) => item.id === id ? { ...item, read: true, readAt: now } : item) });
-    },
-    markAllRead: () => {
-      const now = Date.now();
-      persist({ ...stateRef.current, items: stateRef.current.items.map((item) => item.archived ? item : { ...item, read: true, readAt: now }) });
-    },
-    archive: (id) => {
-      const item = stateRef.current.items.find((notification) => notification.id === id);
-      if (item?.priority === "security") return;
-      persist({ ...stateRef.current, items: stateRef.current.items.map((notification) => notification.id === id ? { ...notification, archived: true } : notification) });
-    },
-    clearAll: () => persist({ ...stateRef.current, items: stateRef.current.items.map((item) => item.priority === "security" ? item : { ...item, archived: true }) }),
-  }), [notify, permission, persist, refresh, state]);
+  const value = useMemo<NotificationsContext>(
+    () => ({
+      items: state.items.filter((item) => !item.archived).sort((a, b) => b.at - a.at),
+      unread: state.items.filter((item) => !item.archived && !item.read).length,
+      loading: !state.loaded,
+      error: state.error,
+      channels: state.channels,
+      pushEnabled: state.pushEnabled,
+      pushSupported: permission !== "unsupported",
+      permission,
+      refresh,
+      retry: refresh,
+      enablePush: async () => {
+        if (typeof window === "undefined" || !("Notification" in window)) return false;
+        const result = await Notification.requestPermission();
+        setPermission(result);
+        const enabled = result === "granted";
+        persist({ ...stateRef.current, pushEnabled: enabled });
+        return enabled;
+      },
+      disablePush: () => persist({ ...stateRef.current, pushEnabled: false }),
+      setChannel: (key, value) =>
+        persist({ ...stateRef.current, channels: { ...stateRef.current.channels, [key]: value } }),
+      notify,
+      createNotification: notify,
+      markRead: (id) => {
+        const now = Date.now();
+        const item = stateRef.current.items.find((entry) => entry.id === id);
+        persist({
+          ...stateRef.current,
+          items: stateRef.current.items.map((entry) =>
+            entry.id === id ? { ...entry, read: true, readAt: now } : entry,
+          ),
+        });
+        if (item && (item.category === "community" || item.category === "followers"))
+          void markCommunityNotificationRead({
+            data: { notificationId: item.eventId ?? item.id },
+          }).catch(() => undefined);
+      },
+      markAllRead: () => {
+        const now = Date.now();
+        const unreadServerItems = stateRef.current.items.filter(
+          (item) =>
+            !item.archived &&
+            !item.read &&
+            (item.category === "community" || item.category === "followers"),
+        );
+        persist({
+          ...stateRef.current,
+          items: stateRef.current.items.map((item) =>
+            item.archived ? item : { ...item, read: true, readAt: now },
+          ),
+        });
+        void Promise.all(
+          unreadServerItems.map((item) =>
+            markCommunityNotificationRead({
+              data: { notificationId: item.eventId ?? item.id },
+            }).catch(() => undefined),
+          ),
+        );
+      },
+      archive: (id) => {
+        const item = stateRef.current.items.find((notification) => notification.id === id);
+        if (item?.priority === "security") return;
+        persist({
+          ...stateRef.current,
+          items: stateRef.current.items.map((notification) =>
+            notification.id === id ? { ...notification, archived: true } : notification,
+          ),
+        });
+      },
+      clearAll: () =>
+        persist({
+          ...stateRef.current,
+          items: stateRef.current.items.map((item) =>
+            item.priority === "security" ? item : { ...item, archived: true },
+          ),
+        }),
+    }),
+    [notify, permission, persist, refresh, state],
+  );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
 }
