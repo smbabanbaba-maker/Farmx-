@@ -8,14 +8,60 @@ import {
   type MarketRepository,
   type MarketSort,
 } from "@/lib/market-repository";
+import {
+  breadcrumbJsonLd,
+  categoryCollectionJsonLd,
+  createSeoHead,
+  truncateDescription,
+} from "@/lib/seo";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 
 export const Route = createFileRoute("/market/category/$category")({
+  loader: async ({ params }) => {
+    const category = getMarketCategory(params.category);
+    if (!category) return { category: null, listings: [] };
+    const repository = await getMarketRepository();
+    const result = await repository.getListings({
+      page: 1,
+      pageSize: 24,
+      filters: { category: category.name },
+    });
+    return { category, listings: result.listings };
+  },
+  head: ({ params, loaderData }) => {
+    const category = loaderData?.category;
+    const listings = loaderData?.listings ?? [];
+    if (!category || listings.length === 0) {
+      return createSeoHead({
+        title: "Market category unavailable | FarmX",
+        description: "This FarmX marketplace category has no public listings available.",
+        path: `/market/category/${encodeURIComponent(params.category)}`,
+        noindex: true,
+      });
+    }
+    return createSeoHead({
+      title: `${category.name} agricultural marketplace | FarmX`,
+      description: truncateDescription(
+        `${category.description} Browse ${listings.length} public ${category.name} listings on FarmX.`,
+      ),
+      path: `/market/category/${encodeURIComponent(category.id)}`,
+      keywords: [category.name, ...category.subcategories, "FarmX marketplace"],
+      jsonLd: [
+        categoryCollectionJsonLd(category, listings),
+        breadcrumbJsonLd([
+          { name: "FarmX Market", path: "/market" },
+          { name: "Categories", path: "/market/categories" },
+          { name: category.name, path: `/market/category/${encodeURIComponent(category.id)}` },
+        ]),
+      ],
+    });
+  },
   component: MarketCategoryPage,
 });
 
 function MarketCategoryPage() {
   const { category: categoryParam } = Route.useParams();
+  const loaderData = Route.useLoaderData();
   const navigate = useNavigate();
   const [repository, setRepository] = useState<MarketRepository | null>(null);
   const [query, setQuery] = useState("");
@@ -23,8 +69,8 @@ function MarketCategoryPage() {
   const [sort, setSort] = useState<MarketSort>("newest");
   const [listings, setListings] = useState<
     Awaited<ReturnType<MarketRepository["getListings"]>>["listings"]
-  >([]);
-  const [total, setTotal] = useState(0);
+  >(loaderData.listings);
+  const [total, setTotal] = useState(loaderData.listings.length);
   const category = useMemo(() => getMarketCategory(categoryParam), [categoryParam]);
 
   const load = useCallback(async () => {

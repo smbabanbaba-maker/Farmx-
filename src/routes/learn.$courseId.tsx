@@ -26,8 +26,40 @@ import {
 } from "@/lib/learn.functions";
 import { getLearnRepository } from "@/lib/learn-repository";
 import type { Course, CourseEnrollment, Lesson } from "@/lib/learn.types";
+import { breadcrumbJsonLd, courseJsonLd, createSeoHead, truncateDescription } from "@/lib/seo";
 
 export const Route = createFileRoute("/learn/$courseId")({
+  loader: async ({ params }) => {
+    const repository = await getLearnRepository();
+    const candidate = await repository.getCourseById(params.courseId);
+    return { course: candidate?.status === "published" ? candidate : null };
+  },
+  head: ({ params, loaderData }) => {
+    const course = loaderData?.course;
+    if (!course) {
+      return createSeoHead({
+        title: "Course unavailable | FarmX Learn",
+        description: "This public FarmX Learn course is unavailable or has been removed.",
+        path: `/learn/${encodeURIComponent(params.courseId)}`,
+        noindex: true,
+      });
+    }
+    return createSeoHead({
+      title: `${course.title} | FarmX Learn`,
+      description: truncateDescription(course.shortDescription || course.fullDescription),
+      path: `/learn/${encodeURIComponent(course.id)}`,
+      image: course.coverImage,
+      keywords: [course.title, course.category, course.subcategory, course.language, "FarmX Learn"],
+      jsonLd: [
+        courseJsonLd(course),
+        breadcrumbJsonLd([
+          { name: "FarmX Learn", path: "/learn" },
+          { name: course.category, path: `/learn?category=${encodeURIComponent(course.category)}` },
+          { name: course.title, path: `/learn/${encodeURIComponent(course.id)}` },
+        ]),
+      ],
+    });
+  },
   component: LearnCourseDetail,
 });
 
@@ -45,8 +77,9 @@ type FormValues = {
 
 function LearnCourseDetail() {
   const { courseId } = Route.useParams();
+  const loaderData = Route.useLoaderData();
   const navigate = useNavigate();
-  const [course, setCourse] = useState<Course | null>(null);
+  const [course, setCourse] = useState<Course | null>(loaderData.course);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
   const [mode, setMode] = useState<"preview" | "production">("preview");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
@@ -63,7 +96,7 @@ function LearnCourseDetail() {
     educationLevel: "",
     experience: "",
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!loaderData.course);
   const [action, setAction] = useState<
     "idle" | "enrolling" | "success" | "payment_required" | "error"
   >("idle");
@@ -90,7 +123,7 @@ function LearnCourseDetail() {
         ]);
         if (cancelled) return;
         setMode(nextMode);
-        setCourse(nextCourse);
+        setCourse(nextCourse?.status === "published" ? nextCourse : null);
         setEnrollment(nextEnrollment);
         if (nextCourse?.modules[0]) setOpenModules({ [nextCourse.modules[0].id]: true });
         const profile = profileResult?.profile;

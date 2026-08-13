@@ -4,6 +4,7 @@ import { Briefcase, Building2, CheckCircle2, MapPin, Search, Bookmark, Plus } fr
 import { AppShell } from "@/components/AppShell";
 import { getJobRepository } from "@/lib/job-repository";
 import type { JobPost, JobCategory, JobApplication } from "@/lib/job.types";
+import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 
 const categories: { name: JobCategory; icon: string }[] = [
   { name: "Agriculture", icon: "🌾" },
@@ -24,18 +25,30 @@ const categories: { name: JobCategory; icon: string }[] = [
 ];
 
 export const Route = createFileRoute("/jobs")({
+  head: ({ matches }) =>
+    matches[matches.length - 1]?.pathname === "/jobs"
+      ? createSeoHead({
+          title: "Agricultural jobs in Nigeria | FarmX Jobs",
+          description:
+            "Find public agricultural, farm operations, logistics, technology and business jobs across Nigeria on FarmX.",
+          path: "/jobs",
+          keywords: ["Nigeria agricultural jobs", "farm jobs", "FarmX Jobs", "agriculture careers"],
+          noindex: !publicIndexingEnabled(),
+          jsonLd: breadcrumbJsonLd([{ name: "FarmX Jobs", path: "/jobs" }]),
+        })
+      : {},
   validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : "",
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
     category: categories.some((c) => c.name === search.category)
       ? (search.category as JobCategory)
       : undefined,
-    tab: typeof search.tab === "string" ? search.tab : "explore",
+    tab: typeof search.tab === "string" && search.tab !== "explore" ? search.tab : undefined,
   }),
   component: JobsHome,
 });
 
 function JobsHome() {
-  const { q, category, tab } = Route.useSearch();
+  const { q = "", category, tab = "explore" } = Route.useSearch();
   const navigate = useNavigate();
   const [search, setSearch] = useState(q);
   const [jobs, setJobs] = useState<JobPost[]>([]);

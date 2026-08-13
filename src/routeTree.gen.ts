@@ -29,9 +29,11 @@ import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SubscribeRouteImport } from './routes/subscribe'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
@@ -151,6 +153,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
   path: '/saved',
@@ -164,6 +171,11 @@ const SearchRoute = SearchRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffRoute = StaffRouteImport.update({
@@ -278,9 +290,11 @@ export interface FileRoutesByFullPath {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
@@ -321,9 +335,11 @@ export interface FileRoutesByTo {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
@@ -365,9 +381,11 @@ export interface FileRoutesById {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
@@ -410,9 +428,11 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/robots.txt'
     | '/saved'
     | '/search'
     | '/settings'
+    | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
@@ -453,9 +473,11 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/robots.txt'
     | '/saved'
     | '/search'
     | '/settings'
+    | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
@@ -496,9 +518,11 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/robots.txt'
     | '/saved'
     | '/search'
     | '/settings'
+    | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
@@ -540,9 +564,11 @@ export interface RootRouteChildren {
   PostProductRoute: typeof PostProductRoute
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRoute
   SubscribeRoute: typeof SubscribeRoute
   UpgradeRoute: typeof UpgradeRoute
@@ -698,6 +724,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/saved': {
       id: '/saved'
       path: '/saved'
@@ -717,6 +750,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff': {
@@ -928,9 +968,11 @@ const rootRouteChildren: RootRouteChildren = {
   PostProductRoute: PostProductRoute,
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRoute,
   SubscribeRoute: SubscribeRoute,
   UpgradeRoute: UpgradeRoute,

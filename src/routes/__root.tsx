@@ -69,20 +69,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FarmX — Agricultural Marketplace, Jobs & Community" },
-      {
-        name: "description",
-        content:
-          "FarmX connects farmers, buyers and partners with a marketplace, wallet, jobs, learning hub and community.",
-      },
       { name: "theme-color", content: "#dc2626" },
-      { property: "og:title", content: "FarmX — Agricultural Marketplace, Jobs & Community" },
-      {
-        property: "og:description",
-        content: "Marketplace, wallet, jobs, learning hub and community for African agriculture.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

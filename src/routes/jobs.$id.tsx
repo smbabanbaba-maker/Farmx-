@@ -19,6 +19,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { getJobRepository } from "@/lib/job-repository";
 import type { JobPost, JobApplication } from "@/lib/job.types";
+import { breadcrumbJsonLd, createSeoHead, jobJsonLd, truncateDescription } from "@/lib/seo";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/jobs/$id")({
@@ -27,16 +28,50 @@ export const Route = createFileRoute("/jobs/$id")({
     category: typeof search.category === "string" ? search.category : undefined,
     tab: typeof search.tab === "string" ? search.tab : "explore",
   }),
+  loader: async ({ params }) => {
+    const repository = await getJobRepository();
+    const candidate = await repository.getJobById(params.id);
+    return { job: candidate?.status === "published" ? candidate : null };
+  },
+  head: ({ params, loaderData }) => {
+    const job = loaderData?.job;
+    if (!job) {
+      return createSeoHead({
+        title: "Job unavailable | FarmX",
+        description: "This public FarmX job is unavailable or has been removed.",
+        path: `/jobs/${encodeURIComponent(params.id)}`,
+        noindex: true,
+      });
+    }
+    return createSeoHead({
+      title: `${job.title} at ${job.company} in ${job.state} | FarmX Jobs`,
+      description: truncateDescription(
+        `${job.title} at ${job.company} in ${job.location}, ${job.state}. View responsibilities, requirements and application details on FarmX Jobs. ${job.description}`,
+      ),
+      path: `/jobs/${encodeURIComponent(job.id)}`,
+      image: job.employer.logo,
+      keywords: [job.title, job.category, job.company, job.location, job.state],
+      jsonLd: [
+        jobJsonLd(job),
+        breadcrumbJsonLd([
+          { name: "FarmX Jobs", path: "/jobs" },
+          { name: job.category, path: `/jobs?category=${encodeURIComponent(job.category)}` },
+          { name: job.title, path: `/jobs/${encodeURIComponent(job.id)}` },
+        ]),
+      ],
+    });
+  },
   component: JobDetailView,
 });
 
 function JobDetailView() {
   const { id } = Route.useParams();
+  const loaderData = Route.useLoaderData();
   const navigate = useNavigate();
-  const [job, setJob] = useState<JobPost | null>(null);
+  const [job, setJob] = useState<JobPost | null>(loaderData.job);
   const [application, setApplication] = useState<JobApplication | null>(null);
   const [saved, setSaved] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!loaderData.job);
   const [applying, setApplying] = useState(false);
 
   // Application form state
@@ -58,7 +93,7 @@ function JobDetailView() {
           repo.getSavedJobIds("preview-user"),
         ]);
         if (cancelled) return;
-        setJob(nextJob);
+        setJob(nextJob?.status === "published" ? nextJob : null);
         setApplication(nextApps.find((a) => a.jobId === id) || null);
         setSaved(nextSaved.includes(id));
       } catch {

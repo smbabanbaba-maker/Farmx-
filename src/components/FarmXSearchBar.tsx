@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { Clock3, MapPin, Search, X } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 import {
   clearGlobalSearches,
   getRecentSearches,
@@ -21,9 +22,11 @@ export function FarmXSearchBar({
   compact = false,
   initialQuery = "",
   location,
-  placeholder = "What are you looking for?",
+  placeholder,
   className = "",
 }: FarmXSearchBarProps) {
+  const { t } = useI18n();
+  const resolvedPlaceholder = placeholder ?? t("home.search.placeholder");
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState(initialQuery);
@@ -107,8 +110,8 @@ export function FarmXSearchBar({
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 160)}
-          placeholder={placeholder}
-          aria-label={placeholder}
+          placeholder={resolvedPlaceholder}
+          aria-label={resolvedPlaceholder}
           className={`w-full rounded-2xl border border-border bg-card py-3 pl-10 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15 ${compact ? "pr-20" : "pr-24"}`}
         />
         {location && (
@@ -125,7 +128,7 @@ export function FarmXSearchBar({
               inputRef.current?.focus();
             }}
             className="absolute right-14 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:bg-muted"
-            aria-label="Clear search"
+            aria-label={t("home.search.clear")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -134,14 +137,14 @@ export function FarmXSearchBar({
           type="submit"
           className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-brand px-3 py-2 text-xs font-black text-brand-foreground transition active:scale-[0.97]"
         >
-          Search
+          {t("search")}
         </button>
       </form>
       {focused && (visibleRecent || visibleSuggestions || loading) && (
         <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-xl">
           <div className="flex items-center justify-between px-2 py-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              {visibleRecent ? "Recent searches" : "Suggestions"}
+              {visibleRecent ? t("home.search.recent") : t("home.search.suggestions")}
             </p>
             {visibleRecent && (
               <button
@@ -153,7 +156,7 @@ export function FarmXSearchBar({
                 }}
                 className="text-[10px] font-bold text-brand"
               >
-                Clear all
+                {t("home.search.clearAll")}
               </button>
             )}
           </div>

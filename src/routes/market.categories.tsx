@@ -4,8 +4,24 @@ import { AppShell } from "@/components/AppShell";
 import { getMarketRepository } from "@/lib/market-repository";
 import type { MarketCategory } from "@/lib/market-dev-data";
 import { ChevronLeft, ChevronRight, Search, Tags } from "lucide-react";
+import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 
-export const Route = createFileRoute("/market/categories")({ component: MarketCategories });
+export const Route = createFileRoute("/market/categories")({
+  head: () =>
+    createSeoHead({
+      title: "Marketplace categories | FarmX",
+      description:
+        "Explore public FarmX marketplace categories for agriculture, vehicles, property, services and more.",
+      path: "/market/categories",
+      keywords: ["FarmX categories", "agriculture categories", "Nigeria marketplace categories"],
+      noindex: !publicIndexingEnabled(),
+      jsonLd: breadcrumbJsonLd([
+        { name: "FarmX Market", path: "/market" },
+        { name: "Categories", path: "/market/categories" },
+      ]),
+    }),
+  component: MarketCategories,
+});
 
 function MarketCategories() {
   const [categories, setCategories] = useState<MarketCategory[]>([]);

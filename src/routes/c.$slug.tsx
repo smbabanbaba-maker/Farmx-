@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useCompany, TIER_META } from "@/lib/company-store";
 import { COUNTRIES } from "@/lib/currency";
+import { createSeoHead } from "@/lib/seo";
 import { products } from "@/lib/mock-data";
 import {
   type LucideIcon,
@@ -21,19 +22,14 @@ import { useState } from "react";
 
 export const Route = createFileRoute("/c/$slug")({
   component: MiniSite,
-  head: ({ params }) => ({
-    meta: [
-      { title: `${params.slug} — FarmX Company` },
-      {
-        name: "description",
-        content: `Verified FarmX company page for ${params.slug}. Products, partners, reviews.`,
-      },
-      { property: "og:title", content: `${params.slug} on FarmX` },
-      { property: "og:description", content: `Verified company mini-site on FarmX.` },
-      { property: "og:type", content: "profile" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  head: ({ params }) =>
+    createSeoHead({
+      title: `${params.slug} — FarmX Company`,
+      description: `FarmX company mini-site for ${params.slug}.`,
+      path: `/c/${encodeURIComponent(params.slug)}`,
+      type: "website",
+      noindex: true,
+    }),
 });
 
 function MiniSite() {

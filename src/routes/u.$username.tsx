@@ -1,10 +1,91 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicProfile, getPublicProfilePhotoUrl } from "@/lib/profile.functions";
 import { getProfileRepository } from "@/lib/profile-repository";
+import {
+  breadcrumbJsonLd,
+  createSeoHead,
+  publicProfileJsonLd,
+  truncateDescription,
+} from "@/lib/seo";
 import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 
-export const Route = createFileRoute("/u/$username")({ component: PublicProfile });
+export const Route = createFileRoute("/u/$username")({
+  loader: async ({ params }) => {
+    try {
+      const repository = await getProfileRepository();
+      if (repository.mode === "preview") {
+        const snapshot = await repository.getSnapshot();
+        if (
+          snapshot.profile.username !== params.username ||
+          snapshot.profile.privacy.profileVisibility !== "public"
+        )
+          return { data: null, photoUrl: null };
+        return {
+          data: {
+            profile: snapshot.profile,
+            stats: {
+              activeAds: snapshot.stats.activeAds,
+              followers: snapshot.stats.followers,
+              rating: snapshot.stats.rating,
+              reviews: snapshot.stats.reviews,
+            },
+          },
+          photoUrl: snapshot.profile.photoKey?.startsWith("data:image/")
+            ? snapshot.profile.photoKey
+            : null,
+        };
+      }
+      const data = await getPublicProfile({ data: { username: params.username } });
+      const photo = data.profile.photoKey
+        ? await getPublicProfilePhotoUrl({ data: { username: params.username } })
+        : { downloadUrl: null };
+      return { data, photoUrl: photo.downloadUrl };
+    } catch {
+      return { data: null, photoUrl: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const data = loaderData?.data;
+    if (!data) {
+      return createSeoHead({
+        title: "Profile unavailable | FarmX",
+        description: "This public FarmX profile is unavailable or private.",
+        path: `/u/${encodeURIComponent(params.username)}`,
+        noindex: true,
+      });
+    }
+    const profile = data.profile;
+    return createSeoHead({
+      title: `${profile.fullName} | FarmX public profile`,
+      description: truncateDescription(
+        profile.bio ||
+          `${profile.fullName} is a public FarmX ${profile.role} profile in ${profile.state}.`,
+      ),
+      path: `/u/${encodeURIComponent(profile.username)}`,
+      image: loaderData.photoUrl ?? undefined,
+      keywords: [profile.fullName, profile.role, profile.state, ...profile.agriculturalInterests],
+      jsonLd: [
+        publicProfileJsonLd({
+          fullName: profile.fullName,
+          username: profile.username,
+          role: profile.role,
+          bio: profile.bio,
+          state: profile.state,
+          location: profile.location,
+          photoUrl: loaderData.photoUrl,
+          verification: profile.verification,
+        }),
+        breadcrumbJsonLd([
+          { name: "FarmX", path: "/" },
+          { name: "Public profiles", path: "/search" },
+          { name: profile.fullName, path: `/u/${encodeURIComponent(profile.username)}` },
+        ]),
+      ],
+    });
+  },
+  component: PublicProfile,
+});
 
 type PublicProfileData = {
   profile: {
@@ -28,8 +109,9 @@ type PublicProfileData = {
 
 function PublicProfile() {
   const { username } = Route.useParams();
-  const [data, setData] = useState<PublicProfileData | null>(null);
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const loaderData = Route.useLoaderData();
+  const [data, setData] = useState<PublicProfileData | null>(loaderData.data);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(loaderData.photoUrl);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

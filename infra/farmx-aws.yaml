@@ -194,12 +194,13 @@ Resources:
         RecoveryMechanisms:
           - Name: verified_email
             Priority: 1
-      PasswordPolicy:
-        MinimumLength: 10
-        RequireLowercase: true
-        RequireNumbers: true
-        RequireSymbols: true
-        RequireUppercase: true
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+          RequireUppercase: true
       UserPoolTags:
         Application: FarmX
         Environment: !Ref Environment

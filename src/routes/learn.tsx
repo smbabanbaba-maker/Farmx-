@@ -18,6 +18,7 @@ import { AppShell } from "@/components/AppShell";
 import { getMyProfile } from "@/lib/profile.functions";
 import { getLearnRepository } from "@/lib/learn-repository";
 import type { Course, CourseCategory, CourseEnrollment } from "@/lib/learn.types";
+import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 
 const categoryItems: { name: CourseCategory; icon: string }[] = [
   { name: "Agriculture", icon: "🌾" },
@@ -40,8 +41,25 @@ const categoryItems: { name: CourseCategory; icon: string }[] = [
 ];
 
 export const Route = createFileRoute("/learn")({
+  head: ({ matches }) =>
+    matches[matches.length - 1]?.pathname === "/learn"
+      ? createSeoHead({
+          title: "Agricultural learning courses in Nigeria | FarmX Learn",
+          description:
+            "Learn agriculture, poultry, livestock, irrigation, business and digital skills through public FarmX courses.",
+          path: "/learn",
+          keywords: [
+            "agriculture courses Nigeria",
+            "farm training",
+            "FarmX Learn",
+            "agricultural education",
+          ],
+          noindex: !publicIndexingEnabled(),
+          jsonLd: breadcrumbJsonLd([{ name: "FarmX Learn", path: "/learn" }]),
+        })
+      : {},
   validateSearch: (search: Record<string, unknown>) => ({
-    q: typeof search.q === "string" ? search.q : "",
+    q: typeof search.q === "string" && search.q ? search.q : undefined,
     category: categoryItems.some((item) => item.name === search.category)
       ? (search.category as CourseCategory)
       : undefined,
@@ -50,7 +68,7 @@ export const Route = createFileRoute("/learn")({
 });
 
 function LearnHome() {
-  const { q, category } = Route.useSearch();
+  const { q = "", category } = Route.useSearch();
   const navigate = useNavigate();
   const [search, setSearch] = useState(q);
   const [courses, setCourses] = useState<Course[]>([]);

@@ -7,6 +7,7 @@ import type { MarketCategory } from "@/lib/market-dev-data";
 import { useCompany } from "@/lib/company-store";
 import { LOCATIONS } from "@/lib/mock-data";
 import { useI18n } from "@/lib/i18n";
+import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 import {
   ChevronRight,
   CircleHelp,
@@ -18,7 +19,32 @@ import {
   X,
 } from "lucide-react";
 
-export const Route = createFileRoute("/market")({ component: Market });
+export const Route = createFileRoute("/market")({
+  head: () =>
+    createSeoHead({
+      title: "Agricultural marketplace in Nigeria | FarmX",
+      description:
+        "Browse public agricultural products, services and marketplace listings across Nigeria on FarmX.",
+      path: "/market",
+      keywords: [
+        "Nigeria agricultural marketplace",
+        "farm products",
+        "farm services",
+        "FarmX Market",
+      ],
+      noindex: !publicIndexingEnabled(),
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          name: "FarmX Market",
+          description: "Public agricultural products and marketplace listings on FarmX.",
+        },
+        breadcrumbJsonLd([{ name: "FarmX Market", path: "/market" }]),
+      ],
+    }),
+  component: Market,
+});
 
 function Market() {
   const { t } = useI18n();

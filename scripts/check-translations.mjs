@@ -13,7 +13,11 @@ function objectBody(name) {
 }
 
 function explicitKeys(body) {
-  return new Set([...body.matchAll(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*:/gm)].map((match) => match[1]));
+  return new Set(
+    [...body.matchAll(/^\s*(?:"([^"]+)"|([A-Za-z_][A-Za-z0-9_]*))\s*:/gm)].map(
+      (match) => match[1] ?? match[2],
+    ),
+  );
 }
 
 const englishKeys = explicitKeys(objectBody("en"));

@@ -2,11 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { MarketListingCard } from "@/components/MarketListingCard";
+import { PublicShareActions } from "@/components/PublicShareActions";
+import { PublicDeepLinkPrompt } from "@/components/PublicDeepLinkPrompt";
 import type { MarketListing } from "@/lib/market-dev-data";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import { usePrefs } from "@/lib/prefs";
 import { useMessages } from "@/lib/messages-store";
 import { useNotifications } from "@/lib/notifications-store";
+import { breadcrumbJsonLd, createSeoHead, productJsonLd, truncateDescription } from "@/lib/seo";
 import {
   ArrowLeft,
   BadgeCheck,
@@ -30,29 +33,58 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/product/$id")({
-  head: () => ({
-    meta: [
-      { title: "Listing details — FarmX Market" },
-      {
-        name: "description",
-        content: "Discover agricultural listings and contact FarmX sellers directly.",
-      },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const repository = await getMarketRepository();
+    const candidate = await repository.getListingById(params.id);
+    return { listing: candidate?.status === "published" ? candidate : null };
+  },
+  head: ({ params, loaderData }) => {
+    const listing = loaderData?.listing;
+    if (!listing) {
+      return createSeoHead({
+        title: "Listing unavailable | FarmX",
+        description: "This public FarmX listing is unavailable or has been removed.",
+        path: `/product/${encodeURIComponent(params.id)}`,
+        noindex: true,
+      });
+    }
+    return createSeoHead({
+      title: `${listing.title} for sale in ${listing.city} | FarmX`,
+      description: truncateDescription(
+        `${listing.title} available in ${listing.city}, ${listing.state}. View price, seller information, location and listing details on FarmX. ${listing.description}`,
+      ),
+      path: `/product/${encodeURIComponent(listing.id)}`,
+      image: listing.images[0] ?? listing.imagePlaceholder,
+      type: "product",
+      keywords: [listing.title, listing.category, listing.subcategory, listing.city, listing.state],
+      jsonLd: [
+        productJsonLd(listing),
+        breadcrumbJsonLd([
+          { name: "FarmX Market", path: "/market" },
+          {
+            name: listing.category,
+            path: `/market/category/${encodeURIComponent(listing.category)}`,
+          },
+          { name: listing.title, path: `/product/${encodeURIComponent(listing.id)}` },
+        ]),
+      ],
+    });
+  },
   component: ProductPage,
 });
 
 function ProductPage() {
   const { id } = Route.useParams();
+  const loaderData = Route.useLoaderData();
   const navigate = useNavigate();
   const { isSaved, toggleSaved, toggleFollow, isFollowing, hideAd, hideSeller, toggles } =
     usePrefs();
   const { openConversationWith } = useMessages();
   const { createNotification } = useNotifications();
   const [repository, setRepository] = useState<MarketRepository | null>(null);
-  const [listing, setListing] = useState<MarketListing | null>(null);
+  const [listing, setListing] = useState<MarketListing | null>(loaderData.listing);
   const [related, setRelated] = useState<MarketListing[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!loaderData.listing);
   const [error, setError] = useState<string | null>(null);
   const [photoIndex, setPhotoIndex] = useState(0);
   const [menu, setMenu] = useState(false);
@@ -68,7 +100,8 @@ function ProductPage() {
     try {
       const nextRepository = repository ?? (await getMarketRepository());
       const nextListing = await nextRepository.getListingById(id);
-      if (!nextListing) throw new Error("This listing is no longer available.");
+      if (!nextListing || nextListing.status !== "published")
+        throw new Error("This listing is no longer available.");
       await nextRepository.recordView(id);
       setRepository(nextRepository);
       setListing(nextListing);
@@ -221,6 +254,11 @@ function ProductPage() {
             <ArrowLeft className="h-4 w-4" /> Back to Market
           </Link>
           <div className="flex items-center gap-1">
+            <PublicShareActions
+              title={listing.title}
+              text={`View ${listing.title} on FarmX Market`}
+              path={`/product/${encodeURIComponent(listing.id)}`}
+            />
             <button
               onClick={() => void save()}
               className="rounded-full p-2 hover:bg-accent"
@@ -268,6 +306,10 @@ function ProductPage() {
             </div>
           </div>
         </div>
+        <PublicDeepLinkPrompt
+          path={`/product/${encodeURIComponent(listing.id)}`}
+          title={listing.title}
+        />
         <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
           <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand/15 via-brand/5 to-accent text-8xl">
             <span aria-label={listing.title}>{currentImage}</span>
