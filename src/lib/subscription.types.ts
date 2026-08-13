@@ -1,20 +1,8 @@
 export type SubscriptionTier =
-  | "FREE"
-  | "STARTER"
-  | "BASIC"
-  | "PREMIUM"
-  | "VIP"
-  | "BUSINESS"
-  | "DIAMOND"
-  | "ENTERPRISE";
+  "FREE" | "STARTER" | "BASIC" | "PREMIUM" | "VIP" | "BUSINESS" | "DIAMOND" | "ENTERPRISE";
 
 export type SubscriptionStatus =
-  | "FREE"
-  | "ACTIVE"
-  | "EXPIRED"
-  | "CANCELLED"
-  | "PENDING"
-  | "PAST_DUE";
+  "FREE" | "ACTIVE" | "EXPIRED" | "CANCELLED" | "PENDING" | "PAST_DUE";
 
 export interface SubscriptionPlan {
   tier: SubscriptionTier;
@@ -39,4 +27,7 @@ export interface UserSubscription {
   remainingDays: number;
   autoRenew: boolean;
   reference?: string;
+  activeListings?: number;
+  listingLimit?: number;
+  overLimit?: boolean;
 }

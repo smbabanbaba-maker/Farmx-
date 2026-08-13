@@ -3,7 +3,6 @@ import {
   Bell,
   Home,
   ShoppingBag,
-  Wallet,
   Briefcase,
   Plus,
   MessageSquare,
@@ -34,10 +33,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
     { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
-    { to: "/wallet", icon: Wallet, label: "Wallet", badge: 0 },
-    { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
-    { to: "/post-product", icon: Plus, label: "Post", badge: 0 },
     { to: "/messages", icon: MessageSquare, label: "Chats", badge: totalUnread },
+    { to: "/post-product", icon: Plus, label: "Post", badge: 0 },
+    { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
     { to: "/community", icon: Users, label: t("community"), badge: 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
   ] as const;
@@ -88,7 +86,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>
 
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur border-t border-border">
-        <div className="mx-auto max-w-2xl grid grid-cols-8">
+        <div className="mx-auto max-w-2xl grid grid-cols-7">
           {tabs.map((tab) => {
             const active = tab.to === "/" ? pathname === "/" : pathname.startsWith(tab.to);
             const Icon = tab.icon;

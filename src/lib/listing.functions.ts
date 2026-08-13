@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getSubscriptionLimitForUser } from "./subscription.functions";
 import { z } from "zod";
 
 const imageKeySchema = z.string();
@@ -47,6 +48,23 @@ export const publishListing = createServerFn({ method: "POST" })
     const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
       marshallOptions: { removeUndefinedValues: true },
     });
+    const listingLimit = await getSubscriptionLimitForUser(data.sellerId);
+    const listingCount = await client.send(
+      new QueryCommand({
+        TableName: tableName,
+        IndexName: "GSI2",
+        KeyConditionExpression: "gsi2pk = :seller",
+        FilterExpression: "#status = :active",
+        ExpressionAttributeNames: { "#status": "status" },
+        ExpressionAttributeValues: { ":seller": `SELLER#${data.sellerId}`, ":active": "ACTIVE" },
+        Select: "COUNT",
+      }),
+    );
+    if (Number(listingCount.Count ?? 0) >= listingLimit) {
+      throw new Error(
+        `Your current FarmX plan allows up to ${listingLimit} active listings. Upgrade your plan before publishing another listing.`,
+      );
+    }
 
     await client.send(
       new PutCommand({

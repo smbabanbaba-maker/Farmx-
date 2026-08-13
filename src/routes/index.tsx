@@ -31,17 +31,16 @@ function Dashboard() {
   const { notify } = useNotifications();
   const { weather, loading: weatherLoading } = useRealWeather(location);
   const [locOpen, setLocOpen] = useState(false);
-  const [shortcutsExpanded, setShortcutsExpanded] = useState(false);
-
   const dashIcons = [
     { to: "/market", icon: ShoppingBag, label: t("market") },
 
     { to: "/jobs", icon: Briefcase, label: t("jobs") },
     { to: "/learn", icon: GraduationCap, label: t("learn") },
     { to: "/analytics", icon: BarChart3, label: t("analytics") },
+    { to: "/wallet", icon: Wallet, label: "Wallet" },
   ] as const;
 
-  const visibleShortcuts = shortcutsExpanded ? dashIcons : dashIcons.slice(0, 4);
+  const visibleShortcuts = dashIcons;
 
   const localProducts = useMemo(() => {
     const local = products.filter((product) => product.location === location);
@@ -168,18 +167,8 @@ function Dashboard() {
         <section aria-label="Quick access">
           <div className="mb-2 flex items-center justify-between">
             <h2 className="text-sm font-bold">Quick access</h2>
-            <button
-              onClick={() => setShortcutsExpanded((expanded) => !expanded)}
-              className="inline-flex items-center gap-0.5 text-xs font-semibold text-brand"
-              aria-expanded={shortcutsExpanded}
-            >
-              {shortcutsExpanded ? "Show less" : "See all"}
-              <ChevronRight
-                className={`h-3.5 w-3.5 transition-transform ${shortcutsExpanded ? "rotate-90" : ""}`}
-              />
-            </button>
           </div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
             {visibleShortcuts.map(({ to, icon: Icon, label }) => (
               <Link
                 key={to}
@@ -256,7 +245,11 @@ function Dashboard() {
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold">Ayyuka a {location}</h2>
-            <Link to="/jobs" search={{ q: "", category: undefined, tab: "explore" }} className="text-xs text-brand font-semibold">
+            <Link
+              to="/jobs"
+              search={{ q: "", category: undefined, tab: "explore" }}
+              className="text-xs text-brand font-semibold"
+            >
               See all
             </Link>
           </div>

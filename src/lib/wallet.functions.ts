@@ -78,7 +78,7 @@ function privateResponse() {
   setResponseHeaders(new Headers({ "Cache-Control": "no-store", Vary: "Cookie, Authorization" }));
 }
 
-async function writeWalletNotification(
+export async function writeWalletNotification(
   client: DynamoDBDocumentClient,
   profileTable: string,
   userId: string,
