@@ -366,7 +366,61 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 
   const listings = listingResult.Items ?? [];
   const activeListings = listings.filter((listing) => listing.status === "ACTIVE");
-  const profile = (profileResult.Item as FarmXProfile | undefined) ?? null;
+  let profile = (profileResult.Item as FarmXProfile | undefined) ?? null;
+
+  if (!profile) {
+    const now = new Date().toISOString();
+    const cleanId = actor.userId.replace(/[^a-z0-9]/gi, "").slice(0, 8).toLowerCase();
+    const defaultUsername = `farmer_${cleanId || "user"}`;
+    const defaultProfile = {
+      userId: actor.userId,
+      fullName: actor.email ? actor.email.split("@")[0] : "FarmX Member",
+      username: defaultUsername,
+      role: "farmer" as const,
+      bio: "Member of the FarmX agricultural marketplace.",
+      state: "Kano State",
+      location: "Kano Municipal",
+      phone: "+2348000000000",
+      email: actor.email ?? `${defaultUsername}@farmx.app`,
+      agriculturalInterests: ["Crop Farming", "Agribusiness"],
+      skills: ["General Farming"],
+      privacy: {
+        profileVisibility: "public" as const,
+        messagePermission: "everyone" as const,
+        callPermission: "everyone" as const,
+        showFollowers: true,
+        showActivity: true,
+        showBusinessInfo: true,
+      },
+      createdAt: now,
+      updatedAt: now,
+      verification: "not_started" as const,
+      pk: `USER#${actor.userId}`,
+      sk: "PROFILE",
+      entityType: "PROFILE",
+      gsi1pk: `USERNAME#${defaultUsername}`,
+      gsi1sk: `USER#${actor.userId}`,
+    };
+
+    try {
+      await client.send(
+        new PutCommand({
+          TableName: config.profileTable,
+          Item: defaultProfile,
+          ConditionExpression: "attribute_not_exists(pk)",
+        }),
+      );
+      profile = defaultProfile;
+    } catch {
+      const retryResult = await client.send(
+        new GetCommand({
+          TableName: config.profileTable,
+          Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        }),
+      );
+      profile = (retryResult.Item as FarmXProfile | undefined) ?? defaultProfile;
+    }
+  }
 
   const stats: ProfileStats = {
     activeAds: activeListings.length,
