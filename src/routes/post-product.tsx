@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PayModal } from "@/components/PayModal";
-import { PRICING, LOCATIONS } from "@/lib/mock-data";
+import { PRICING } from "@/lib/mock-data";
+import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useLocation } from "@/lib/location";
 import type { PaymentPurpose } from "@/lib/paystack";
 import { useSubscription } from "@/lib/subscription";
@@ -78,16 +79,7 @@ const DEFAULT_PRICE_UNITS = [
   "request quote",
 ];
 
-const KANO_LGAS = [
-  "Kano Municipal",
-  "Dala",
-  "Fagge",
-  "Gwale",
-  "Kumbotso",
-  "Nassarawa",
-  "Tarauni",
-  "Other LGA",
-];
+const NIGERIA_STATES = Object.keys(NIGERIA_STATES_LGAS).sort();
 const POST_STEPS = ["details", "media", "location", "publish"] as const;
 
 function PostProduct() {
@@ -172,7 +164,7 @@ function PostProduct() {
     [form.categoryId],
   );
   const lgaOptions = useMemo(
-    () => (form.state === "Kano" ? KANO_LGAS : ["Central LGA", "Other LGA"]),
+    () => (form.state ? NIGERIA_STATES_LGAS[form.state] || [] : []),
     [form.state],
   );
 
@@ -558,16 +550,16 @@ function PostProduct() {
             </span>
           </div>
           <div className="mt-4 grid grid-cols-4 gap-1.5" aria-label="Post progress">
-            {POST_STEPS.map((step, index) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => index < currentStep && setCurrentStep(index)}
-                className={`h-1.5 rounded-full transition ${index <= currentStep ? "bg-brand" : "bg-muted"}`}
-                aria-label={`${stepLabels[index].label} step`}
-                disabled={index >= currentStep}
-              />
-            ))}
+                    {POST_STEPS.map((step, index) => (
+                      <button
+                        key={step}
+                        type="button"
+                        onClick={() => index < currentStep && setCurrentStep(index)}
+                        className={`h-1.5 rounded-full transition ${index <= currentStep ? "bg-brand" : "bg-muted"}`}
+                        aria-label={`${stepLabels[index].label} step`}
+                        disabled={index >= currentStep}
+                      />
+                    ))}
           </div>
         </section>
 
@@ -577,7 +569,7 @@ function PostProduct() {
             <section className="space-y-4">
               <div className="flex justify-between items-end">
                 <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Title *
+                  {t("post.title")} *
                 </label>
                 <span className="text-[10px] font-bold text-muted-foreground">
                   {form.title.length}/70
@@ -586,7 +578,7 @@ function PostProduct() {
               <input
                 type="text"
                 maxLength={70}
-                placeholder="Enter a clear title for your listing"
+                placeholder={t("post.titlePlaceholder")}
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.title ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
@@ -600,11 +592,11 @@ function PostProduct() {
 
             {/* 2. Category & Subcategory */}
             <section className="space-y-4">
-              <FieldLabel label="Category *" />
+              <FieldLabel label={`${t("category")} *`} />
               <SelectorRow
                 icon={category?.icon ?? "▦"}
                 value={category?.name}
-                placeholder="Select category"
+                placeholder={t("post.selectCategory")}
                 onClick={() => setSelector("category")}
                 invalid={!!errors.category}
               />
@@ -612,10 +604,10 @@ function PostProduct() {
 
               {form.categoryId && (
                 <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                  <FieldLabel label="Subcategory *" />
+                  <FieldLabel label={`${t("subcategory")} *`} />
                   <SelectorRow
                     value={subcategory?.name}
-                    placeholder="Select subcategory"
+                    placeholder={t("post.selectSubcategory")}
                     onClick={() => setSelector("subcategory")}
                     invalid={!!errors.subcategory}
                   />
@@ -631,22 +623,22 @@ function PostProduct() {
 
             <section className="space-y-4">
               <div className="flex items-center justify-between">
-                <FieldLabel label="Photos" />
+                <FieldLabel label={t("photos")} />
                 <span className="text-[10px] font-bold text-muted-foreground">
                   {form.photos.length}/15
                 </span>
               </div>
               <div className="rounded-2xl border border-dashed border-brand/30 bg-brand/[0.03] p-4">
-                <p className="text-xs font-bold">Add up to 15 photos</p>
+                <p className="text-xs font-bold">{t("post.addPhotos")}</p>
                 <p className="mt-1 text-[10px] text-muted-foreground">
-                  The first photo is your cover. You can reorder or replace photos below.
+                  {t("post.photoTip")}
                 </p>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-sm shadow-brand/20 transition active:scale-[0.98]"
                 >
-                  <Camera className="h-4 w-4" /> Add photos
+                  <Camera className="h-4 w-4" /> {t("post.addPhotosButton")}
                 </button>
               </div>
 
@@ -671,7 +663,7 @@ function PostProduct() {
                       </button>
                       {i === 0 && (
                         <span className="absolute left-2 top-2 rounded-lg bg-brand px-2 py-1 text-[8px] font-black text-brand-foreground shadow-sm">
-                          COVER PHOTO
+                          {t("post.coverPhoto")}
                         </span>
                       )}
                       {p.uploading && (
@@ -755,20 +747,20 @@ function PostProduct() {
                         </div>
                       </div>
                       {i !== 0 && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setForm((prev) => {
-                              const photos = [...prev.photos];
-                              const [cover] = photos.splice(i, 1);
-                              photos.unshift(cover);
-                              return { ...prev, photos };
-                            })
-                          }
-                          className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
-                        >
-                          Set cover
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setForm((prev) => {
+                                const photos = [...prev.photos];
+                                const [cover] = photos.splice(i, 1);
+                                photos.unshift(cover);
+                                return { ...prev, photos };
+                              })
+                            }
+                            className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
+                          >
+                            {t("post.setCover")}
+                          </button>
                       )}
                     </div>
                   ))}
@@ -809,16 +801,16 @@ function PostProduct() {
             {/* 5. Location */}
 
             <section className="space-y-3">
-              <FieldLabel label="Location *" icon={<MapPin className="h-3.5 w-3.5" />} />
+              <FieldLabel label={`${t("location")} *`} icon={<MapPin className="h-3.5 w-3.5" />} />
               <SelectorRow
                 icon={<MapPin className="h-4 w-4 text-brand" />}
                 value={[form.state, form.lga, form.city].filter(Boolean).join(", ")}
-                placeholder="Select state, LGA and city/area"
+                placeholder={t("post.selectLocation")}
                 onClick={() => setSelector("location")}
                 invalid={!!(errors.state || errors.lga || errors.city)}
               />
               <p className="text-[10px] text-muted-foreground">
-                Nigeria location hierarchy · State, LGA and City/Area
+                {t("post.locationTip")}
               </p>
               {(errors.state || errors.lga || errors.city) && (
                 <InlineError message="Complete your State, LGA and City/Area." />
@@ -990,9 +982,9 @@ function PostProduct() {
             {/* 7. Description */}
             <section className="space-y-4">
               <div className="flex justify-between items-end">
-                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Description *
-                </label>
+                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    {t("description")} *
+                  </label>
                 <span className="text-[10px] font-bold text-muted-foreground">
                   {form.description.length}/2000
                 </span>
@@ -1000,7 +992,7 @@ function PostProduct() {
               <textarea
                 rows={6}
                 maxLength={2000}
-                placeholder="Describe the item or service accurately. Include important details buyers should know..."
+                placeholder={t("post.descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all resize-none ${errors.description ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
@@ -1008,8 +1000,7 @@ function PostProduct() {
               <div className="flex gap-2 p-3 rounded-xl bg-blue-50 text-blue-700 text-[10px] font-medium leading-tight">
                 <Info className="h-3.5 w-3.5 shrink-0" />
                 <span>
-                  Tip: Mention the condition, features, and why you are selling to attract more
-                  buyers.
+                  {t("post.descriptionTip")}
                 </span>
               </div>
               {errors.description && (
@@ -1022,7 +1013,7 @@ function PostProduct() {
             {/* 8. Price & Negotiation */}
             <section className="space-y-7 border-t border-border pt-7">
               <div className="space-y-3">
-                <FieldLabel label="Price *" />
+                <FieldLabel label={`${t("price")} *`} />
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-muted-foreground">
                     ₦
@@ -1030,7 +1021,7 @@ function PostProduct() {
                   <input
                     type="number"
                     min="0"
-                    placeholder="Enter price"
+                    placeholder={t("post.pricePlaceholder")}
                     value={form.price ?? ""}
                     disabled={form.priceType === "free" || form.priceType === "request"}
                     onChange={(e) =>
@@ -1041,10 +1032,10 @@ function PostProduct() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {[
-                    { id: "fixed", label: "Fixed price" },
-                    { id: "negotiable", label: "Negotiable" },
-                    { id: "request", label: "Request quote" },
-                    { id: "free", label: "Free" },
+                    { id: "fixed", label: t("post.priceFixed") },
+                    { id: "negotiable", label: t("post.priceNegotiable") },
+                    { id: "request", label: t("post.priceRequest") },
+                    { id: "free", label: t("post.priceFree") },
                   ].map((type) => (
                     <button
                       key={type.id}
@@ -1065,7 +1056,7 @@ function PostProduct() {
                 {(form.priceType === "fixed" || form.priceType === "negotiable") && (
                   <SelectorRow
                     value={form.priceUnit || "per item"}
-                    placeholder="Select price unit"
+                    placeholder={t("post.selectPriceUnit")}
                     onClick={() => setSelector("priceUnit")}
                     invalid={false}
                   />
@@ -1074,7 +1065,7 @@ function PostProduct() {
               </div>
 
               <div className="space-y-3">
-                <FieldLabel label="Are you open to negotiation?" />
+                <FieldLabel label={t("post.negotiablePrompt")} />
                 <div className="grid grid-cols-3 gap-2">
                   {["Yes", "No", "Not sure"].map((opt) => (
                     <button
@@ -1085,7 +1076,7 @@ function PostProduct() {
                       }
                       className={`rounded-xl border px-2 py-3 text-xs font-bold transition active:scale-[0.98] ${form.negotiation === opt ? "border-brand bg-brand/5 text-brand" : "border-border bg-card"}`}
                     >
-                      {opt}
+                      {t(opt.toLowerCase())}
                     </button>
                   ))}
                 </div>
@@ -1099,17 +1090,17 @@ function PostProduct() {
                   <Phone className="h-4 w-4 text-brand" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black">Contact Information</h3>
-                  <p className="text-[10px] text-muted-foreground">Verified from your profile</p>
+                  <h3 className="text-sm font-black">{t("post.contactInfo")}</h3>
+                  <p className="text-[10px] text-muted-foreground">{t("post.verifiedProfile")}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground px-1">Name</label>
+                  <label className="text-[10px] font-bold text-muted-foreground px-1">{t("name")}</label>
                   <input
                     type="text"
-                    placeholder="Your name"
+                    placeholder={t("name")}
                     value={form.contactName}
                     onChange={(e) => setForm({ ...form, contactName: e.target.value })}
                     className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.contactName ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
@@ -1117,7 +1108,7 @@ function PostProduct() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-muted-foreground px-1">
-                    Phone Number
+                    {t("phoneNumber")}
                   </label>
                   <input
                     type="tel"
@@ -1137,9 +1128,9 @@ function PostProduct() {
                   <Sparkles className="h-4 w-4 text-brand" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black">Boost Visibility</h3>
+                  <h3 className="text-sm font-black">{t("post.boostVisibility")}</h3>
                   <p className="text-[10px] text-muted-foreground">
-                    Get up to 10x more views and sales
+                    {t("post.boostTip")}
                   </p>
                 </div>
               </div>
@@ -1154,12 +1145,12 @@ function PostProduct() {
                     className={`flex items-center justify-between p-5 rounded-3xl border transition-all ${form.promoId === p.id ? "border-brand bg-brand/5 ring-2 ring-brand/20" : "border-border bg-card"}`}
                   >
                     <div className="text-left">
-                      <p className="text-sm font-black">{p.label}</p>
-                      <p className="text-[10px] text-muted-foreground">{p.sub}</p>
+                      <p className="text-sm font-black">{t(`post.promo.${p.id}.label`)}</p>
+                      <p className="text-[10px] text-muted-foreground">{t(`post.promo.${p.id}.sub`)}</p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-black text-brand">
-                        {p.price > 0 ? `₦${p.price.toLocaleString()}` : "FREE"}
+                        {p.price > 0 ? `₦${p.price.toLocaleString()}` : t("free")}
                       </p>
                     </div>
                   </button>
@@ -1172,7 +1163,7 @@ function PostProduct() {
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4 text-muted-foreground" />
                 <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  Ad Preview
+                  {t("post.adPreview")}
                 </h3>
               </div>
               <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm opacity-80">
@@ -1186,13 +1177,13 @@ function PostProduct() {
                   )}
                   <div className="absolute top-4 left-4 flex gap-2">
                     <span className="px-3 py-1 rounded-full bg-black/50 text-white text-[10px] font-black backdrop-blur-md">
-                      {category?.name || "Category"}
+                      {category?.name || t("category")}
                     </span>
                   </div>
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <h2 className="text-lg font-black leading-tight">{form.title || "No Title"}</h2>
+                    <h2 className="text-lg font-black leading-tight">{form.title || t("post.noTitle")}</h2>
                     <div className="flex items-center gap-1.5 text-brand mt-1">
                       <span className="text-xl font-black">{priceText}</span>
                     </div>
@@ -1200,10 +1191,10 @@ function PostProduct() {
                   <div className="flex flex-wrap gap-2">
                     <div className="px-3 py-1.5 rounded-xl bg-muted text-[10px] font-bold flex items-center gap-1.5">
                       <MapPin className="h-3 w-3" />
-                      {form.city || "City"}, {form.state}
+                      {form.city || t("city")}, {form.state}
                     </div>
                     <div className="px-3 py-1.5 rounded-xl bg-muted text-[10px] font-bold">
-                      {subcategory?.name || "Subcategory"}
+                      {subcategory?.name || t("subcategory")}
                     </div>
                   </div>
                 </div>
@@ -1214,18 +1205,17 @@ function PostProduct() {
             <div className="p-5 rounded-3xl bg-amber-50 border border-amber-100 space-y-3">
               <div className="flex items-center gap-2 text-amber-800">
                 <ShieldCheck className="h-5 w-5" />
-                <h4 className="text-xs font-black">Safety First!</h4>
+                <h4 className="text-xs font-black">{t("post.safetyTitle")}</h4>
               </div>
               <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
-                FarmX is a classified marketplace. Always meet in public places, inspect items
-                thoroughly before payment, and never pay in advance to sellers you don't trust.
+                {t("post.safetyTip")}
               </p>
               <Link
                 to="/profile-center/$section"
                 params={{ section: "safety" }}
                 className="text-[10px] font-black text-amber-900 underline"
               >
-                Read safety tips
+                {t("post.readSafety")}
               </Link>
             </div>
           </div>
@@ -1331,12 +1321,12 @@ function PostProduct() {
                 </p>
                 <h2 className="mt-1 text-lg font-black">
                   {selector === "category"
-                    ? "Select category"
+                    ? t("post.selectCategory")
                     : selector === "subcategory"
-                      ? "Select subcategory"
+                      ? t("post.selectSubcategory")
                       : selector === "location"
-                        ? "Select location"
-                        : "Select price unit"}
+                        ? t("post.selectLocation")
+                        : t("post.selectPriceUnit")}
                 </h2>
               </div>
               <button
@@ -1428,9 +1418,9 @@ function PostProduct() {
             {selector === "location" && (
               <div className="max-h-[76vh] space-y-4 overflow-y-auto p-5">
                 <div className="space-y-2">
-                  <FieldLabel label="State" />
+                  <FieldLabel label={t("state")} />
                   <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto rounded-2xl border border-border p-2 sm:grid-cols-3">
-                    {LOCATIONS.map((state) => (
+                    {NIGERIA_STATES.map((state) => (
                       <button
                         key={state}
                         type="button"
@@ -1443,7 +1433,7 @@ function PostProduct() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <FieldLabel label="LGA" />
+                  <FieldLabel label={t("lga")} />
                   <div className="grid grid-cols-2 gap-2">
                     {lgaOptions.map((lga) => (
                       <button
@@ -1458,11 +1448,11 @@ function PostProduct() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <FieldLabel label="City / Area" />
+                  <FieldLabel label={t("city")} />
                   <input
                     value={form.city}
                     onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
-                    placeholder="e.g. Kofar Mata, Ikeja, Maitama"
+                    placeholder={t("post.cityPlaceholder")}
                     className="w-full rounded-2xl border border-border bg-background p-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
                   />
                 </div>
@@ -1471,7 +1461,7 @@ function PostProduct() {
                   onClick={() => setSelector(null)}
                   className="w-full rounded-2xl bg-brand py-3.5 text-sm font-black text-brand-foreground shadow-lg shadow-brand/20"
                 >
-                  Save location
+                  {t("post.saveLocation")}
                 </button>
               </div>
             )}

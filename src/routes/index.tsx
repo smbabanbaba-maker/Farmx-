@@ -97,8 +97,12 @@ function Dashboard() {
     sessionStorage.setItem(key, String(Date.now()));
     notify({
       type: "order",
-      title: `Weather update for ${location}`,
-      body: `${weather.temperature}°C · ${weather.summary} · Humidity ${weather.humidity}%`,
+      title: t("home.weather.notifTitle", { location }),
+      body: t("home.weather.notifBody", {
+        temp: weather.temperature,
+        summary: localizedWeatherSummary,
+        humidity: weather.humidity,
+      }),
       link: "/",
     });
   }, [location, notify, weather, weatherLoading]);
