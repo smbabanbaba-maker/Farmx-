@@ -12,6 +12,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
+import { getAwsClientOptions } from "@/lib/aws-config";
 import { getPaystackSecret } from "./paystack-server";
 import { SUBSCRIPTION_PLANS } from "./subscription-repository";
 import type { SubscriptionStatus, SubscriptionTier, UserSubscription } from "./subscription.types";
@@ -58,7 +59,7 @@ function getConfig() {
 }
 
 function documentClient(region: string) {
-  return DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
+  return DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
     marshallOptions: { removeUndefinedValues: true },
   });
 }

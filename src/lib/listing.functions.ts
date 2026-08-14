@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { getAwsClientOptions } from "@/lib/aws-config";
 import { getSubscriptionLimitForUser } from "./subscription.functions";
 import { z } from "zod";
 
@@ -45,7 +46,7 @@ export const publishListing = createServerFn({ method: "POST" })
       ? new Date(Date.now() + data.promoDays * 86_400_000).toISOString()
       : undefined;
 
-    const client = DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
+    const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
       marshallOptions: { removeUndefinedValues: true },
     });
     const listingLimit = await getSubscriptionLimitForUser(data.sellerId);

@@ -12,6 +12,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
+import { getAwsClientOptions } from "@/lib/aws-config";
 import type { Course, CourseEnrollment, CourseCertificate } from "./learn.types";
 
 const courseIdSchema = z.object({ courseId: z.string().min(1).max(120) });
@@ -73,7 +74,7 @@ function privateResponse() {
 }
 
 function createDocumentClient(region: string) {
-  return DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
+  return DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
     marshallOptions: { removeUndefinedValues: true },
   });
 }

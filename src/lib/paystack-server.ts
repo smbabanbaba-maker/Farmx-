@@ -1,4 +1,5 @@
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
+import { getAwsClientOptions } from "@/lib/aws-config";
 
 let cachedSecret: { value: string; expiresAt: number } | null = null;
 
@@ -33,7 +34,7 @@ export async function getPaystackSecret(): Promise<string | null> {
 
   if (cachedSecret && cachedSecret.expiresAt > Date.now()) return cachedSecret.value;
 
-  const client = new SecretsManagerClient({ region });
+  const client = new SecretsManagerClient(getAwsClientOptions(region));
   const result = await client.send(new GetSecretValueCommand({ SecretId: identifier }));
   if (!result.SecretString) return null;
 

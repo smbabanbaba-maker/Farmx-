@@ -11,6 +11,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
+import { getAwsClientOptions } from "@/lib/aws-config";
 import type {
   CommunityAuthor,
   CommunityComment,
@@ -275,7 +276,7 @@ function getConfig(): CommunityConfig {
 }
 
 function documentClient(region: string) {
-  return DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
+  return DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
     marshallOptions: { removeUndefinedValues: true },
   });
 }

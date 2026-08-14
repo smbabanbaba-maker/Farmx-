@@ -287,20 +287,20 @@ function PostProduct() {
   const validateCurrentStep = () => {
     const newErrors: Record<string, string> = {};
     if (currentStep === 0) {
-      if (!form.title.trim()) newErrors.title = "Sanya sunan talla (Title).";
-      else if (form.title.trim().length < 5) newErrors.title = "Title ya yi gajarta sosai.";
-      if (!form.categoryId) newErrors.category = "Zaɓi Category.";
-      if (!form.subcategoryId) newErrors.subcategory = "Zaɓi Subcategory.";
+      if (!form.title.trim()) newErrors.title = t("post.error.titleRequired");
+      else if (form.title.trim().length < 5) newErrors.title = t("post.error.titleShort");
+      if (!form.categoryId) newErrors.category = t("post.error.categoryRequired");
+      if (!form.subcategoryId) newErrors.subcategory = t("post.error.subcategoryRequired");
     }
     if (currentStep === 1) {
-      if (form.photos.length === 0) newErrors.photos = "Saka aƙalla hoto 1.";
-      if (form.photos.some((p) => p.uploading)) newErrors.photos = "Jira hotuna su gama loduwa…";
-      if (form.photos.some((p) => p.error)) newErrors.photos = "Gyara hotunan da suka kasa loduwa.";
+      if (form.photos.length === 0) newErrors.photos = t("post.error.photosRequired");
+      if (form.photos.some((p) => p.uploading)) newErrors.photos = t("post.error.photosUploading");
+      if (form.photos.some((p) => p.error)) newErrors.photos = t("post.error.photosError");
     }
     if (currentStep === 2) {
-      if (!form.state) newErrors.state = "Zaɓi State.";
-      if (!form.lga?.trim()) newErrors.lga = "Zaɓi LGA.";
-      if (!form.city.trim()) newErrors.city = "Sanya gari (City).";
+      if (!form.state) newErrors.state = t("post.error.stateRequired");
+      if (!form.lga?.trim()) newErrors.lga = t("post.error.lgaRequired");
+      if (!form.city.trim()) newErrors.city = t("post.error.cityRequired");
       for (const field of dynamicFields) {
         const value = form.dynamicFields[field.id];
         const empty =
@@ -333,18 +333,18 @@ function PostProduct() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    if (!form.title.trim()) newErrors.title = "Sanya sunan talla (Title).";
-    else if (form.title.length < 5) newErrors.title = "Title ya yi gajarta sosai.";
+    if (!form.title.trim()) newErrors.title = t("post.error.titleRequired");
+    else if (form.title.length < 5) newErrors.title = t("post.error.titleShort");
 
-    if (!form.categoryId) newErrors.category = "Zaɓi Category.";
-    if (!form.subcategoryId) newErrors.subcategory = "Zaɓi Subcategory.";
+    if (!form.categoryId) newErrors.category = t("post.error.categoryRequired");
+    if (!form.subcategoryId) newErrors.subcategory = t("post.error.subcategoryRequired");
 
-    if (form.photos.length === 0) newErrors.photos = "Saka aƙalla hoto 1.";
-    if (form.photos.some((p) => p.uploading)) newErrors.photos = "Jira hotuna su gama loduwa…";
+    if (form.photos.length === 0) newErrors.photos = t("post.error.photosRequired");
+    if (form.photos.some((p) => p.uploading)) newErrors.photos = t("post.error.photosUploading");
 
-    if (!form.state) newErrors.state = "Zaɓi State.";
-    if (!form.lga?.trim()) newErrors.lga = "Zaɓi LGA.";
-    if (!form.city.trim()) newErrors.city = "Sanya gari (City).";
+    if (!form.state) newErrors.state = t("post.error.stateRequired");
+    if (!form.lga?.trim()) newErrors.lga = t("post.error.lgaRequired");
+    if (!form.city.trim()) newErrors.city = t("post.error.cityRequired");
 
     for (const field of dynamicFields) {
       const value = form.dynamicFields[field.id];
@@ -358,21 +358,21 @@ function PostProduct() {
       }
     }
 
-    if (!form.description.trim()) newErrors.description = "Rubuta bayanin talla (Description).";
+    if (!form.description.trim()) newErrors.description = t("post.error.descriptionRequired");
     else if (form.description.length < 20)
-      newErrors.description = "Description ya yi gajarta, ƙara bayani.";
+      newErrors.description = t("post.error.descriptionShort");
 
     if (
       form.priceType !== "free" &&
       form.priceType !== "request" &&
       (!form.price || form.price <= 0)
     ) {
-      newErrors.price = "Sanya farashi (Price).";
+      newErrors.price = t("post.error.priceRequired");
     }
 
-    if (!form.contactName.trim()) newErrors.contactName = "Sanya sunan mai talla.";
+    if (!form.contactName.trim()) newErrors.contactName = t("post.error.contactNameRequired");
     if (!/^\d{7,15}$/.test(form.contactPhone))
-      newErrors.contactPhone = "Sanya lambar waya mai kyau.";
+      newErrors.contactPhone = t("post.error.phoneRequired");
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -393,7 +393,7 @@ function PostProduct() {
     }
 
     if (!canPost) {
-      setErrors({ global: "Quota ɗinka ya ƙare. Sayi subscription don ci gaba." });
+      setErrors({ global: t("post.error.quotaExhausted") });
       navigate({ to: "/subscribe" });
       return;
     }
@@ -479,21 +479,21 @@ function PostProduct() {
 
   if (done) {
     return (
-      <AppShell title="Success">
+      <AppShell title={t("success")}>
         <div className="flex flex-col items-center text-center py-16 px-6">
           <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mb-6">
             <Check className="h-10 w-10 text-green-600" />
           </div>
-          <h2 className="text-2xl font-black">Talla ya shiga Market!</h2>
+          <h2 className="text-2xl font-black">{t("post.successTitle")}</h2>
           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-            Mun karɓi tallarka. Zai bayyana a cikin Market da kuma dashboard ɗinka nan take.
+            {t("post.successBody")}
           </p>
           <div className="mt-8 space-y-3 w-full max-w-xs">
             <button
               onClick={() => navigate({ to: "/market" })}
               className="w-full py-3 rounded-2xl bg-brand text-brand-foreground font-black shadow-lg shadow-brand/20"
             >
-              Go to Market
+              {t("post.goToMarket")}
             </button>
             <button
               onClick={() => {
@@ -502,7 +502,7 @@ function PostProduct() {
               }}
               className="w-full py-3 rounded-2xl border border-border font-bold"
             >
-              Post another ad
+              {t("post.postAnother")}
             </button>
           </div>
         </div>

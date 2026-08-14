@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { useI18n } from "@/lib/i18n";
 import {
   useCompany,
   TIER_PRICING_NGN,
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/upgrade")({ component: UpgradePage });
 type Step = "tier" | "personal" | "company" | "pay" | "done";
 
 function UpgradePage() {
+  const { t } = useI18n();
   const { state, country, setCountry, savePersonal, saveCompany, activateTier } = useCompany();
   const navigate = useNavigate();
 
@@ -138,7 +140,7 @@ function UpgradePage() {
                 </select>
               </div>
               <p className="mt-1 text-[11px] text-muted-foreground">
-                Farashi zai canja bisa kudin ƙasarka.
+                {t("upgrade.priceCurrencyNote")}
               </p>
             </div>
 
@@ -283,7 +285,7 @@ function UpgradePage() {
           <div className="space-y-3">
             <div>
               <h2 className="font-bold">Company details</h2>
-              <p className="text-xs text-muted-foreground">Mun cika wasu fannoni daga KYC ɗinka.</p>
+              <p className="text-xs text-muted-foreground">{t("upgrade.kycPreloadNote")}</p>
             </div>
             <Field
               label="Company name"

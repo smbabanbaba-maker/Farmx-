@@ -18,6 +18,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
+import { getAwsClientOptions } from "@/lib/aws-config";
 
 const roles = ["farmer", "seller", "buyer", "employer", "agricultural_business"] as const;
 const profileLanguageSchema = z.enum(["en", "ha", "ig", "yo", "kr"]);
@@ -145,7 +146,7 @@ async function requireAuthenticatedUser() {
 }
 
 function createDocumentClient(region: string) {
-  return DynamoDBDocumentClient.from(new DynamoDBClient({ region }), {
+  return DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
     marshallOptions: { removeUndefinedValues: true },
   });
 }
@@ -316,7 +317,7 @@ export const getPublicProfilePhotoUrl = createServerFn({ method: "GET" })
     }
 
     const downloadUrl = await getSignedUrl(
-      new S3Client({ region: config.region }),
+      new S3Client(getAwsClientOptions(config.region)),
       new GetObjectCommand({ Bucket: config.bucket, Key: profile.photoKey }),
       { expiresIn: 300 },
     );
@@ -477,7 +478,7 @@ export const createProfilePhotoUpload = createServerFn({ method: "POST" })
     const extension =
       data.contentType === "image/png" ? "png" : data.contentType === "image/webp" ? "webp" : "jpg";
     const objectKey = `profiles/${actor.userId}/avatar/${crypto.randomUUID()}.${extension}`;
-    const client = new S3Client({ region: config.region });
+    const client = new S3Client(getAwsClientOptions(config.region));
     const uploadUrl = await getSignedUrl(
       client,
       new PutObjectCommand({
@@ -515,7 +516,7 @@ export const removeMyProfilePhoto = createServerFn({ method: "POST" }).handler(a
       ExpressionAttributeValues: { ":userId": actor.userId },
     }),
   );
-  await new S3Client({ region: config.region }).send(
+  await new S3Client(getAwsClientOptions(config.region)).send(
     new DeleteObjectCommand({ Bucket: config.bucket, Key: photoKey }),
   );
   return { removed: true };
@@ -538,7 +539,7 @@ export const getMyProfilePhotoUrl = createServerFn({ method: "GET" })
     if (!data.objectKey.startsWith(`profiles/${actor.userId}/`))
       throw new Error("You cannot access this profile photo.");
 
-    const client = new S3Client({ region: config.region });
+    const client = new S3Client(getAwsClientOptions(config.region));
     const downloadUrl = await getSignedUrl(
       client,
       new GetObjectCommand({ Bucket: config.bucket, Key: data.objectKey }),

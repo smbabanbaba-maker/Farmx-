@@ -119,8 +119,8 @@ function CompanyPage() {
             className="w-full p-5 rounded-2xl border-2 border-dashed border-border text-center hover:border-brand"
           >
             <Plus className="h-6 w-6 mx-auto text-brand" />
-            <p className="mt-2 font-semibold">Ƙirƙiri Kamfani</p>
-            <p className="text-xs text-muted-foreground">KYC + Verified Seller kafin ka fara</p>
+            <p className="mt-2 font-semibold">{t("company.createPrompt")}</p>
+            <p className="text-xs text-muted-foreground">{t("company.kycPrompt")}</p>
           </button>
         ) : (
           <div className="rounded-2xl bg-card border border-border overflow-hidden">

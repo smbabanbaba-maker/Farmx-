@@ -128,10 +128,10 @@ let repositoryPromise: Promise<ListingRepository> | undefined;
 
 export async function getListingRepository(): Promise<ListingRepository> {
   if (!repositoryPromise) {
-    const apiBaseUrl = getApiBaseUrl();
-    const preview = import.meta.env.VITE_LISTING_PREVIEW !== "false" || !apiBaseUrl;
+    const isProductionBuild =
+      import.meta.env.PROD || import.meta.env.VITE_LISTING_PREVIEW === "false";
     repositoryPromise = Promise.resolve(
-      preview ? createPreviewRepository() : createProductionRepository(),
+      isProductionBuild ? createProductionRepository() : createPreviewRepository(),
     );
   }
   return repositoryPromise;

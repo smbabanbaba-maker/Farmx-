@@ -483,8 +483,7 @@ export async function getCommunityRepository(): Promise<CommunityRepository> {
   return repositoryPromise;
 }
 export function getCommunityRuntimeModeClient() {
-  return import.meta.env.VITE_COMMUNITY_PREVIEW !== "false" && !import.meta.env.VITE_API_BASE_URL
-    ? ("preview" as const)
-    : ("production" as const);
+  const isProd = import.meta.env.PROD || import.meta.env.VITE_COMMUNITY_PREVIEW === "false";
+  return isProd ? ("production" as const) : ("preview" as const);
 }
 export { COMMUNITY_TOPICS, topicLabel };
