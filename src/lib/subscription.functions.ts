@@ -12,6 +12,7 @@ import {
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
+import { getPaystackSecret } from "./paystack-server";
 import { SUBSCRIPTION_PLANS } from "./subscription-repository";
 import type { SubscriptionStatus, SubscriptionTier, UserSubscription } from "./subscription.types";
 import { writeWalletNotification } from "./wallet.functions";
@@ -285,7 +286,7 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
       return { reference, status: "successful" as const, amount: plan.price, planName: plan.name };
     }
 
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = await getPaystackSecret();
     if (!secret)
       throw new Error(
         "FarmX payment provider is not configured. Add PAYSTACK_SECRET_KEY on the server before accepting subscriptions.",
@@ -388,7 +389,7 @@ export const verifySubscriptionPayment = createServerFn({ method: "POST" })
     if (!transaction) throw new Error("Subscription transaction not found.");
     if (transaction.status === "successful")
       return { verified: true, reference: data.reference, status: "successful" as const };
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = await getPaystackSecret();
     if (!secret) throw new Error("FarmX payment provider is not configured for verification.");
     const providerResponse = await fetch(
       `https://api.paystack.co/transaction/verify/${encodeURIComponent(String(transaction.providerReference ?? data.reference))}`,
@@ -584,7 +585,7 @@ export const handleSubscriptionWebhook = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     noStore();
     if (!hasProductionConfig()) return { processed: true, reference: data.data.reference };
-    const secret = process.env.PAYSTACK_SECRET_KEY;
+    const secret = await getPaystackSecret();
     const signature =
       getRequestHeader("x-paystack-signature") ?? getRequestHeader("x-farmx-signature");
     if (!secret || !signature) throw new Error("Webhook verification is not configured.");
