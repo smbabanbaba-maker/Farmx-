@@ -2,9 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useSubscription, TIERS, FREE_QUOTA, type TierId } from "@/lib/subscription";
+import {
+  cancelSubscription,
+  getSubscriptionSummary,
+  setSubscriptionAutoRenew,
+} from "@/lib/subscription.functions";
+import type { UserSubscription } from "@/lib/subscription.types";
 import { PayModal } from "@/components/PayModal";
 import { Check, Crown, Infinity as InfinityIcon } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export const Route = createFileRoute("/subscribe")({
   head: () => ({
@@ -35,6 +41,53 @@ function SubscribePage() {
     title: string;
     second?: boolean;
   } | null>(null);
+  const [serverSubscription, setServerSubscription] = useState<UserSubscription | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [serverBusy, setServerBusy] = useState(false);
+
+  const loadServerSubscription = useCallback(async () => {
+    try {
+      const summary = await getSubscriptionSummary();
+      setServerSubscription(summary);
+      setServerError(null);
+    } catch (error) {
+      setServerError(
+        error instanceof Error ? error.message : "Unable to load subscription status.",
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadServerSubscription();
+  }, [loadServerSubscription]);
+
+  const toggleAutoRenew = async () => {
+    if (!serverSubscription) return;
+    setServerBusy(true);
+    try {
+      const updated = await setSubscriptionAutoRenew({
+        data: { enabled: !serverSubscription.autoRenew },
+      });
+      setServerSubscription(updated);
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : "Unable to update auto-renewal.");
+    } finally {
+      setServerBusy(false);
+    }
+  };
+
+  const endSubscription = async () => {
+    if (!window.confirm("Cancel auto-renewal for this FarmX subscription?")) return;
+    setServerBusy(true);
+    try {
+      const updated = await cancelSubscription();
+      setServerSubscription(updated);
+    } catch (error) {
+      setServerError(error instanceof Error ? error.message : "Unable to cancel subscription.");
+    } finally {
+      setServerBusy(false);
+    }
+  };
 
   return (
     <AppShell title={t("subscription")}>
@@ -44,13 +97,52 @@ function SubscribePage() {
             {t("currentPlan")}
           </p>
           <p className="text-lg font-bold mt-0.5">
-            {tier ? tier.name : `${t("freeQuota")} (${FREE_QUOTA})`}
+            {serverSubscription
+              ? serverSubscription.tier
+              : tier
+                ? tier.name
+                : `${t("freeQuota")} (${FREE_QUOTA})`}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {listingsLeft === "unlimited"
-              ? t("unlimitedListings")
-              : `${listingsLeft} ${t("quotaLeft")}`}
+            {serverSubscription?.listingLimit !== undefined
+              ? `${serverSubscription.activeListings ?? 0}/${serverSubscription.listingLimit} active listings`
+              : listingsLeft === "unlimited"
+                ? t("unlimitedListings")
+                : `${listingsLeft} ${t("quotaLeft")}`}
           </p>
+          {serverSubscription && (
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl bg-accent/40 p-2">
+                <p className="text-muted-foreground">Status</p>
+                <p className="mt-0.5 font-bold">{serverSubscription.status}</p>
+              </div>
+              <div className="rounded-xl bg-accent/40 p-2">
+                <p className="text-muted-foreground">Remaining days</p>
+                <p className="mt-0.5 font-bold">{serverSubscription.remainingDays}</p>
+              </div>
+            </div>
+          )}
+          {serverError && <p className="mt-2 text-xs font-semibold text-brand">{serverError}</p>}
+          {serverSubscription && serverSubscription.status === "ACTIVE" && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={serverBusy}
+                onClick={() => void toggleAutoRenew()}
+                className="rounded-lg border border-border px-3 py-2 text-xs font-bold disabled:opacity-50"
+              >
+                Auto-renew: {serverSubscription.autoRenew ? "On" : "Off"}
+              </button>
+              <button
+                type="button"
+                disabled={serverBusy}
+                onClick={() => void endSubscription()}
+                className="rounded-lg border border-brand/30 px-3 py-2 text-xs font-bold text-brand disabled:opacity-50"
+              >
+                Cancel renewal
+              </button>
+            </div>
+          )}
           {tier && state.installmentsPaid === 1 && (
             <button
               onClick={() =>
@@ -155,6 +247,7 @@ function SubscribePage() {
           if (pending.second) paySecondInstallment();
           else activateTier(pending.id);
           setPending(null);
+          void loadServerSubscription();
         }}
       />
     </AppShell>

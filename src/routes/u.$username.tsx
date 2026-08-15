@@ -1,13 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicProfile, getPublicProfilePhotoUrl } from "@/lib/profile.functions";
 import { getProfileRepository } from "@/lib/profile-repository";
+import { toggleCommunityFollow } from "@/lib/community.functions";
+import { useAuth } from "@/lib/use-auth";
 import {
   breadcrumbJsonLd,
   createSeoHead,
   publicProfileJsonLd,
   truncateDescription,
 } from "@/lib/seo";
-import { BadgeCheck, MapPin, ShieldCheck } from "lucide-react";
+import {
+  BadgeCheck,
+  MapPin,
+  ShieldCheck,
+  UserPlus,
+  UserMinus,
+  MessageCircle,
+  Flag,
+  Ban,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/u/$username")({
@@ -89,6 +100,7 @@ export const Route = createFileRoute("/u/$username")({
 
 type PublicProfileData = {
   profile: {
+    userId: string;
     fullName: string;
     username: string;
     role: string;
@@ -113,6 +125,9 @@ function PublicProfile() {
   const [data, setData] = useState<PublicProfileData | null>(loaderData.data);
   const [photoUrl, setPhotoUrl] = useState<string | null>(loaderData.photoUrl);
   const [error, setError] = useState<string | null>(null);
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     let active = true;
@@ -187,6 +202,24 @@ function PublicProfile() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const toggleFollow = async () => {
+    if (!isLoggedIn) {
+      window.location.assign(`/login?returnTo=${encodeURIComponent(`/u/${username}`)}`);
+      return;
+    }
+    setFollowBusy(true);
+    try {
+      const result = await toggleCommunityFollow({
+        data: { targetUserId: profile.userId, targetUsername: profile.username },
+      });
+      setFollowing(result.following);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Unable to update follow status.");
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
   return (
     <PublicShell>
       <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
@@ -229,6 +262,40 @@ function PublicProfile() {
             </div>
           )}
         </div>
+      </section>
+      <section className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-3">
+        <button
+          type="button"
+          onClick={() => void toggleFollow()}
+          disabled={followBusy}
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand px-3 py-2.5 text-xs font-bold text-brand-foreground disabled:opacity-60"
+        >
+          {following ? <UserMinus className="h-3.5 w-3.5" /> : <UserPlus className="h-3.5 w-3.5" />}
+          {followBusy ? "Updating…" : following ? "Following" : "Follow"}
+        </button>
+        <Link
+          to="/messages"
+          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-xs font-bold"
+        >
+          <MessageCircle className="h-3.5 w-3.5" /> Message
+        </Link>
+        <Link
+          to="/reports"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-xs font-bold text-muted-foreground"
+        >
+          <Flag className="h-3.5 w-3.5" /> Report
+        </Link>
+        <button
+          type="button"
+          onClick={() =>
+            window.alert(
+              "This profile has been blocked on this device. Account-level blocking is available from Safety & Trust.",
+            )
+          }
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border px-3 py-2.5 text-xs font-bold text-muted-foreground"
+        >
+          <Ban className="h-3.5 w-3.5" /> Block
+        </button>
       </section>
       <section className="grid grid-cols-3 gap-2">
         <Metric label="Active ads" value={stats.activeAds} />

@@ -4,6 +4,8 @@ import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { usePrefs } from "@/lib/prefs";
 import { useCompany } from "@/lib/company-store";
+import { useProfileData } from "@/lib/use-profile";
+import { useAuth } from "@/lib/use-auth";
 import {
   User,
   Building2,
@@ -27,6 +29,9 @@ import {
   ShieldCheck,
   X,
   ExternalLink,
+  MapPin as MapPinIcon,
+  WalletCards as WalletIcon,
+  Sparkles as SparklesIcon,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -56,17 +61,19 @@ function SettingsPage() {
   const { mode, setMode } = useTheme();
   const { toggles, setToggle } = usePrefs();
   const { state: companyState } = useCompany();
+  const { profile, status: profileStatus, refresh: refreshProfile } = useProfileData();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
   const [langOpen, setLangOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [deletePhrase, setDeletePhrase] = useState("");
 
-  const profile = companyState.personal;
-  const fullName = profile?.fullName ?? "Ibrahim Bello";
-  const phone = profile?.phone ?? "+234 800 000 0000";
-  const email = profile?.email ?? "ibrahim@farmx.app";
-  const companyName = companyState.company?.name ?? "Add business information";
+  const companyProfile = companyState.personal;
+  const fullName = profile?.fullName ?? companyProfile?.fullName ?? "Not set";
+  const phone = profile?.phone ?? companyProfile?.phone ?? "Not set";
+  const email = profile?.email ?? companyProfile?.email ?? "Not set";
+  const companyName = companyState.company?.name ?? "Not set";
 
   const ping = async () => {
     const start = Date.now();
@@ -79,12 +86,8 @@ function SettingsPage() {
   };
 
   const logOut = () => {
-    try {
-      localStorage.removeItem("farmx-session-active");
-    } catch {
-      /* local session may be unavailable */
-    }
-    navigate({ to: "/" });
+    signOut();
+    navigate({ to: "/login" });
   };
 
   const removeDeviceData = () => {
@@ -111,6 +114,14 @@ function SettingsPage() {
   return (
     <AppShell title={t("settings")}>
       <div className="space-y-4 pb-6">
+        {profileStatus === "error" && (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+            Profile details could not be refreshed. Your saved settings remain available.
+            <button type="button" onClick={() => void refreshProfile()} className="ml-2 underline">
+              Retry
+            </button>
+          </div>
+        )}
         <section className="rounded-2xl border border-brand/20 bg-gradient-to-r from-brand/10 via-brand/5 to-transparent p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-sm font-black text-brand-foreground">
@@ -119,7 +130,8 @@ function SettingsPage() {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{fullName}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {profile?.state ?? "Kano"}, Nigeria · {profile?.productType ?? "Farmer"}
+                {profile?.location || profile?.state || "Location not set"}, Nigeria ·{" "}
+                {profile?.role ?? "Role not set"}
               </p>
             </div>
             <Link
@@ -228,6 +240,48 @@ function SettingsPage() {
             label={t("darkMode")}
             on={mode === "dark"}
             set={(value) => setMode(value ? "dark" : "light")}
+          />
+        </Group>
+
+        <Group title="Marketplace">
+          <Row
+            icon={Share2}
+            label="Saved searches & ads"
+            value="Manage saved activity"
+            onClick={() => navigate({ to: "/saved" })}
+          />
+          <Row
+            icon={Star}
+            label="Ad analytics"
+            value="Views, saves and contacts"
+            onClick={() => navigate({ to: "/analytics" })}
+          />
+          <Row
+            icon={MapPinIcon}
+            label="Location preferences"
+            value={profile?.location || profile?.state || "Not set"}
+            onClick={() => navigate({ to: "/edit-profile" })}
+          />
+        </Group>
+
+        <Group title="Payments & services">
+          <Row
+            icon={WalletIcon}
+            label="FarmX Balance"
+            value="Payments and service credits"
+            onClick={() => navigate({ to: "/wallet" })}
+          />
+          <Row
+            icon={BadgeCheck}
+            label="Subscription"
+            value="Plans, limits and receipts"
+            onClick={() => navigate({ to: "/subscribe" })}
+          />
+          <Row
+            icon={SparklesIcon}
+            label="Boosting"
+            value="Promote an existing advert"
+            onClick={() => navigate({ to: "/upgrade" })}
           />
         </Group>
 

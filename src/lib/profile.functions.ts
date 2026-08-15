@@ -288,6 +288,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
     const activeAds = listings.filter((listing) => listing.status === "ACTIVE").length;
     return {
       profile: {
+        userId: profile.userId,
         fullName: profile.fullName,
         username: profile.username,
         role: profile.role,

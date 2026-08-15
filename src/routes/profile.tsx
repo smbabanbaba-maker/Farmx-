@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useProfileData } from "@/lib/use-profile";
 import { useProfilePhoto } from "@/lib/use-profile-photo";
@@ -8,12 +8,15 @@ import {
   BadgeCheck,
   Bell,
   Building2,
+  CalendarDays,
   ChevronRight,
   CircleHelp,
   Heart,
   History,
   LayoutDashboard,
+  MapPin,
   MessageSquareText,
+  Globe2,
   MoreHorizontal,
   Pencil,
   ShieldCheck,
@@ -43,90 +46,105 @@ export const Route = createFileRoute("/profile")({
 const sections = [
   {
     id: "ads",
+    group: "My Marketplace",
     label: "My ads",
     description: "Active, drafts, paused and closed adverts",
     icon: LayoutDashboard,
   },
   {
     id: "promotions",
+    group: "Promotion",
     label: "Pro sales",
     description: "Boosts, featured listings and campaigns",
     icon: Sparkles,
   },
   {
     id: "inquiries",
+    group: "My Marketplace",
     label: "Buyer inquiries",
     description: "People who contacted you about an advert",
     icon: MessageSquareText,
   },
   {
     id: "interactions",
+    group: "My Marketplace",
     label: "My interactions",
     description: "Recent chats, viewed ads and saved activity",
     icon: UsersRound,
   },
   {
     id: "saved",
+    group: "My Marketplace",
     label: "Saved ads",
     description: "Listings you saved to revisit later",
     icon: Heart,
   },
   {
     id: "analytics",
+    group: "Performance",
     label: "Ad analytics",
     description: "Views, saves, contacts and promotion performance",
     icon: TrendingUp,
   },
   {
     id: "balance",
+    group: "Payments",
     label: "FarmX balance",
     description: "Payments for FarmX services only",
     icon: WalletCards,
   },
   {
     id: "services",
+    group: "Payments",
     label: "Premium services",
     description: "Subscription, limits and service receipts",
     icon: Sparkles,
   },
   {
     id: "reviews",
+    group: "Performance",
     label: "Ratings & reviews",
     description: "Feedback from verified FarmX interactions",
     icon: Star,
   },
   {
     id: "network",
+    group: "Performance",
     label: "Followers & following",
     description: "People and businesses you connect with",
     icon: UsersRound,
   },
   {
     id: "verification",
+    group: "Account",
     label: "Seller verification",
     description: "Phone, email, identity and business status",
     icon: UserCheck,
   },
   {
     id: "business",
+    group: "Account",
     label: "Business profile",
     description: "Your public agricultural business information",
     icon: Building2,
   },
   {
     id: "activity",
+    group: "Account",
     label: "Profile activity",
     description: "Your adverts, services and account history",
     icon: History,
   },
   {
     id: "safety",
+    group: "Account",
     label: "Safety & trust",
     description: "Safety guidance, reports and blocked users",
     icon: ShieldCheck,
   },
   {
     id: "support",
+    group: "Account",
     label: "Help & support",
     description: "FAQ, support tickets and FarmX assistance",
     icon: CircleHelp,
@@ -138,6 +156,7 @@ function ProfilePage() {
   const photoUrl = useProfilePhoto(profile?.photoKey);
   const { isLoggedIn, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("Overview");
 
   useEffect(() => {
     if (status === "error" && error?.toLowerCase().includes("sign in")) {
@@ -238,6 +257,29 @@ function ProfilePage() {
     typeof window === "undefined"
       ? `/u/${profile.username}`
       : `${window.location.origin}/u/${profile.username}`;
+  const memberSince = profile.createdAt
+    ? new Intl.DateTimeFormat("en-NG", { month: "long", year: "numeric" }).format(
+        new Date(profile.createdAt),
+      )
+    : "Not available";
+  const tabs = [
+    "Overview",
+    "Ads",
+    "Services",
+    "Reviews",
+    "Followers",
+    "Following",
+    "About",
+    "Activity",
+  ];
+  const tabRoutes: Record<string, string> = {
+    Ads: "/profile-center/ads",
+    Services: "/profile-center/services",
+    Reviews: "/profile-center/reviews",
+    Followers: "/profile-center/network",
+    Following: "/profile-center/network",
+    Activity: "/profile-center/activity",
+  };
 
   const shareProfile = async () => {
     const shareData = {
@@ -324,8 +366,77 @@ function ProfilePage() {
           <Metric label="Reviews" value={stats.reviews ?? "—"} />
         </section>
 
-        <section className="rounded-2xl border border-border bg-card">
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <section className="overflow-x-auto rounded-2xl border border-border bg-card p-1">
+          <div className="flex min-w-max gap-1" role="tablist" aria-label="Profile sections">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab}
+                onClick={() => setActiveTab(tab)}
+                className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
+                  activeTab === tab
+                    ? "bg-brand text-brand-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {activeTab !== "Overview" && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                {activeTab === "About" ? (
+                  <Globe2 className="h-5 w-5" />
+                ) : (
+                  <LayoutDashboard className="h-5 w-5" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-bold">{activeTab}</h2>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  {activeTab === "About"
+                    ? `${profile.fullName} is a ${roleLabel(profile.role)} based in ${profile.location || profile.state}, Nigeria.`
+                    : `Real FarmX data for this section is available in your Profile Centre.`}
+                </p>
+                {activeTab === "About" && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <InfoItem icon={Globe2} label="Country" value="Nigeria" />
+                    <InfoItem
+                      icon={MapPin}
+                      label="Location"
+                      value={profile.location || profile.state}
+                    />
+                    <InfoItem icon={CalendarDays} label="Member since" value={memberSince} />
+                    <InfoItem icon={UserRound} label="Role" value={roleLabel(profile.role)} />
+                  </div>
+                )}
+                {tabRoutes[activeTab] && (
+                  <Link
+                    to={tabRoutes[activeTab] as "/profile-center/$section"}
+                    params={{
+                      section:
+                        activeTab === "Following"
+                          ? "network"
+                          : (tabRoutes[activeTab].split("/").pop() ?? "ads"),
+                    }}
+                    className="mt-3 inline-flex rounded-xl bg-brand px-3 py-2 text-xs font-bold text-brand-foreground"
+                  >
+                    Open {activeTab}
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
             <div>
               <h2 className="text-sm font-bold">Profile centre</h2>
               <p className="text-[11px] text-muted-foreground">
@@ -334,26 +445,37 @@ function ProfilePage() {
             </div>
             <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div className="divide-y divide-border">
-            {sections.map((section) => (
-              <Link
-                key={section.id}
-                to="/profile-center/$section"
-                params={{ section: section.id }}
-                className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70 active:scale-[0.995]"
-              >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                  <section.icon className="h-4 w-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold">{section.label}</span>
-                  <span className="block truncate text-[11px] text-muted-foreground">
-                    {section.description}
-                  </span>
-                </span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </Link>
-            ))}
+          {Array.from(new Set(sections.map((section) => section.group))).map((group) => (
+            <div key={group}>
+              <h3 className="mb-1.5 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                {group}
+              </h3>
+              <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+                {sections
+                  .filter((section) => section.group === group)
+                  .map((section) => (
+                    <Link
+                      key={section.id}
+                      to="/profile-center/$section"
+                      params={{ section: section.id }}
+                      className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70 active:scale-[0.995]"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
+                        <section.icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{section.label}</span>
+                        <span className="block truncate text-[11px] text-muted-foreground">
+                          {section.description}
+                        </span>
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          ))}
+          <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
             <Link
               to="/notifications"
               className="flex items-center gap-3 px-4 py-3 transition hover:bg-accent/70"
@@ -404,6 +526,26 @@ function ProfileLoading() {
         <div className="h-80 rounded-2xl bg-muted" />
       </div>
     </AppShell>
+  );
+}
+
+function InfoItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Globe2;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-2.5">
+      <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+        <Icon className="h-3.5 w-3.5 text-brand" />
+        {label}
+      </div>
+      <p className="mt-1 truncate text-xs font-semibold text-foreground">{value || "Not set"}</p>
+    </div>
   );
 }
 
