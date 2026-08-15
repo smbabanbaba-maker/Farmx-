@@ -1,3 +1,4 @@
+import "./polyfills";
 import {
   CognitoUserPool,
   CognitoUser,
@@ -5,11 +6,6 @@ import {
   CognitoUserAttribute,
   type CognitoUserSession,
 } from "amazon-cognito-identity-js";
-
-// Polyfill for global/process needed by some versions of amazon-cognito-identity-js
-if (typeof window !== "undefined" && !(window as unknown as Record<string, unknown>).global) {
-  (window as unknown as Record<string, unknown>).global = window;
-}
 
 const poolData = {
   UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || "eu-west-1_HXI6OOXpg",
@@ -89,7 +85,7 @@ export async function signUp(
   email: string,
   password: string,
   name: string,
-  phone: string,
+  phone: string
 ): Promise<unknown> {
   const attributeList = [
     new CognitoUserAttribute({
@@ -108,7 +104,7 @@ export async function signUp(
       new CognitoUserAttribute({
         Name: "phone_number",
         Value: formattedPhone,
-      }),
+      })
     );
   }
 
@@ -116,7 +112,7 @@ export async function signUp(
     "Attempting signup for:",
     email,
     "with attributes:",
-    attributeList.map((a) => a.getName()),
+    attributeList.map((a) => a.getName())
   );
 
   return new Promise((resolve, reject) => {
