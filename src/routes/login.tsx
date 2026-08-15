@@ -27,16 +27,16 @@ function SignUpPage() {
       console.log("Calling Cognito signIn...");
       const result = await signIn(email, password);
       console.log("Cognito signIn success:", result);
-      
+
       // Explicitly navigate to profile
       navigate({ to: "/profile" });
     } catch (err: unknown) {
       const errorObj = err as Error;
       console.error("Login error details:", errorObj);
-      
+
       const msg = errorObj.message || "Invalid email or password.";
       setError(msg);
-      
+
       // On mobile, console logs are hard to see, so alert the error
       if (typeof window !== "undefined") {
         window.alert("Login Error: " + msg);
@@ -87,7 +87,7 @@ function SignUpPage() {
                   type="button"
                   onClick={() =>
                     alert(
-                      "Password reset is managed via AWS Cognito. Please contact support to reset your password."
+                      "Password reset is managed via AWS Cognito. Please contact support to reset your password.",
                     )
                   }
                   className="text-[10px] font-bold text-brand hover:underline"
@@ -136,7 +136,7 @@ function SignUpPage() {
               type="button"
               onClick={() => {
                 alert(
-                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers."
+                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers.",
                 );
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold hover:bg-accent"
