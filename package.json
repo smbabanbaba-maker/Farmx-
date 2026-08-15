@@ -2,7 +2,10 @@
   "name": "farmx-marketplace",
   "version": "1.0.0",
   "private": true,
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css",
+    "*.ts"
+  ],
   "type": "module",
   "packageManager": "pnpm@11.21.0",
   "engines": {
