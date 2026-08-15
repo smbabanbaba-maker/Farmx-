@@ -9,17 +9,35 @@ const LOGO = "/farmx-logo.png";
  *  - Every route change afterwards: quick logo flash (~0.7s)
  */
 export function BrandSplash() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Use try-catch or safe access for router state to prevent boot-time crashes
+  let pathname = "/";
+  try {
+    const state = useRouterState({ select: (s) => s.location.pathname });
+    pathname = state;
+  } catch (e) {
+    console.warn("Router state not ready in BrandSplash");
+  }
+
   const [phase, setPhase] = useState<"boot" | "flash" | "idle">("boot");
   const lastPath = useRef(pathname);
   const booted = useRef(false);
 
   useEffect(() => {
+    // Primary boot timeout
     const t = setTimeout(() => {
       booted.current = true;
       setPhase("idle");
     }, 1800);
-    return () => clearTimeout(t);
+
+    // Fail-safe: force idle after 4s even if something hangs
+    const failSafe = setTimeout(() => {
+      setPhase("idle");
+    }, 4000);
+
+    return () => {
+      clearTimeout(t);
+      clearTimeout(failSafe);
+    };
   }, []);
 
   useEffect(() => {

@@ -16,12 +16,18 @@ export async function getCurrentSession() {
   const user = userPool.getCurrentUser();
   if (!user) return null;
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      console.warn("Cognito session lookup timed out");
+      resolve(null);
+    }, 5000); // 5s timeout
+
     user.getSession((err: any, session: any) => {
+      clearTimeout(timeout);
       if (err) {
         resolve(null);
       } else {
-        if (session.isValid()) {
+        if (session && session.isValid()) {
           resolve(session);
         } else {
           resolve(null);
