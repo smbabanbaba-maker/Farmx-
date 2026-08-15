@@ -20,7 +20,7 @@ import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useMessages } from "@/lib/messages-store";
 import { useNotifications } from "@/lib/notifications-store";
-import { signOut } from "@/lib/auth";
+import { getCurrentSession, signOut } from "@/lib/auth";
 
 const LOGO = "/farmx-logo.png";
 
@@ -33,10 +33,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setIsLoggedIn(localStorage.getItem("farmx-session-active") === "true");
-    }
-  }, []);
+    let active = true;
+    void getCurrentSession().then((session) => {
+      if (active) setIsLoggedIn(Boolean(session));
+    });
+    return () => {
+      active = false;
+    };
+  }, [pathname]);
 
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
