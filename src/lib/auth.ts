@@ -75,7 +75,8 @@ export async function signIn(email: string, password: string): Promise<unknown> 
         resolve(result);
       },
       onFailure: (err) => {
-        reject(err);
+        console.error("Cognito signIn error:", err);
+        reject(err instanceof Error ? err : new Error(String(err)));
       },
     });
   });
@@ -119,7 +120,8 @@ export async function signUp(
     userPool.signUp(email, password, attributeList, [], (err, result) => {
       if (err) {
         console.error("Cognito signUp error:", err);
-        reject(err);
+        // Ensure err is an Error object
+        reject(err instanceof Error ? err : new Error(String(err)));
         return;
       }
       console.log("Signup success:", result?.user?.getUsername());

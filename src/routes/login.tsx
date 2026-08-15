@@ -19,7 +19,11 @@ function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     console.log("Login form submitted for:", email);
     setLoading(true);
     setError(null);
@@ -28,8 +32,12 @@ function SignUpPage() {
       const result = await signIn(email, password);
       console.log("Cognito signIn success:", result);
 
+      if (typeof window !== "undefined") {
+        window.alert("Login successful! Welcome back.");
+      }
+
       // Explicitly navigate to profile
-      navigate({ to: "/profile" });
+      await navigate({ to: "/profile" });
     } catch (err: unknown) {
       const errorObj = err as Error;
       console.error("Login error details:", errorObj);
@@ -37,7 +45,6 @@ function SignUpPage() {
       const msg = errorObj.message || "Invalid email or password.";
       setError(msg);
 
-      // On mobile, console logs are hard to see, so alert the error
       if (typeof window !== "undefined") {
         window.alert("Login Error: " + msg);
       }

@@ -21,12 +21,18 @@ function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     console.log("Signup form submitted for:", email);
 
     // Client-side validation for the 10-char policy
     if (password.length < 10) {
-      setError("Password must be at least 10 characters long.");
+      const msg = "Password must be at least 10 characters long.";
+      setError(msg);
+      if (typeof window !== "undefined") window.alert(msg);
       return;
     }
 
@@ -37,8 +43,14 @@ function SignUpPage() {
       const result = await signUp(email, password, name, phone);
       console.log("Cognito signUp success:", result);
 
+      if (typeof window !== "undefined") {
+        window.alert(
+          "Account created successfully! Please check your email for the verification code.",
+        );
+      }
+
       // Explicitly navigate to verify-email
-      navigate({ to: "/verify-email", search: { email } });
+      await navigate({ to: "/verify-email", search: { email } });
     } catch (err: unknown) {
       const errorObj = err as Error;
       console.error("Signup error details:", errorObj);
@@ -49,7 +61,6 @@ function SignUpPage() {
       }
 
       setError(msg);
-      // On mobile, console logs are hard to see, so alert the error
       if (typeof window !== "undefined") {
         window.alert("Registration Error: " + msg);
       }
@@ -154,6 +165,10 @@ function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
+              onClick={(e) => {
+                console.log("Submit button clicked");
+                // The form onSubmit should handle it, but this is a backup
+              }}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
