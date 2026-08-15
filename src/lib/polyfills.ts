@@ -1,9 +1,9 @@
 if (typeof window !== "undefined") {
-  if (!(window as any).global) {
-    (window as any).global = window;
+  if (!(window as unknown as Record<string, unknown>).global) {
+    (window as unknown as Record<string, unknown>).global = window;
   }
-  if (!(window as any).process) {
-    (window as any).process = { env: {} };
+  if (!(window as unknown as Record<string, unknown>).process) {
+    (window as unknown as Record<string, unknown>).process = { env: {} };
   }
 }
 export {};
