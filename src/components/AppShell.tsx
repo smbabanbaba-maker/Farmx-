@@ -75,7 +75,23 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 </span>
               )}
             </Link>
-            {isLoggedIn ? (
+            <div className="flex items-center gap-1.5">
+              {!isLoggedIn && (
+                <>
+                  <Link
+                    to="/login"
+                    className="rounded-lg border border-brand px-2.5 py-1 text-xs font-bold text-brand hover:bg-brand/5"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    className="rounded-lg bg-brand px-2.5 py-1 text-xs font-bold text-brand-foreground shadow-sm"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
               <button
                 onClick={() => setMenuOpen(true)}
                 className="p-2 rounded-full hover:bg-accent"
@@ -83,14 +99,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               >
                 <Menu className="h-5 w-5" />
               </button>
-            ) : (
-              <Link
-                to="/login"
-                className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-brand-foreground"
-              >
-                Sign In
-              </Link>
-            )}
+            </div>
           </div>
         </div>
         {title && (
@@ -147,12 +156,12 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         </div>
       </nav>
 
-      {menuOpen && <SettingsDrawer onClose={() => setMenuOpen(false)} />}
+      {menuOpen && <SettingsDrawer isLoggedIn={isLoggedIn} onClose={() => setMenuOpen(false)} />}
     </div>
   );
 }
 
-function SettingsDrawer({ onClose }: { onClose: () => void }) {
+function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose: () => void }) {
   const { t, lang, setLang } = useI18n();
   const { mode, setMode, fontScale, setFontScale } = useTheme();
 
@@ -227,19 +236,39 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
           />
         </section>
 
+        {!isLoggedIn ? (
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <Link
+              to="/login"
+              onClick={onClose}
+              className="flex items-center justify-center rounded-lg border border-brand py-2.5 text-sm font-bold text-brand"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/signup"
+              onClick={onClose}
+              className="flex items-center justify-center rounded-lg bg-brand py-2.5 text-sm font-bold text-brand-foreground"
+            >
+              Sign Up
+            </Link>
+          </div>
+        ) : (
+          <button
+            onClick={logOut}
+            className="mb-4 w-full rounded-lg bg-brand py-2.5 font-semibold text-brand-foreground"
+          >
+            {t("logout")}
+          </button>
+        )}
+
         <Link
           to="/settings"
           onClick={onClose}
-          className="mb-2 flex w-full items-center justify-center rounded-lg border border-brand py-2.5 text-sm font-semibold text-brand"
+          className="mb-2 flex w-full items-center justify-center rounded-lg border border-border py-2.5 text-sm font-semibold text-foreground hover:bg-accent"
         >
           {t("openFullSettings")}
         </Link>
-        <button
-          onClick={logOut}
-          className="w-full rounded-lg bg-brand py-2.5 font-semibold text-brand-foreground"
-        >
-          {t("logout")}
-        </button>
 
         <div className="mt-8 flex flex-col items-center gap-1 pb-4">
           <img src={LOGO} alt="" className="h-8 w-8 rounded-full object-cover opacity-80" />
