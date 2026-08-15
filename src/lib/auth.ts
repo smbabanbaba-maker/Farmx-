@@ -89,18 +89,28 @@ export async function signUp(email: string, password: string, name: string, phon
       Name: "name",
       Value: name,
     }),
-    new CognitoUserAttribute({
-      Name: "phone_number",
-      Value: phone.startsWith("+") ? phone : `+234${phone.replace(/^0/, "")}`,
-    }),
   ];
+
+  if (phone && phone.trim()) {
+    const formattedPhone = phone.startsWith("+") ? phone : `+234${phone.trim().replace(/^0/, "")}`;
+    attributeList.push(
+      new CognitoUserAttribute({
+        Name: "phone_number",
+        Value: formattedPhone,
+      })
+    );
+  }
+
+  console.log("Attempting signup for:", email, "with attributes:", attributeList.map(a => a.getName()));
 
   return new Promise((resolve, reject) => {
     userPool.signUp(email, password, attributeList, [], (err, result) => {
       if (err) {
+        console.error("Cognito signUp error:", err);
         reject(err);
         return;
       }
+      console.log("Signup success:", result.user.getUsername());
       resolve(result);
     });
   });

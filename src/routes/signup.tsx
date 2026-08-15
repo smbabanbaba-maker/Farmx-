@@ -22,13 +22,25 @@ function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation for the 10-char policy
+    if (password.length < 10) {
+      setError("Password must be at least 10 characters long.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
       await signUp(email, password, name, phone);
       navigate({ to: "/verify-email", search: { email } });
     } catch (err: any) {
-      setError(err.message || "Something went wrong. Please try again.");
+      console.error("Signup error:", err);
+      let msg = err.message || "Something went wrong. Please try again.";
+      if (msg.includes("Password")) {
+        msg = "Password must be 10+ chars with Uppercase, Lowercase, Number & Symbol.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -116,7 +128,7 @@ function SignUpPage() {
                 />
               </div>
               <p className="text-[10px] text-muted-foreground px-1">
-                Must be at least 8 characters with numbers & symbols.
+                At least 10 characters with Uppercase, Lowercase, Number & Symbol.
               </p>
             </div>
 
