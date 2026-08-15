@@ -85,7 +85,7 @@ export async function signUp(
   email: string,
   password: string,
   name: string,
-  phone: string
+  phone: string,
 ): Promise<unknown> {
   const attributeList = [
     new CognitoUserAttribute({
@@ -104,7 +104,7 @@ export async function signUp(
       new CognitoUserAttribute({
         Name: "phone_number",
         Value: formattedPhone,
-      })
+      }),
     );
   }
 
@@ -112,7 +112,7 @@ export async function signUp(
     "Attempting signup for:",
     email,
     "with attributes:",
-    attributeList.map((a) => a.getName())
+    attributeList.map((a) => a.getName()),
   );
 
   return new Promise((resolve, reject) => {
