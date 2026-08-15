@@ -79,7 +79,7 @@ export async function signIn(email: string, password: string): Promise<any> {
   });
 }
 
-export async function signUp(email: string, password: string, name: string): Promise<any> {
+export async function signUp(email: string, password: string, name: string, phone: string): Promise<any> {
   const attributeList = [
     new CognitoUserAttribute({
       Name: "email",
@@ -88,6 +88,10 @@ export async function signUp(email: string, password: string, name: string): Pro
     new CognitoUserAttribute({
       Name: "name",
       Value: name,
+    }),
+    new CognitoUserAttribute({
+      Name: "phone_number",
+      Value: phone.startsWith("+") ? phone : `+234${phone.replace(/^0/, "")}`,
     }),
   ];
 
