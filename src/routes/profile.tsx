@@ -145,7 +145,7 @@ function ProfilePage() {
     }
   }, [status, error]);
 
-  if (status === "loading" || authLoading) {
+  if (authLoading) {
     return <ProfileLoading />;
   }
 
@@ -178,6 +178,10 @@ function ProfilePage() {
         </section>
       </AppShell>
     );
+  }
+
+  if (status === "loading") {
+    return <ProfileLoading />;
   }
 
   if (status === "error") {
