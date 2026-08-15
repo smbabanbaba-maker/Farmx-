@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useProfileData } from "@/lib/use-profile";
 import { useProfilePhoto } from "@/lib/use-profile-photo";
+import { useAuth } from "@/lib/use-auth";
 import {
   BadgeCheck,
   Bell,
@@ -134,9 +136,48 @@ const sections = [
 function ProfilePage() {
   const { status, profile, stats, error, refresh } = useProfileData();
   const photoUrl = useProfilePhoto(profile?.photoKey);
+  const { isLoggedIn, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
-  if (status === "loading") {
+  useEffect(() => {
+    if (status === "error" && error?.toLowerCase().includes("sign in")) {
+      // Potentially redirect or show login prompt
+    }
+  }, [status, error]);
+
+  if (status === "loading" || authLoading) {
     return <ProfileLoading />;
+  }
+
+  if (!isLoggedIn) {
+    return (
+      <AppShell title="Profile">
+        <section className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand">
+            <ShieldCheck className="h-8 w-8" />
+          </div>
+          <h1 className="text-xl font-bold text-foreground">Sign in to FarmX</h1>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Join thousands of Nigerian farmers and buyers. Manage your ads, chats, and professional
+            profile securely.
+          </p>
+          <div className="mt-8 flex flex-col gap-3">
+            <Link
+              to="/login"
+              className="rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground transition-transform active:scale-[0.98]"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/signup"
+              className="rounded-xl border border-border bg-card py-3 text-sm font-bold text-foreground transition-transform active:scale-[0.98]"
+            >
+              Create Account
+            </Link>
+          </div>
+        </section>
+      </AppShell>
+    );
   }
 
   if (status === "error") {
@@ -144,10 +185,9 @@ function ProfilePage() {
       <AppShell title="Profile">
         <section className="mx-auto max-w-lg rounded-2xl border border-border bg-card p-5 text-center">
           <ShieldCheck className="mx-auto h-9 w-9 text-brand" />
-          <h1 className="mt-3 text-lg font-bold">Your secure Profile is unavailable</h1>
+          <h1 className="mt-3 text-lg font-bold">Unable to load Profile</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Sign in with your FarmX account and make sure the Profile service environment is
-            configured before loading private profile data.
+            Make sure the FarmX Profile service environment is configured correctly on the server.
           </p>
           <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
             {error}

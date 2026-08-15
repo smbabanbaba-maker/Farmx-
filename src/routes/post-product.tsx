@@ -11,6 +11,7 @@ import { useCommerce } from "@/lib/commerce-store";
 import { useNotifications } from "@/lib/notifications-store";
 import { useCompany } from "@/lib/company-store";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/use-auth";
 import {
   UNIVERSAL_CATEGORIES,
   getCategory,
@@ -89,9 +90,26 @@ function PostProduct() {
   const { canPost, consumeListing } = useSubscription();
   const { createNotification } = useNotifications();
   const { state: companyState } = useCompany();
+  const { isLoggedIn, loading: authLoading } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [repository, setRepository] = useState<ListingRepository | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      navigate({ to: "/login" });
+    }
+  }, [authLoading, isLoggedIn, navigate]);
+
+  if (authLoading) {
+    return (
+      <AppShell title="Post New Ad">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+        </div>
+      </AppShell>
+    );
+  }
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<ListingFormState>({
     categoryId: "",

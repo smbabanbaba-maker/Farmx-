@@ -15,11 +15,12 @@ import {
   Languages,
   Type,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useMessages } from "@/lib/messages-store";
 import { useNotifications } from "@/lib/notifications-store";
+import { signOut } from "@/lib/auth";
 
 const LOGO = "/farmx-logo.png";
 
@@ -29,6 +30,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { totalUnread } = useMessages();
   const { unread: unreadNotifications } = useNotifications();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsLoggedIn(localStorage.getItem("farmx-session-active") === "true");
+    }
+  }, []);
 
   const tabs = [
     { to: "/", icon: Home, label: t("home"), badge: 0 },
@@ -67,13 +75,22 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 </span>
               )}
             </Link>
-            <button
-              onClick={() => setMenuOpen(true)}
-              className="p-2 rounded-full hover:bg-accent"
-              aria-label={t("menu")}
-            >
-              <Menu className="h-5 w-5" />
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={() => setMenuOpen(true)}
+                className="p-2 rounded-full hover:bg-accent"
+                aria-label={t("menu")}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-brand-foreground"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
         {title && (
@@ -140,11 +157,7 @@ function SettingsDrawer({ onClose }: { onClose: () => void }) {
   const { mode, setMode, fontScale, setFontScale } = useTheme();
 
   const logOut = () => {
-    try {
-      localStorage.removeItem("farmx-session-active");
-    } catch {
-      /* local session may be unavailable */
-    }
+    signOut();
     window.location.assign("/");
   };
 

@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
-import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DeleteCommand,
@@ -12,6 +11,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
 import { getAwsClientOptions } from "@/lib/aws-config";
+import { requireAuthenticatedUser } from "@/lib/auth-server";
 import type {
   CommunityAuthor,
   CommunityComment,
@@ -266,13 +266,18 @@ function getConfig(): CommunityConfig {
   const communityTable = process.env.FARMX_COMMUNITY_TABLE;
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
-  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
-  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
-  if (!region || !communityTable || !profileTable || !listingsTable || !userPoolId || !clientId)
+  if (!region || !communityTable || !profileTable || !listingsTable)
     throw new Error(
-      "Community service is not configured. Set AWS_REGION, FARMX_COMMUNITY_TABLE, FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, COGNITO_USER_POOL_ID, and COGNITO_WEB_CLIENT_ID on the FarmX server.",
+      "Community service is not configured. Set AWS_REGION, FARMX_COMMUNITY_TABLE, FARMX_PROFILE_TABLE, and FARMX_LISTINGS_TABLE on the FarmX server.",
     );
-  return { region, communityTable, profileTable, listingsTable, userPoolId, clientId };
+  return {
+    region,
+    communityTable,
+    profileTable,
+    listingsTable,
+    userPoolId: "",
+    clientId: "",
+  };
 }
 
 function documentClient(region: string) {
@@ -284,15 +289,8 @@ function privateResponse() {
   setResponseHeaders(new Headers({ "Cache-Control": "no-store", Vary: "Cookie, Authorization" }));
 }
 async function requireUser() {
-  const authorization = getRequestHeader("authorization");
-  if (!authorization?.startsWith("Bearer "))
-    throw new Error("You must be signed in to use Community.");
-  const { userPoolId, clientId } = getConfig();
-  const claims = await CognitoJwtVerifier.create({ userPoolId, tokenUse: "id", clientId }).verify(
-    authorization.slice("Bearer ".length),
-  );
-  if (!claims.sub) throw new Error("Your FarmX account identity could not be verified.");
-  return { userId: claims.sub, email: typeof claims.email === "string" ? claims.email : undefined };
+  const actor = await requireAuthenticatedUser();
+  return { userId: actor.userId, email: actor.email };
 }
 
 function authorFromItem(item: CommunityItem): CommunityAuthor {

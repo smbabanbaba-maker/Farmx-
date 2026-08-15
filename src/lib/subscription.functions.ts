@@ -1,7 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
-import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
@@ -13,6 +12,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
 import { getAwsClientOptions } from "@/lib/aws-config";
+import { requireAuthenticatedUser } from "@/lib/auth-server";
 import { getPaystackSecret } from "./paystack-server";
 import { SUBSCRIPTION_PLANS } from "./subscription-repository";
 import type { SubscriptionStatus, SubscriptionTier, UserSubscription } from "./subscription.types";
@@ -50,12 +50,10 @@ function getConfig() {
   const region = process.env.AWS_REGION;
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
-  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
-  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
-  if (!region || !profileTable || !userPoolId || !clientId) {
+  if (!region || !profileTable) {
     throw new Error("FarmX subscription storage is not configured on the server.");
   }
-  return { region, profileTable, listingsTable, userPoolId, clientId };
+  return { region, profileTable, listingsTable };
 }
 
 function documentClient(region: string) {
@@ -69,15 +67,8 @@ function noStore() {
 }
 
 async function requireUser() {
-  const authorization = getRequestHeader("authorization");
-  if (!authorization?.startsWith("Bearer "))
-    throw new Error("You must be signed in to manage a subscription.");
-  const { userPoolId, clientId } = getConfig();
-  const claims = await CognitoJwtVerifier.create({ userPoolId, tokenUse: "id", clientId }).verify(
-    authorization.slice("Bearer ".length),
-  );
-  if (!claims.sub) throw new Error("Your FarmX account identity could not be verified.");
-  return { userId: claims.sub, email: typeof claims.email === "string" ? claims.email : undefined };
+  const actor = await requireAuthenticatedUser();
+  return { userId: actor.userId, email: actor.email };
 }
 
 function freeSubscription(userId: string): UserSubscription {

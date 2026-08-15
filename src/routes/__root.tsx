@@ -22,6 +22,35 @@ import { NotificationsProvider } from "@/lib/notifications-store";
 import { CommerceProvider } from "@/lib/commerce-store";
 import { CommunityProvider } from "@/lib/community-store";
 import { BrandSplash } from "@/components/BrandSplash";
+import { getIdToken } from "@/lib/auth";
+
+// Client-side fetch interceptor to inject Cognito ID token into server function calls
+if (typeof window !== "undefined") {
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    const [resource, config] = args;
+    const url = typeof resource === "string" ? resource : resource instanceof URL ? resource.href : resource.url;
+
+    // Only inject token for server function calls or API requests to our own origin
+    if (url.includes("/_server") || url.startsWith("/") || url.startsWith(window.location.origin)) {
+      try {
+        const token = await getIdToken();
+        if (token) {
+          const newConfig = { ...(config || {}) };
+          const headers = new Headers(newConfig.headers || {});
+          if (!headers.has("Authorization")) {
+            headers.set("Authorization", `Bearer ${token}`);
+          }
+          newConfig.headers = headers;
+          return originalFetch(resource, newConfig);
+        }
+      } catch (e) {
+        console.error("Auth interceptor error:", e);
+      }
+    }
+    return originalFetch(...args);
+  };
+}
 
 function NotFoundComponent() {
   return (

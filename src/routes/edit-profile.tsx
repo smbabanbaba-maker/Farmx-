@@ -19,6 +19,7 @@ import {
   Upload,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/lib/use-auth";
 
 export const Route = createFileRoute("/edit-profile")({ component: EditProfile });
 
@@ -48,6 +49,7 @@ const blankProfile: ProfileDraft = {
 function EditProfile() {
   const navigate = useNavigate();
   const { status, profile, error, refresh, mode } = useProfileData();
+  const { isLoggedIn, loading: authLoading } = useAuth();
   const [form, setForm] = useState<ProfileDraft>(blankProfile);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [interestText, setInterestText] = useState("");
@@ -57,6 +59,12 @@ function EditProfile() {
   const [notice, setNotice] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authLoading && !isLoggedIn) {
+      navigate({ to: "/login" });
+    }
+  }, [authLoading, isLoggedIn, navigate]);
 
   useEffect(() => {
     if (!profile) return;
@@ -190,7 +198,7 @@ function EditProfile() {
     }
   };
 
-  if (status === "loading")
+  if (status === "loading" || authLoading)
     return (
       <AppShell title="Edit Profile">
         <div className="h-96 animate-pulse rounded-2xl bg-muted" />

@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { getAwsClientOptions } from "@/lib/aws-config";
 import { getSubscriptionLimitForUser } from "./subscription.functions";
+import { requireAuthenticatedUser } from "@/lib/auth-server";
 import { z } from "zod";
 
 const imageKeySchema = z.string();
@@ -17,7 +18,6 @@ const listingSchema = z.object({
   description: z.string().trim().min(1).max(2000),
   price: z.number().nullable(),
   metadata: z.record(z.any()).optional(),
-  sellerId: z.string().trim().min(1).max(128).default("demo-user"),
   promoDays: z.number().default(0),
 });
 
@@ -39,6 +39,7 @@ function getListingsTable() {
 export const publishListing = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => listingSchema.parse(input))
   .handler(async ({ data }) => {
+    const actor = await requireAuthenticatedUser();
     const { tableName, region } = getListingsTable();
     const now = new Date().toISOString();
     const listingId = crypto.randomUUID();
@@ -49,7 +50,7 @@ export const publishListing = createServerFn({ method: "POST" })
     const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)), {
       marshallOptions: { removeUndefinedValues: true },
     });
-    const listingLimit = await getSubscriptionLimitForUser(data.sellerId);
+    const listingLimit = await getSubscriptionLimitForUser(actor.userId);
     const listingCount = await client.send(
       new QueryCommand({
         TableName: tableName,
@@ -57,7 +58,7 @@ export const publishListing = createServerFn({ method: "POST" })
         KeyConditionExpression: "gsi2pk = :seller",
         FilterExpression: "#status = :active",
         ExpressionAttributeNames: { "#status": "status" },
-        ExpressionAttributeValues: { ":seller": `SELLER#${data.sellerId}`, ":active": "ACTIVE" },
+        ExpressionAttributeValues: { ":seller": `SELLER#${actor.userId}`, ":active": "ACTIVE" },
         Select: "COUNT",
       }),
     );
@@ -75,7 +76,7 @@ export const publishListing = createServerFn({ method: "POST" })
           sk: `LISTING#${listingId}`,
           entityType: "LISTING",
           listingId,
-          ownerId: data.sellerId,
+          ownerId: actor.userId,
           status: "ACTIVE",
           createdAt: now,
           updatedAt: now,
@@ -92,7 +93,7 @@ export const publishListing = createServerFn({ method: "POST" })
           promoExpiresAt,
           gsi1pk: `LISTING_STATUS#ACTIVE`,
           gsi1sk: `${now}#${listingId}`,
-          gsi2pk: `SELLER#${data.sellerId}`,
+          gsi2pk: `SELLER#${actor.userId}`,
           gsi2sk: `${now}#${listingId}`,
         },
         ConditionExpression: "attribute_not_exists(pk)",

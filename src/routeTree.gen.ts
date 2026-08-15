@@ -21,6 +21,7 @@ import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LearnRouteImport } from './routes/learn'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -33,11 +34,13 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as SubscribeRouteImport } from './routes/subscribe'
 import { Route as UpgradeRouteImport } from './routes/upgrade'
 import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
 import { Route as CommunityIdRouteImport } from './routes/community.$id'
@@ -113,6 +116,11 @@ const LearnRoute = LearnRouteImport.update({
   path: '/learn',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MarketRoute = MarketRouteImport.update({
   id: '/market',
   path: '/market',
@@ -173,6 +181,11 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -196,6 +209,11 @@ const UpgradeRoute = UpgradeRouteImport.update({
 const VerifyRoute = VerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WalletRoute = WalletRouteImport.update({
@@ -282,6 +300,7 @@ export interface FileRoutesByFullPath {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
+  '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -294,11 +313,13 @@ export interface FileRoutesByFullPath {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
   '/verify': typeof VerifyRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
@@ -327,6 +348,7 @@ export interface FileRoutesByTo {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
+  '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -339,11 +361,13 @@ export interface FileRoutesByTo {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
   '/verify': typeof VerifyRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
@@ -373,6 +397,7 @@ export interface FileRoutesById {
   '/inventory': typeof InventoryRoute
   '/jobs': typeof JobsRouteWithChildren
   '/learn': typeof LearnRouteWithChildren
+  '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
@@ -385,11 +410,13 @@ export interface FileRoutesById {
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
   '/subscribe': typeof SubscribeRoute
   '/upgrade': typeof UpgradeRoute
   '/verify': typeof VerifyRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
   '/community/$id': typeof CommunityIdRoute
@@ -420,6 +447,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/jobs'
     | '/learn'
+    | '/login'
     | '/market'
     | '/messages'
     | '/notifications'
@@ -432,11 +460,13 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/settings'
+    | '/signup'
     | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
     | '/verify'
+    | '/verify-email'
     | '/wallet'
     | '/c/$slug'
     | '/community/$id'
@@ -465,6 +495,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/jobs'
     | '/learn'
+    | '/login'
     | '/market'
     | '/messages'
     | '/notifications'
@@ -477,11 +508,13 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/settings'
+    | '/signup'
     | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
     | '/verify'
+    | '/verify-email'
     | '/wallet'
     | '/c/$slug'
     | '/community/$id'
@@ -510,6 +543,7 @@ export interface FileRouteTypes {
     | '/inventory'
     | '/jobs'
     | '/learn'
+    | '/login'
     | '/market'
     | '/messages'
     | '/notifications'
@@ -522,11 +556,13 @@ export interface FileRouteTypes {
     | '/saved'
     | '/search'
     | '/settings'
+    | '/signup'
     | '/sitemap.xml'
     | '/staff'
     | '/subscribe'
     | '/upgrade'
     | '/verify'
+    | '/verify-email'
     | '/wallet'
     | '/c/$slug'
     | '/community/$id'
@@ -556,6 +592,7 @@ export interface RootRouteChildren {
   InventoryRoute: typeof InventoryRoute
   JobsRoute: typeof JobsRouteWithChildren
   LearnRoute: typeof LearnRouteWithChildren
+  LoginRoute: typeof LoginRoute
   MarketRoute: typeof MarketRouteWithChildren
   MessagesRoute: typeof MessagesRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
@@ -568,11 +605,13 @@ export interface RootRouteChildren {
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRoute
   SubscribeRoute: typeof SubscribeRoute
   UpgradeRoute: typeof UpgradeRoute
   VerifyRoute: typeof VerifyRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   WalletRoute: typeof WalletRoute
   CSlugRoute: typeof CSlugRoute
   EditAdIdRoute: typeof EditAdIdRoute
@@ -668,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LearnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/market': {
       id: '/market'
       path: '/market'
@@ -752,6 +798,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -785,6 +838,13 @@ declare module '@tanstack/react-router' {
       path: '/verify'
       fullPath: '/verify'
       preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wallet': {
@@ -960,6 +1020,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryRoute: InventoryRoute,
   JobsRoute: JobsRouteWithChildren,
   LearnRoute: LearnRouteWithChildren,
+  LoginRoute: LoginRoute,
   MarketRoute: MarketRouteWithChildren,
   MessagesRoute: MessagesRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
@@ -972,11 +1033,13 @@ const rootRouteChildren: RootRouteChildren = {
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRoute,
   SubscribeRoute: SubscribeRoute,
   UpgradeRoute: UpgradeRoute,
   VerifyRoute: VerifyRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   WalletRoute: WalletRoute,
   CSlugRoute: CSlugRoute,
   EditAdIdRoute: EditAdIdRoute,
