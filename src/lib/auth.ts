@@ -7,8 +7,8 @@ import {
 } from "amazon-cognito-identity-js";
 
 // Polyfill for global/process needed by some versions of amazon-cognito-identity-js
-if (typeof window !== "undefined" && !(window as Record<string, unknown>).global) {
-  (window as Record<string, unknown>).global = window;
+if (typeof window !== "undefined" && !(window as unknown as Record<string, unknown>).global) {
+  (window as unknown as Record<string, unknown>).global = window;
 }
 
 const poolData = {
