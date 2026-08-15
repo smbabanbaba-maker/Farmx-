@@ -129,7 +129,6 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <BrandSplash />
       <ThemeProvider>
         <I18nProvider>
           <LocationProvider>
