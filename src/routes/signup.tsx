@@ -22,6 +22,7 @@ function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Signup form submitted for:", email);
 
     // Client-side validation for the 10-char policy
     if (password.length < 10) {
@@ -32,16 +33,26 @@ function SignUpPage() {
     setLoading(true);
     setError(null);
     try {
-      await signUp(email, password, name, phone);
+      console.log("Calling Cognito signUp...");
+      const result = await signUp(email, password, name, phone);
+      console.log("Cognito signUp success:", result);
+      
+      // Explicitly navigate to verify-email
       navigate({ to: "/verify-email", search: { email } });
     } catch (err: unknown) {
       const errorObj = err as Error;
-      console.error("Signup error:", errorObj);
+      console.error("Signup error details:", errorObj);
+      
       let msg = errorObj.message || "Something went wrong. Please try again.";
       if (msg.includes("Password")) {
         msg = "Password must be 10+ chars with Uppercase, Lowercase, Number & Symbol.";
       }
+      
       setError(msg);
+      // On mobile, console logs are hard to see, so alert the error
+      if (typeof window !== "undefined") {
+        window.alert("Registration Error: " + msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -161,7 +172,7 @@ function SignUpPage() {
               type="button"
               onClick={() => {
                 alert(
-                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers.",
+                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers."
                 );
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold hover:bg-accent"

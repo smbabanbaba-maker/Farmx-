@@ -7,10 +7,10 @@ import { signIn } from "@/lib/auth";
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
-  component: LoginPage,
+  component: SignUpPage,
 });
 
-function LoginPage() {
+function SignUpPage() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -20,14 +20,27 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login form submitted for:", email);
     setLoading(true);
     setError(null);
     try {
-      await signIn(email, password);
+      console.log("Calling Cognito signIn...");
+      const result = await signIn(email, password);
+      console.log("Cognito signIn success:", result);
+      
+      // Explicitly navigate to profile
       navigate({ to: "/profile" });
     } catch (err: unknown) {
       const errorObj = err as Error;
-      setError(errorObj.message || "Invalid email or password.");
+      console.error("Login error details:", errorObj);
+      
+      const msg = errorObj.message || "Invalid email or password.";
+      setError(msg);
+      
+      // On mobile, console logs are hard to see, so alert the error
+      if (typeof window !== "undefined") {
+        window.alert("Login Error: " + msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -74,7 +87,7 @@ function LoginPage() {
                   type="button"
                   onClick={() =>
                     alert(
-                      "Password reset is managed via AWS Cognito. Please contact support to reset your password.",
+                      "Password reset is managed via AWS Cognito. Please contact support to reset your password."
                     )
                   }
                   className="text-[10px] font-bold text-brand hover:underline"
@@ -123,7 +136,7 @@ function LoginPage() {
               type="button"
               onClick={() => {
                 alert(
-                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers.",
+                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers."
                 );
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold hover:bg-accent"
