@@ -37,8 +37,9 @@ export async function requireAuthenticatedUser() {
       email: typeof claims.email === "string" ? claims.email : undefined,
       groups: Array.isArray(claims["cognito:groups"]) ? claims["cognito:groups"].map(String) : [],
     };
-  } catch (e: any) {
-    console.error("JWT Verification failed:", e);
-    throw new Error(`Authentication failed: ${e.message}`);
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("JWT Verification failed:", error);
+    throw new Error(`Authentication failed: ${error.message}`);
   }
 }

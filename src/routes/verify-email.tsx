@@ -32,8 +32,9 @@ function VerifyEmailPage() {
       setTimeout(() => {
         navigate({ to: "/login" });
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || "Invalid verification code.");
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj.message || "Invalid verification code.");
     } finally {
       setLoading(false);
     }
@@ -60,9 +61,7 @@ function VerifyEmailPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-foreground">Email Verified!</h2>
-                <p className="text-sm text-muted-foreground">
-                  Redirecting you to login...
-                </p>
+                <p className="text-sm text-muted-foreground">Redirecting you to login...</p>
               </div>
             </div>
           ) : (

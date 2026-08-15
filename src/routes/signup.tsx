@@ -22,7 +22,7 @@ function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Client-side validation for the 10-char policy
     if (password.length < 10) {
       setError("Password must be at least 10 characters long.");
@@ -34,9 +34,10 @@ function SignUpPage() {
     try {
       await signUp(email, password, name, phone);
       navigate({ to: "/verify-email", search: { email } });
-    } catch (err: any) {
-      console.error("Signup error:", err);
-      let msg = err.message || "Something went wrong. Please try again.";
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      console.error("Signup error:", errorObj);
+      let msg = errorObj.message || "Something went wrong. Please try again.";
       if (msg.includes("Password")) {
         msg = "Password must be 10+ chars with Uppercase, Lowercase, Number & Symbol.";
       }
@@ -151,13 +152,17 @@ function SignUpPage() {
           <div className="mt-6">
             <div className="relative flex py-2 items-center">
               <div className="flex-grow border-t border-border"></div>
-              <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase tracking-wider">Or continue with</span>
+              <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase tracking-wider">
+                Or continue with
+              </span>
               <div className="flex-grow border-t border-border"></div>
             </div>
             <button
               type="button"
               onClick={() => {
-                alert("Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers.");
+                alert(
+                  "Google Sign-In is managed via AWS Cognito Hosted UI. Please configure Google Identity Provider in your AWS Cognito console under Sign-in experience -> Federated identity providers.",
+                );
               }}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-sm font-semibold hover:bg-accent"
             >

@@ -370,7 +370,10 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 
   if (!profile) {
     const now = new Date().toISOString();
-    const cleanId = actor.userId.replace(/[^a-z0-9]/gi, "").slice(0, 8).toLowerCase();
+    const cleanId = actor.userId
+      .replace(/[^a-z0-9]/gi, "")
+      .slice(0, 8)
+      .toLowerCase();
     const defaultUsername = `farmer_${cleanId || "user"}`;
     const defaultProfile = {
       userId: actor.userId,

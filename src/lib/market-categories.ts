@@ -108,7 +108,14 @@ const PROPERTY_COMMON: DynamicField[] = [
     id: "document-status",
     label: "Title / Document",
     type: "select",
-    options: ["C of O", "Governor's Consent", "Deed of Assignment", "Survey Plan", "Receipt", "Pending"],
+    options: [
+      "C of O",
+      "Governor's Consent",
+      "Deed of Assignment",
+      "Survey Plan",
+      "Receipt",
+      "Pending",
+    ],
   },
   CONDITION,
 ];
@@ -134,7 +141,12 @@ const SERVICE_COMMON: DynamicField[] = [
     type: "select",
     options: ["Available now", "Weekdays", "Weekends", "Appointment only"],
   },
-  { id: "service-area", label: "Service Area", type: "text", placeholder: "e.g. Kano and nearby LGAs" },
+  {
+    id: "service-area",
+    label: "Service Area",
+    type: "text",
+    placeholder: "e.g. Kano and nearby LGAs",
+  },
   {
     id: "pricing-model",
     label: "Pricing Model",
@@ -189,7 +201,11 @@ export const UNIVERSAL_CATEGORIES: MainCategory[] = [
     id: "electronics",
     name: "Electronics",
     icon: "📺",
-    commonFields: [CONDITION, { id: "brand", label: "Brand", type: "text" }, { id: "model", label: "Model", type: "text" }],
+    commonFields: [
+      CONDITION,
+      { id: "brand", label: "Brand", type: "text" },
+      { id: "model", label: "Model", type: "text" },
+    ],
     subcategories: [
       { id: "phones-tablets", name: "Phones & Tablets" },
       { id: "computers", name: "Computers" },
@@ -201,7 +217,11 @@ export const UNIVERSAL_CATEGORIES: MainCategory[] = [
     id: "fashion",
     name: "Fashion",
     icon: "👕",
-    commonFields: [CONDITION, { id: "brand", label: "Brand", type: "text" }, { id: "color", label: "Color", type: "text" }],
+    commonFields: [
+      CONDITION,
+      { id: "brand", label: "Brand", type: "text" },
+      { id: "color", label: "Color", type: "text" },
+    ],
     subcategories: [
       { id: "shoes", name: "Shoes" },
       { id: "bags", name: "Bags" },

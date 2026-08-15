@@ -42,14 +42,14 @@ export function BrandSplash() {
   useEffect(() => {
     if (!globalBooted || pathname === lastPath.current) return;
     lastPath.current = pathname;
-    
+
     setPhase("flash");
     setVisible(true);
-    
+
     const t = setTimeout(() => {
       setVisible(false);
     }, 700);
-    
+
     return () => clearTimeout(t);
   }, [pathname]);
 

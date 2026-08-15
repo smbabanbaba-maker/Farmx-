@@ -210,8 +210,10 @@ const en: Dict = {
   "post.setCover": "Set cover",
   "post.selectLocation": "Select location",
   "post.locationTip": "Nigeria location hierarchy · State, LGA and City/Area",
-  "post.descriptionPlaceholder": "Describe the item or service accurately. Include important details buyers should know...",
-  "post.descriptionTip": "Tip: Mention the condition, features, and why you are selling to attract more buyers.",
+  "post.descriptionPlaceholder":
+    "Describe the item or service accurately. Include important details buyers should know...",
+  "post.descriptionTip":
+    "Tip: Mention the condition, features, and why you are selling to attract more buyers.",
   "post.pricePlaceholder": "Enter price",
   "post.priceFixed": "Fixed price",
   "post.priceNegotiable": "Negotiable",
@@ -232,12 +234,14 @@ const en: Dict = {
   "post.adPreview": "Ad Preview",
   "post.noTitle": "No Title",
   "post.safetyTitle": "Safety First!",
-  "post.safetyTip": "FarmX is a classified marketplace. Always meet in public places, inspect items thoroughly before payment, and never pay in advance to sellers you don't trust.",
+  "post.safetyTip":
+    "FarmX is a classified marketplace. Always meet in public places, inspect items thoroughly before payment, and never pay in advance to sellers you don't trust.",
   "post.readSafety": "Read safety tips",
   "post.saveLocation": "Save location",
   "post.cityPlaceholder": "e.g. Kofar Mata, Ikeja, Maitama",
   "post.successTitle": "Your listing has been submitted successfully!",
-  "post.successBody": "We have received your listing. It will appear in Market and your dashboard shortly.",
+  "post.successBody":
+    "We have received your listing. It will appear in Market and your dashboard shortly.",
   "post.goToMarket": "Go to Market",
   "post.postAnother": "Post another ad",
   "post.error.titleRequired": "Please enter a title for your listing.",
@@ -536,14 +540,17 @@ const ha: Dict = {
   "post.selectCategory": "Zaɓi rukuni",
   "post.selectSubcategory": "Zaɓi rukunin ƙasa",
   "post.addPhotos": "Ƙara hotuna har 15",
-  "post.photoTip": "Hoto na farko shi ne hoton bangon ku. Kuna iya sake tsara ko musanya hotuna a kasa.",
+  "post.photoTip":
+    "Hoto na farko shi ne hoton bangon ku. Kuna iya sake tsara ko musanya hotuna a kasa.",
   "post.addPhotosButton": "Ƙara hotuna",
   "post.coverPhoto": "HOTON BANGO",
   "post.setCover": "Sanya a bango",
   "post.selectLocation": "Zaɓi wuri",
   "post.locationTip": "Tsarin wuraren Najeriya · Jiha, Karamar Hukuma da Gari/Wuri",
-  "post.descriptionPlaceholder": "Bayyana abu ko sabis din daidai. Hada muhimman bayanai da masu saya ya kamata su sani...",
-  "post.descriptionTip": "Shawara: Ambaci yanayin, fasalulluka, da dalilin da ya sa kake sayarwa don jawo hankalin masu saya.",
+  "post.descriptionPlaceholder":
+    "Bayyana abu ko sabis din daidai. Hada muhimman bayanai da masu saya ya kamata su sani...",
+  "post.descriptionTip":
+    "Shawara: Ambaci yanayin, fasalulluka, da dalilin da ya sa kake sayarwa don jawo hankalin masu saya.",
   "post.pricePlaceholder": "Shigar da farashi",
   "post.priceFixed": "Kafaffen farashi",
   "post.priceNegotiable": "Za a iya ciniki",
@@ -564,12 +571,14 @@ const ha: Dict = {
   "post.adPreview": "Rigimar Talla",
   "post.noTitle": "Babu Suna",
   "post.safetyTitle": "Tsaro Farko!",
-  "post.safetyTip": "FarmX kasuwa ce ta tallace-tallace. Koyaushe ku hadu a wuraren jama'a, ku bincika abubuwa sosai kafin biya, kuma kada ku biya kudi a gaba ga masu sayarwa da ba ku amince da su ba.",
+  "post.safetyTip":
+    "FarmX kasuwa ce ta tallace-tallace. Koyaushe ku hadu a wuraren jama'a, ku bincika abubuwa sosai kafin biya, kuma kada ku biya kudi a gaba ga masu sayarwa da ba ku amince da su ba.",
   "post.readSafety": "Karanta shawarwarin tsaro",
   "post.saveLocation": "Ajiye wuri",
   "post.cityPlaceholder": "misali. Kofar Mata, Ikeja, Maitama",
   "post.successTitle": "An aika tallan ku cikin nasara!",
-  "post.successBody": "Mun karɓi tallan ku. Zai bayyana a Kasuwa da dashboard ɗin ku nan ba da jimawa ba.",
+  "post.successBody":
+    "Mun karɓi tallan ku. Zai bayyana a Kasuwa da dashboard ɗin ku nan ba da jimawa ba.",
   "post.goToMarket": "Je zuwa Kasuwa",
   "post.postAnother": "Sanya wani tallan",
   "post.error.titleRequired": "Don Allah shigar da sunan talla.",

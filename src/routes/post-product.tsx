@@ -101,15 +101,6 @@ function PostProduct() {
     }
   }, [authLoading, isLoggedIn, navigate]);
 
-  if (authLoading) {
-    return (
-      <AppShell title="Post New Ad">
-        <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand" />
-        </div>
-      </AppShell>
-    );
-  }
   const [currentStep, setCurrentStep] = useState(0);
   const [form, setForm] = useState<ListingFormState>({
     categoryId: "",
@@ -191,6 +182,16 @@ function PostProduct() {
     if (form.priceType === "request") return "Price on request";
     return form.price ? `₦${form.price.toLocaleString()}` : "₦0";
   }, [form.price, form.priceType]);
+
+  if (authLoading) {
+    return (
+      <AppShell title="Post New Ad">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+        </div>
+      </AppShell>
+    );
+  }
   const stepLabels = [
     { label: t("title"), caption: `${t("category")} & ${t("subcategory")}` },
     { label: t("photos"), caption: "Photos & video" },
@@ -369,8 +370,7 @@ function PostProduct() {
     }
 
     if (!form.description.trim()) newErrors.description = t("post.error.descriptionRequired");
-    else if (form.description.length < 20)
-      newErrors.description = t("post.error.descriptionShort");
+    else if (form.description.length < 20) newErrors.description = t("post.error.descriptionShort");
 
     if (
       form.priceType !== "free" &&
@@ -568,16 +568,16 @@ function PostProduct() {
             </span>
           </div>
           <div className="mt-4 grid grid-cols-4 gap-1.5" aria-label="Post progress">
-                    {POST_STEPS.map((step, index) => (
-                      <button
-                        key={step}
-                        type="button"
-                        onClick={() => index < currentStep && setCurrentStep(index)}
-                        className={`h-1.5 rounded-full transition ${index <= currentStep ? "bg-brand" : "bg-muted"}`}
-                        aria-label={`${stepLabels[index].label} step`}
-                        disabled={index >= currentStep}
-                      />
-                    ))}
+            {POST_STEPS.map((step, index) => (
+              <button
+                key={step}
+                type="button"
+                onClick={() => index < currentStep && setCurrentStep(index)}
+                className={`h-1.5 rounded-full transition ${index <= currentStep ? "bg-brand" : "bg-muted"}`}
+                aria-label={`${stepLabels[index].label} step`}
+                disabled={index >= currentStep}
+              />
+            ))}
           </div>
         </section>
 
@@ -648,9 +648,7 @@ function PostProduct() {
               </div>
               <div className="rounded-2xl border border-dashed border-brand/30 bg-brand/[0.03] p-4">
                 <p className="text-xs font-bold">{t("post.addPhotos")}</p>
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {t("post.photoTip")}
-                </p>
+                <p className="mt-1 text-[10px] text-muted-foreground">{t("post.photoTip")}</p>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
@@ -765,20 +763,20 @@ function PostProduct() {
                         </div>
                       </div>
                       {i !== 0 && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setForm((prev) => {
-                                const photos = [...prev.photos];
-                                const [cover] = photos.splice(i, 1);
-                                photos.unshift(cover);
-                                return { ...prev, photos };
-                              })
-                            }
-                            className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
-                          >
-                            {t("post.setCover")}
-                          </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => {
+                              const photos = [...prev.photos];
+                              const [cover] = photos.splice(i, 1);
+                              photos.unshift(cover);
+                              return { ...prev, photos };
+                            })
+                          }
+                          className="absolute bottom-2 left-2 rounded-lg bg-white/90 px-2 py-1 text-[9px] font-black text-brand opacity-0 transition group-hover:opacity-100 focus-within:opacity-100"
+                        >
+                          {t("post.setCover")}
+                        </button>
                       )}
                     </div>
                   ))}
@@ -827,9 +825,7 @@ function PostProduct() {
                 onClick={() => setSelector("location")}
                 invalid={!!(errors.state || errors.lga || errors.city)}
               />
-              <p className="text-[10px] text-muted-foreground">
-                {t("post.locationTip")}
-              </p>
+              <p className="text-[10px] text-muted-foreground">{t("post.locationTip")}</p>
               {(errors.state || errors.lga || errors.city) && (
                 <InlineError message="Complete your State, LGA and City/Area." />
               )}
@@ -1000,9 +996,9 @@ function PostProduct() {
             {/* 7. Description */}
             <section className="space-y-4">
               <div className="flex justify-between items-end">
-                  <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    {t("description")} *
-                  </label>
+                <label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
+                  {t("description")} *
+                </label>
                 <span className="text-[10px] font-bold text-muted-foreground">
                   {form.description.length}/2000
                 </span>
@@ -1017,9 +1013,7 @@ function PostProduct() {
               />
               <div className="flex gap-2 p-3 rounded-xl bg-blue-50 text-blue-700 text-[10px] font-medium leading-tight">
                 <Info className="h-3.5 w-3.5 shrink-0" />
-                <span>
-                  {t("post.descriptionTip")}
-                </span>
+                <span>{t("post.descriptionTip")}</span>
               </div>
               {errors.description && (
                 <p className="text-[10px] font-bold text-brand flex items-center gap-1" data-error>
@@ -1115,7 +1109,9 @@ function PostProduct() {
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground px-1">{t("name")}</label>
+                  <label className="text-[10px] font-bold text-muted-foreground px-1">
+                    {t("name")}
+                  </label>
                   <input
                     type="text"
                     placeholder={t("name")}
@@ -1147,9 +1143,7 @@ function PostProduct() {
                 </div>
                 <div>
                   <h3 className="text-sm font-black">{t("post.boostVisibility")}</h3>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t("post.boostTip")}
-                  </p>
+                  <p className="text-[10px] text-muted-foreground">{t("post.boostTip")}</p>
                 </div>
               </div>
 
@@ -1164,7 +1158,9 @@ function PostProduct() {
                   >
                     <div className="text-left">
                       <p className="text-sm font-black">{t(`post.promo.${p.id}.label`)}</p>
-                      <p className="text-[10px] text-muted-foreground">{t(`post.promo.${p.id}.sub`)}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {t(`post.promo.${p.id}.sub`)}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-black text-brand">
@@ -1201,7 +1197,9 @@ function PostProduct() {
                 </div>
                 <div className="p-5 space-y-4">
                   <div>
-                    <h2 className="text-lg font-black leading-tight">{form.title || t("post.noTitle")}</h2>
+                    <h2 className="text-lg font-black leading-tight">
+                      {form.title || t("post.noTitle")}
+                    </h2>
                     <div className="flex items-center gap-1.5 text-brand mt-1">
                       <span className="text-xl font-black">{priceText}</span>
                     </div>

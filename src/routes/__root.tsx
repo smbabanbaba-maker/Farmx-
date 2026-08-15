@@ -29,7 +29,12 @@ if (typeof window !== "undefined") {
   const originalFetch = window.fetch;
   window.fetch = async (...args) => {
     const [resource, config] = args;
-    const url = typeof resource === "string" ? resource : resource instanceof URL ? resource.href : resource.url;
+    const url =
+      typeof resource === "string"
+        ? resource
+        : resource instanceof URL
+          ? resource.href
+          : resource.url;
 
     // Only inject token for server function calls or API requests to our own origin
     if (url.includes("/_server") || url.startsWith("/") || url.startsWith(window.location.origin)) {

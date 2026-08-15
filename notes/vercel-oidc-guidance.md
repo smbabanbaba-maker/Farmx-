@@ -1,6 +1,7 @@
 # Vercel OIDC guidance used for FarmX
 
 Sources:
+
 - https://vercel.com/docs/oidc/aws (last updated 2026-07-15)
 - https://vercel.com/docs/oidc/reference (last updated 2026-08-04)
 

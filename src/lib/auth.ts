@@ -3,7 +3,13 @@ import {
   CognitoUser,
   AuthenticationDetails,
   CognitoUserAttribute,
+  type CognitoUserSession,
 } from "amazon-cognito-identity-js";
+
+// Polyfill for global/process needed by some versions of amazon-cognito-identity-js
+if (typeof window !== "undefined" && !(window as Record<string, unknown>).global) {
+  (window as Record<string, unknown>).global = window;
+}
 
 const poolData = {
   UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || "eu-west-1_HXI6OOXpg",
@@ -12,7 +18,7 @@ const poolData = {
 
 const userPool = new CognitoUserPool(poolData);
 
-export async function getCurrentSession() {
+export async function getCurrentSession(): Promise<CognitoUserSession | null> {
   const user = userPool.getCurrentUser();
   if (!user) return null;
 
@@ -22,7 +28,7 @@ export async function getCurrentSession() {
       resolve(null);
     }, 5000); // 5s timeout
 
-    user.getSession((err: any, session: any) => {
+    user.getSession((err: Error | null, session: CognitoUserSession | null) => {
       clearTimeout(timeout);
       if (err) {
         resolve(null);
@@ -37,8 +43,8 @@ export async function getCurrentSession() {
   });
 }
 
-export async function getIdToken() {
-  const session: any = await getCurrentSession();
+export async function getIdToken(): Promise<string | null> {
+  const session = await getCurrentSession();
   return session ? session.getIdToken().getJwtToken() : null;
 }
 
@@ -52,7 +58,7 @@ export function signOut() {
   }
 }
 
-export async function signIn(email: string, password: string): Promise<any> {
+export async function signIn(email: string, password: string): Promise<unknown> {
   const authenticationData = {
     Username: email,
     Password: password,
@@ -79,7 +85,12 @@ export async function signIn(email: string, password: string): Promise<any> {
   });
 }
 
-export async function signUp(email: string, password: string, name: string, phone: string): Promise<any> {
+export async function signUp(
+  email: string,
+  password: string,
+  name: string,
+  phone: string,
+): Promise<unknown> {
   const attributeList = [
     new CognitoUserAttribute({
       Name: "email",
@@ -97,11 +108,16 @@ export async function signUp(email: string, password: string, name: string, phon
       new CognitoUserAttribute({
         Name: "phone_number",
         Value: formattedPhone,
-      })
+      }),
     );
   }
 
-  console.log("Attempting signup for:", email, "with attributes:", attributeList.map(a => a.getName()));
+  console.log(
+    "Attempting signup for:",
+    email,
+    "with attributes:",
+    attributeList.map((a) => a.getName()),
+  );
 
   return new Promise((resolve, reject) => {
     userPool.signUp(email, password, attributeList, [], (err, result) => {
@@ -110,13 +126,13 @@ export async function signUp(email: string, password: string, name: string, phon
         reject(err);
         return;
       }
-      console.log("Signup success:", result.user.getUsername());
+      console.log("Signup success:", result?.user?.getUsername());
       resolve(result);
     });
   });
 }
 
-export async function confirmSignUp(email: string, code: string): Promise<any> {
+export async function confirmSignUp(email: string, code: string): Promise<unknown> {
   const userData = {
     Username: email,
     Pool: userPool,
