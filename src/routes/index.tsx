@@ -59,6 +59,17 @@ function weatherSummaryKey(code: number) {
 
 function Dashboard() {
   const { t } = useI18n();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const active = localStorage.getItem("farmx-session-active") === "true";
+      setIsLoggedIn(active);
+      if (!active && window.location.pathname !== "/login" && window.location.pathname !== "/signup") {
+        window.location.assign("/login");
+      }
+    }
+  }, []);
   const { location, setLocation, all } = useLocation();
   const { profile } = useProfileData();
   const { notify } = useNotifications();
