@@ -18,6 +18,7 @@ function SignUpPage() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,9 +145,28 @@ function SignUpPage() {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null;
+                    setPhoto(file);
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setPhotoPreview(reader.result as string);
+                      reader.readAsDataURL(file);
+                    } else {
+                      setPhotoPreview(null);
+                    }
+                  }}
                   className="w-full rounded-xl border border-dashed border-border bg-background py-4 px-4 text-xs outline-none focus:border-brand"
                 />
+                {photoPreview && (
+                  <div className="mt-2 flex justify-center">
+                    <img
+                      src={photoPreview}
+                      alt="Passport Preview"
+                      className="h-20 w-20 rounded-xl border border-border object-cover"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

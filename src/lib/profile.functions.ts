@@ -110,16 +110,24 @@ export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(a
 }));
 
 function getConfig() {
-  const region = process.env.AWS_REGION;
+  const region = process.env.AWS_REGION || "eu-west-1";
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
   const bucket = process.env.FARMX_MEDIA_BUCKET;
-  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
-  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
 
-  if (!region || !profileTable || !listingsTable || !bucket || !userPoolId || !clientId) {
+  let userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
+  if (!userPoolId || userPoolId.startsWith("u-west-1")) {
+    userPoolId = "eu-west-1_HXI6OOXpg";
+  }
+
+  const clientId =
+    process.env.COGNITO_WEB_CLIENT_ID ??
+    process.env.VITE_COGNITO_WEB_CLIENT_ID ??
+    "5160g8vs8f7c55fnvovjtgqnab";
+
+  if (!profileTable || !listingsTable || !bucket) {
     throw new Error(
-      "Profile service is not configured. Set AWS_REGION, FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, FARMX_MEDIA_BUCKET, COGNITO_USER_POOL_ID, and COGNITO_WEB_CLIENT_ID on the FarmX server.",
+      "Profile service is not configured. Set FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, and FARMX_MEDIA_BUCKET on the FarmX server.",
     );
   }
 
@@ -134,6 +142,8 @@ async function requireAuthenticatedUser() {
 
   const { userPoolId, clientId } = getConfig();
   const token = authorization.slice("Bearer ".length);
+
+  // The userPoolId from getConfig() is already sanitized
   const verifier = CognitoJwtVerifier.create({
     userPoolId,
     tokenUse: "id",

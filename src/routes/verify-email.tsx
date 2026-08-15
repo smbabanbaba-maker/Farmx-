@@ -34,6 +34,9 @@ function VerifyEmailPage() {
   const handleChange = (index: number, value: string) => {
     // Only accept numeric digits
     const digit = value.replace(/[^0-9]/g, "").slice(-1);
+
+    if (!digit && value !== "") return; // Prevent non-numeric input
+
     const newOtp = [...otp];
     newOtp[index] = digit;
     setOtp(newOtp);
@@ -41,6 +44,12 @@ function VerifyEmailPage() {
     // Auto-move to next input if digit entered
     if (digit && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit if all 6 digits are entered
+    const fullCode = newOtp.join("");
+    if (fullCode.length === 6) {
+      handleVerify(fullCode);
     }
   };
 

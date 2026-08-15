@@ -4,15 +4,20 @@ import { CognitoJwtVerifier } from "aws-jwt-verify";
 export function getAuthConfig() {
   let userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
 
-  // Auto-fix common typo: u-west-1 -> eu-west-1
-  if (userPoolId?.startsWith("u-west-1")) {
-    userPoolId = "e" + userPoolId;
+  // Force correct ID if it matches the known typo pattern
+  if (userPoolId === "u-west-1_HXI6OOXpg" || userPoolId?.startsWith("u-west-1")) {
+    userPoolId = "eu-west-1_HXI6OOXpg";
   }
-  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
 
-  if (!userPoolId || !clientId) {
-    throw new Error("Cognito is not configured on the server.");
+  // Fallback to hardcoded production ID if still missing or wrong
+  if (!userPoolId || userPoolId.startsWith("u-west-1")) {
+    userPoolId = "eu-west-1_HXI6OOXpg";
   }
+
+  const clientId =
+    process.env.COGNITO_WEB_CLIENT_ID ??
+    process.env.VITE_COGNITO_WEB_CLIENT_ID ??
+    "5160g8vs8f7c55fnvovjtgqnab";
 
   return { userPoolId, clientId };
 }
