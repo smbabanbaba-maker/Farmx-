@@ -7,10 +7,18 @@ import {
   type CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
-const poolData = {
-  UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID || "eu-west-1_HXI6OOXpg",
-  ClientId: import.meta.env.VITE_COGNITO_WEB_CLIENT_ID || "5160g8vs8f7c55fnvovjtgqnab",
+const getPoolData = () => {
+  let userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID || "eu-west-1_HXI6OOXpg";
+  if (userPoolId.startsWith("u-west-1")) {
+    userPoolId = "e" + userPoolId;
+  }
+  return {
+    UserPoolId: userPoolId,
+    ClientId: import.meta.env.VITE_COGNITO_WEB_CLIENT_ID || "5160g8vs8f7c55fnvovjtgqnab",
+  };
 };
+
+const poolData = getPoolData();
 
 const userPool = new CognitoUserPool(poolData);
 

@@ -2,7 +2,12 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 
 export function getAuthConfig() {
-  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
+  let userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
+
+  // Auto-fix common typo: u-west-1 -> eu-west-1
+  if (userPoolId?.startsWith("u-west-1")) {
+    userPoolId = "e" + userPoolId;
+  }
   const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
 
   if (!userPoolId || !clientId) {

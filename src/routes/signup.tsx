@@ -17,6 +17,7 @@ function SignUpPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [photo, setPhoto] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,6 +132,20 @@ function SignUpPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
                   placeholder="+2348012345678"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Profile Photo (Passport)
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhoto(e.target.files?.[0] || null)}
+                  className="w-full rounded-xl border border-dashed border-border bg-background py-4 px-4 text-xs outline-none focus:border-brand"
                 />
               </div>
             </div>
