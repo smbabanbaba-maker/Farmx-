@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
@@ -47,35 +47,41 @@ function VerifyEmailPage() {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
               <ShieldCheck className="h-6 w-6" />
             </div>
-            <h1 className="text-xl font-bold">Verify your email</h1>
+            <h1 className="text-xl font-bold">Verify Your Email</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              We sent a code to <span className="font-bold text-foreground">{email}</span>.
+              We've sent a code to <span className="font-semibold text-foreground">{email}</span>.
             </p>
           </div>
 
           {success ? (
-            <div className="text-center py-4">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-600">
-                <CheckCircle2 className="h-6 w-6" />
+            <div className="flex flex-col items-center gap-4 py-4 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+                <CheckCircle2 className="h-10 w-10" />
               </div>
-              <h2 className="text-lg font-bold">Email Verified!</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Redirecting to login...</p>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Email Verified!</h2>
+                <p className="text-sm text-muted-foreground">
+                  Redirecting you to login...
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-center block">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   Verification Code
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full text-center text-2xl font-black tracking-[0.5em] rounded-xl border border-border bg-background py-3 outline-none focus:border-brand"
-                  placeholder="000000"
-                  maxLength={6}
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    required
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
+                    placeholder="123456"
+                  />
+                </div>
               </div>
 
               {error && (
@@ -90,15 +96,14 @@ function VerifyEmailPage() {
                 disabled={loading}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify & Continue"}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Email"}
               </button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                Didn't receive the code? Check your spam folder or contact support.
+              </p>
             </form>
           )}
-
-          <div className="mt-6 text-center text-xs text-muted-foreground">
-            Didn't receive a code? Check your spam folder or{" "}
-            <button className="font-bold text-brand hover:underline">Resend code</button>
-          </div>
         </div>
       </div>
     </AppShell>
