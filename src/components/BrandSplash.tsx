@@ -3,55 +3,59 @@ import { useState, useEffect, useRef } from "react";
 
 const LOGO = "/farmx-logo.png";
 
+// Global tracker to ensure splash only shows once and isn't reset by re-mounts
+let globalBooted = false;
+
 /**
  * FarmX brand splash:
  *  - First app open: full screen, centered FarmX logo (~1.8s)
  *  - Every route change afterwards: quick logo flash (~0.7s)
  */
 export function BrandSplash() {
-  // Use try-catch or safe access for router state to prevent boot-time crashes
+  // Use try-catch or safe access for router state
   let pathname = "/";
   try {
     const state = useRouterState({ select: (s) => s.location.pathname });
     pathname = state;
   } catch (e) {
-    console.warn("Router state not ready in BrandSplash");
+    // Router not ready
   }
 
-  const [phase, setPhase] = useState<"boot" | "flash" | "idle">("boot");
+  const [visible, setVisible] = useState(!globalBooted);
+  const [phase, setPhase] = useState<"boot" | "flash">("boot");
   const lastPath = useRef(pathname);
-  const booted = useRef(false);
 
   useEffect(() => {
-    // Primary boot timeout
+    if (globalBooted) {
+      setVisible(false);
+      return;
+    }
+
     const t = setTimeout(() => {
-      booted.current = true;
-      setPhase("idle");
-    }, 1800);
+      globalBooted = true;
+      setVisible(false);
+    }, 2000); // Slightly longer to ensure stability
 
-    // Fail-safe: force idle after 4s even if something hangs
-    const failSafe = setTimeout(() => {
-      setPhase("idle");
-    }, 4000);
-
-    return () => {
-      clearTimeout(t);
-      clearTimeout(failSafe);
-    };
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    if (pathname === lastPath.current) return;
+    if (!globalBooted || pathname === lastPath.current) return;
     lastPath.current = pathname;
-    if (!booted.current) return;
+    
     setPhase("flash");
-    const t = setTimeout(() => setPhase("idle"), 700);
+    setVisible(true);
+    
+    const t = setTimeout(() => {
+      setVisible(false);
+    }, 700);
+    
     return () => clearTimeout(t);
   }, [pathname]);
 
-  if (phase === "idle") return null;
+  if (!visible) return null;
 
-  const isBoot = phase === "boot";
+  const isBoot = !globalBooted;
 
   return (
     <div
