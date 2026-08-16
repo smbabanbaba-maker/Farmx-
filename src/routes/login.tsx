@@ -53,13 +53,17 @@ function LoginPage() {
       setError("Enter your email address.");
       return;
     }
-    if (!isSixDigitPassword(password)) {
+    const normalizedPassword = password
+      .trim()
+      .replace(/[^0-9]/g, "")
+      .slice(0, PASSWORD_LENGTH);
+    if (!isSixDigitPassword(normalizedPassword)) {
       setError("Password must contain exactly 6 digits.");
       return;
     }
     setLoading(true);
     try {
-      await signIn(normalizedEmail, password);
+      await signIn(normalizedEmail, normalizedPassword);
       if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
         window.location.assign(returnTo);
       } else {

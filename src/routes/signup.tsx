@@ -28,7 +28,11 @@ function SignUpPage() {
       e.stopPropagation();
     }
 
-    if (!isSixDigitPassword(password)) {
+    const normalizedPassword = password
+      .trim()
+      .replace(/[^0-9]/g, "")
+      .slice(0, PASSWORD_LENGTH);
+    if (!isSixDigitPassword(normalizedPassword)) {
       setError("Password must contain exactly 6 digits.");
       return;
     }
@@ -36,14 +40,14 @@ function SignUpPage() {
     setLoading(true);
     setError(null);
     try {
-      await signUp(email, password, name, phone);
-      await navigate({ to: "/verify-email", search: { email } });
+      await signUp(email.trim().toLowerCase(), normalizedPassword, name.trim(), phone.trim());
+      await navigate({ to: "/verify-email", search: { email: email.trim().toLowerCase() } });
     } catch (err: unknown) {
       const errorObj = err as Error;
       console.error("Signup error details:", errorObj);
 
       const msg = errorObj.message?.toLowerCase().includes("password")
-        ? "Password must contain exactly 6 digits."
+        ? "The 6-digit password was rejected by AWS Cognito. Confirm the FarmX User Pool password policy is set to minimum 6 with no uppercase, lowercase, number, or symbol requirements."
         : errorObj.message || "Something went wrong. Please try again.";
       setError(msg);
     } finally {

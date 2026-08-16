@@ -23,13 +23,13 @@ const poolData = getPoolData();
 const userPool = new CognitoUserPool(poolData);
 
 export const PASSWORD_LENGTH = 6;
-export const PASSWORD_PATTERN = /^\d{6}$/;
+export const PASSWORD_PATTERN = /^[0-9]{6}$/;
 export const VERIFICATION_CODE_LENGTH = 6;
 
 export const PASSWORD_REQUIREMENTS = ["Exactly 6 digits"] as const;
 
 export function isSixDigitPassword(value: string): boolean {
-  return PASSWORD_PATTERN.test(value);
+  return typeof value === "string" && PASSWORD_PATTERN.test(value.trim());
 }
 
 function assertSixDigitPassword(value: string): void {
