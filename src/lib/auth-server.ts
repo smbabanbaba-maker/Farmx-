@@ -45,6 +45,7 @@ export async function requireAuthenticatedUser() {
     return {
       userId: claims.sub,
       email: typeof claims.email === "string" ? claims.email : undefined,
+      name: typeof claims.name === "string" ? claims.name : undefined,
       groups: Array.isArray(claims["cognito:groups"]) ? claims["cognito:groups"].map(String) : [],
     };
   } catch (err: unknown) {

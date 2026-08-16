@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/use-auth";
+import { useProfilePhoto } from "@/lib/use-profile-photo";
 
 export const Route = createFileRoute("/edit-profile")({ component: EditProfile });
 
@@ -49,6 +50,7 @@ const blankProfile: ProfileDraft = {
 function EditProfile() {
   const navigate = useNavigate();
   const { status, profile, error, refresh, mode } = useProfileData();
+  const existingPhotoUrl = useProfilePhoto(profile?.photoKey);
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [form, setForm] = useState<ProfileDraft>(blankProfile);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -62,7 +64,7 @@ function EditProfile() {
 
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: { returnTo: "/edit-profile" } });
     }
   }, [authLoading, isLoggedIn, navigate]);
 
@@ -256,9 +258,9 @@ function EditProfile() {
               disabled={uploading}
               className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand/10 text-lg font-black text-brand disabled:opacity-60"
             >
-              {photoPreview ? (
+              {photoPreview || existingPhotoUrl ? (
                 <img
-                  src={photoPreview}
+                  src={photoPreview ?? existingPhotoUrl ?? undefined}
                   alt="Profile preview"
                   className="h-full w-full object-cover"
                 />

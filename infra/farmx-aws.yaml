@@ -227,6 +227,10 @@ Resources:
       AutoVerifiedAttributes: [email]
       UsernameAttributes: [email]
       MfaConfiguration: "OFF"
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+        EmailSubject: "FarmX verification code"
+        EmailMessage: "Your FarmX verification code is {####}. Use this code to securely verify your account or reset your password. If you did not request this, you can safely ignore this email."
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email

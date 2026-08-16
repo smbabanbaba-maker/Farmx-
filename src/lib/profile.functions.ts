@@ -152,7 +152,11 @@ async function requireAuthenticatedUser() {
   const claims = await verifier.verify(token);
   if (!claims.sub) throw new Error("Your FarmX account identity could not be verified.");
 
-  return { userId: claims.sub, email: typeof claims.email === "string" ? claims.email : undefined };
+  return {
+    userId: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : undefined,
+    name: typeof claims.name === "string" ? claims.name : undefined,
+  };
 }
 
 function createDocumentClient(region: string) {
@@ -388,16 +392,16 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
     const defaultUsername = `farmer_${cleanId || "user"}`;
     const defaultProfile = {
       userId: actor.userId,
-      fullName: actor.email ? actor.email.split("@")[0] : "FarmX Member",
+      fullName: actor.name?.trim() || actor.email?.split("@")[0] || "FarmX Member",
       username: defaultUsername,
       role: "farmer" as const,
-      bio: "Member of the FarmX agricultural marketplace.",
-      state: "Kano State",
-      location: "Kano Municipal",
-      phone: "+2348000000000",
-      email: actor.email ?? `${defaultUsername}@farmx.app`,
-      agriculturalInterests: ["Crop Farming", "Agribusiness"],
-      skills: ["General Farming"],
+      bio: "",
+      state: "",
+      location: "",
+      phone: "",
+      email: actor.email ?? "",
+      agriculturalInterests: [],
+      skills: [],
       privacy: {
         profileVisibility: "public" as const,
         messagePermission: "everyone" as const,

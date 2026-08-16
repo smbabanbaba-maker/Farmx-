@@ -30,6 +30,7 @@ import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as SearchRouteImport } from './routes/search'
@@ -50,6 +51,7 @@ import { Route as LearnCourseIdRouteImport } from './routes/learn.$courseId'
 import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
 import { Route as MarketSearchRouteImport } from './routes/market.search'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
+import { Route as OauthCallbackRouteImport } from './routes/oauth.callback'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
 import { Route as SettingsSectionRouteImport } from './routes/settings.$section'
@@ -162,6 +164,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -262,6 +269,11 @@ const MessagesIdRoute = MessagesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => MessagesRoute,
 } as any)
+const OauthCallbackRoute = OauthCallbackRouteImport.update({
+  id: '/oauth/callback',
+  path: '/oauth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -315,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
@@ -335,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/settings/$section': typeof SettingsSectionRoute
@@ -364,6 +378,7 @@ export interface FileRoutesByTo {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
@@ -384,6 +399,7 @@ export interface FileRoutesByTo {
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/settings/$section': typeof SettingsSectionRoute
@@ -414,6 +430,7 @@ export interface FileRoutesById {
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
@@ -434,6 +451,7 @@ export interface FileRoutesById {
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
+  '/oauth/callback': typeof OauthCallbackRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
   '/settings/$section': typeof SettingsSectionRoute
@@ -465,6 +483,7 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/reset-password'
     | '/robots.txt'
     | '/saved'
     | '/search'
@@ -485,6 +504,7 @@ export interface FileRouteTypes {
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
+    | '/oauth/callback'
     | '/product/$id'
     | '/profile-center/$section'
     | '/settings/$section'
@@ -514,6 +534,7 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/reset-password'
     | '/robots.txt'
     | '/saved'
     | '/search'
@@ -534,6 +555,7 @@ export interface FileRouteTypes {
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
+    | '/oauth/callback'
     | '/product/$id'
     | '/profile-center/$section'
     | '/settings/$section'
@@ -563,6 +585,7 @@ export interface FileRouteTypes {
     | '/post-product'
     | '/profile'
     | '/reports'
+    | '/reset-password'
     | '/robots.txt'
     | '/saved'
     | '/search'
@@ -583,6 +606,7 @@ export interface FileRouteTypes {
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
+    | '/oauth/callback'
     | '/product/$id'
     | '/profile-center/$section'
     | '/settings/$section'
@@ -613,6 +637,7 @@ export interface RootRouteChildren {
   PostProductRoute: typeof PostProductRoute
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
@@ -627,6 +652,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   CSlugRoute: typeof CSlugRoute
   EditAdIdRoute: typeof EditAdIdRoute
+  OauthCallbackRoute: typeof OauthCallbackRoute
   ProductIdRoute: typeof ProductIdRoute
   ProfileCenterSectionRoute: typeof ProfileCenterSectionRoute
   UUsernameRoute: typeof UUsernameRoute
@@ -782,6 +808,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -922,6 +955,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MessagesIdRouteImport
       parentRoute: typeof MessagesRoute
     }
+    '/oauth/callback': {
+      id: '/oauth/callback'
+      path: '/oauth/callback'
+      fullPath: '/oauth/callback'
+      preLoaderRoute: typeof OauthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -1060,6 +1100,7 @@ const rootRouteChildren: RootRouteChildren = {
   PostProductRoute: PostProductRoute,
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
@@ -1074,6 +1115,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   CSlugRoute: CSlugRoute,
   EditAdIdRoute: EditAdIdRoute,
+  OauthCallbackRoute: OauthCallbackRoute,
   ProductIdRoute: ProductIdRoute,
   ProfileCenterSectionRoute: ProfileCenterSectionRoute,
   UUsernameRoute: UUsernameRoute,

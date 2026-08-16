@@ -97,7 +97,7 @@ function PostProduct() {
 
   useEffect(() => {
     if (!authLoading && !isLoggedIn) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: { returnTo: "/post-product" } });
     }
   }, [authLoading, isLoggedIn, navigate]);
 
