@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
-import { signUp } from "@/lib/auth";
+import { PASSWORD_LENGTH, isSixDigitPassword, signUp } from "@/lib/auth";
 import { UserPlus, Mail, Lock, User, AlertCircle, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
@@ -28,44 +28,24 @@ function SignUpPage() {
       e.stopPropagation();
     }
 
-    console.log("Signup form submitted for:", email);
-
-    // Client-side validation for the 10-char policy
-    if (password.length < 10) {
-      const msg = "Password must be at least 10 characters long.";
-      setError(msg);
-      if (typeof window !== "undefined") window.alert(msg);
+    if (!isSixDigitPassword(password)) {
+      setError("Password must contain exactly 6 digits.");
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      console.log("Calling Cognito signUp...");
-      const result = await signUp(email, password, name, phone);
-      console.log("Cognito signUp success:", result);
-
-      if (typeof window !== "undefined") {
-        window.alert(
-          "Account created successfully! Please check your email for the verification code.",
-        );
-      }
-
-      // Explicitly navigate to verify-email
+      await signUp(email, password, name, phone);
       await navigate({ to: "/verify-email", search: { email } });
     } catch (err: unknown) {
       const errorObj = err as Error;
       console.error("Signup error details:", errorObj);
 
-      let msg = errorObj.message || "Something went wrong. Please try again.";
-      if (msg.includes("Password")) {
-        msg = "Password must be 10+ chars with Uppercase, Lowercase, Number & Symbol.";
-      }
-
+      const msg = errorObj.message?.toLowerCase().includes("password")
+        ? "Password must contain exactly 6 digits."
+        : errorObj.message || "Something went wrong. Please try again.";
       setError(msg);
-      if (typeof window !== "undefined") {
-        window.alert("Registration Error: " + msg);
-      }
     } finally {
       setLoading(false);
     }
@@ -172,7 +152,7 @@ function SignUpPage() {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Password
+                6-digit Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -180,13 +160,20 @@ function SignUpPage() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
-                  placeholder="••••••••"
+                  onChange={(e) =>
+                    setPassword(e.target.value.replace(/\D/g, "").slice(0, PASSWORD_LENGTH))
+                  }
+                  inputMode="numeric"
+                  autoComplete="new-password"
+                  pattern="[0-9]{6}"
+                  minLength={PASSWORD_LENGTH}
+                  maxLength={PASSWORD_LENGTH}
+                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm tracking-[0.35em] outline-none focus:border-brand"
+                  placeholder="••••••"
                 />
               </div>
               <p className="text-[10px] text-muted-foreground px-1">
-                At least 10 characters with Uppercase, Lowercase, Number & Symbol.
+                Use exactly 6 numbers for your FarmX password.
               </p>
             </div>
 
@@ -200,10 +187,6 @@ function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              onClick={(e) => {
-                console.log("Submit button clicked");
-                // The form onSubmit should handle it, but this is a backup
-              }}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground transition-transform active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}

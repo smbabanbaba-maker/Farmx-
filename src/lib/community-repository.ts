@@ -479,7 +479,10 @@ export async function getCommunityRepository(): Promise<CommunityRepository> {
       .then(({ mode }) =>
         mode === "production" ? createProductionRepository() : createPreviewRepository(),
       )
-      .catch(() => createPreviewRepository());
+      .catch((error) => {
+        if (import.meta.env.PROD) throw error;
+        return createPreviewRepository();
+      });
   return repositoryPromise;
 }
 export function getCommunityRuntimeModeClient() {

@@ -533,7 +533,10 @@ class ProductionLearnRepository implements LearnRepository {
 let repositoryInstance: LearnRepository | null = null;
 export async function getLearnRepository(): Promise<LearnRepository> {
   if (repositoryInstance) return repositoryInstance;
-  const mode = await getLearnRuntimeMode().catch(() => ({ mode: "preview" as const }));
+  const mode = await getLearnRuntimeMode().catch((error) => {
+    if (import.meta.env.PROD) throw error;
+    return { mode: "preview" as const };
+  });
   repositoryInstance =
     mode.mode === "production" ? new ProductionLearnRepository() : new PreviewLearnRepository();
   return repositoryInstance;

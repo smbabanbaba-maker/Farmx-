@@ -1,5 +1,5 @@
 /**
- * FarmX ⇄ Paystack (client-side stub)
+ * FarmX ⇄ Paystack client integration
  *
  * SECURITY:
  *  - Only the PUBLIC key (`pk_*`) ever belongs in the browser.
@@ -49,11 +49,7 @@ export interface InitPaymentResult {
  */
 export async function initPayment(input: InitPaymentInput): Promise<InitPaymentResult> {
   if (!API_BASE_URL) {
-    // Frontend mock — replace once AWS is live.
-    return {
-      reference: `mock_${Date.now()}`,
-      authorization_url: "#mock-checkout",
-    };
+    throw new Error("Payment service is not configured. Please try again later.");
   }
   const res = await fetch(`${API_BASE_URL}/payments/init`, {
     method: "POST",
@@ -72,7 +68,9 @@ export async function initPayment(input: InitPaymentInput): Promise<InitPaymentR
 export async function verifyPayment(
   reference: string,
 ): Promise<{ status: "success" | "failed" | "pending" }> {
-  if (!API_BASE_URL) return { status: "success" };
+  if (!API_BASE_URL) {
+    throw new Error("Payment verification service is not configured.");
+  }
   const res = await fetch(`${API_BASE_URL}/payments/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

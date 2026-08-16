@@ -214,7 +214,8 @@ async function detectMode(): Promise<ProfileDataMode> {
   try {
     const result = await getProfileRuntimeMode();
     return result.mode;
-  } catch {
+  } catch (error) {
+    if (import.meta.env.PROD) throw error;
     return "preview";
   }
 }

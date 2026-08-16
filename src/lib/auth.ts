@@ -22,29 +22,51 @@ const poolData = getPoolData();
 
 const userPool = new CognitoUserPool(poolData);
 
+export const PASSWORD_LENGTH = 6;
+export const PASSWORD_PATTERN = /^\d{6}$/;
+
+export function isSixDigitPassword(value: string): boolean {
+  return PASSWORD_PATTERN.test(value);
+}
+
+function assertSixDigitPassword(value: string): void {
+  if (!isSixDigitPassword(value)) {
+    throw new Error("Password must contain exactly 6 digits.");
+  }
+}
+
+let sessionCache: { session: CognitoUserSession | null; expiresAt: number } | null = null;
+let sessionRequest: Promise<CognitoUserSession | null> | null = null;
+const SESSION_CACHE_MS = 15_000;
+
 export async function getCurrentSession(): Promise<CognitoUserSession | null> {
-  const user = userPool.getCurrentUser();
-  if (!user) return null;
+  if (sessionCache && sessionCache.expiresAt > Date.now()) return sessionCache.session;
+  if (sessionRequest) return sessionRequest;
 
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      console.warn("Cognito session lookup timed out");
+  sessionRequest = new Promise<CognitoUserSession | null>((resolve) => {
+    const user = userPool.getCurrentUser();
+    if (!user) {
       resolve(null);
-    }, 5000); // 5s timeout
+      return;
+    }
 
+    const timeout = setTimeout(() => resolve(null), 3000);
     user.getSession((err: Error | null, session: CognitoUserSession | null) => {
       clearTimeout(timeout);
-      if (err) {
-        resolve(null);
-      } else {
-        if (session && session.isValid()) {
-          resolve(session);
-        } else {
-          resolve(null);
-        }
-      }
+      resolve(!err && session?.isValid() ? session : null);
     });
+  }).finally(() => {
+    sessionRequest = null;
   });
+
+  const session = await sessionRequest;
+  sessionCache = { session, expiresAt: Date.now() + SESSION_CACHE_MS };
+  return session;
+}
+
+function clearSessionCache() {
+  sessionCache = null;
+  sessionRequest = null;
 }
 
 export async function getIdToken(): Promise<string | null> {
@@ -53,6 +75,7 @@ export async function getIdToken(): Promise<string | null> {
 }
 
 export function signOut() {
+  clearSessionCache();
   const user = userPool.getCurrentUser();
   if (user) {
     user.signOut();
@@ -63,6 +86,7 @@ export function signOut() {
 }
 
 export async function signIn(email: string, password: string): Promise<unknown> {
+  assertSixDigitPassword(password);
   const authenticationData = {
     Username: email,
     Password: password,
@@ -77,6 +101,7 @@ export async function signIn(email: string, password: string): Promise<unknown> 
   return new Promise((resolve, reject) => {
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (result) => {
+        clearSessionCache();
         if (typeof window !== "undefined") {
           localStorage.setItem("farmx-session-active", "true");
         }
@@ -96,6 +121,7 @@ export async function signUp(
   name: string,
   phone: string,
 ): Promise<unknown> {
+  assertSixDigitPassword(password);
   const attributeList = [
     new CognitoUserAttribute({
       Name: "email",

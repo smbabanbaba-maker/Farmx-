@@ -1,6 +1,7 @@
 import { X, Wallet as WalletIcon, CreditCard, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { initPayment, type PaymentPurpose } from "@/lib/paystack";
+import { getCurrentSession } from "@/lib/auth";
 
 interface Props {
   open: boolean;
@@ -18,7 +19,7 @@ export function PayModal({
   title,
   amountNaira,
   purpose,
-  walletBalance = 248500,
+  walletBalance = 0,
   onPaid,
 }: Props) {
   const [busy, setBusy] = useState(false);
@@ -43,20 +44,16 @@ export function PayModal({
     setBusy(true);
     setMsg(null);
     try {
-      const res = await initPayment({
-        email: "user@example.com",
-        amountNaira,
-        purpose,
-      });
-      if (res.authorization_url.startsWith("http")) {
-        window.location.href = res.authorization_url;
-      } else {
-        // Mock success path when AWS not wired yet
-        setTimeout(() => {
-          onPaid?.("paystack", res.reference);
-          onClose();
-        }, 700);
+      const session = await getCurrentSession();
+      const email = session?.getIdToken().payload.email;
+      if (typeof email !== "string" || !email) {
+        throw new Error("Please sign in with a verified FarmX account before paying.");
       }
+      const res = await initPayment({ email, amountNaira, purpose });
+      if (!res.authorization_url.startsWith("http")) {
+        throw new Error("Paystack did not return a valid checkout URL.");
+      }
+      window.location.href = res.authorization_url;
     } catch (e) {
       setMsg((e as Error).message);
     } finally {

@@ -21,7 +21,6 @@ import { PrefsProvider } from "@/lib/prefs";
 import { NotificationsProvider } from "@/lib/notifications-store";
 import { CommerceProvider } from "@/lib/commerce-store";
 import { CommunityProvider } from "@/lib/community-store";
-import { BrandSplash } from "@/components/BrandSplash";
 import { getIdToken } from "@/lib/auth";
 
 // Client-side fetch interceptor to inject Cognito ID token into server function calls

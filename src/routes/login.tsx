@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
-import { signIn } from "@/lib/auth";
+import { PASSWORD_LENGTH, isSixDigitPassword, signIn } from "@/lib/auth";
 import { LogIn, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
@@ -24,30 +24,22 @@ function SignUpPage() {
       e.stopPropagation();
     }
 
-    console.log("Login form submitted for:", email);
+    if (!isSixDigitPassword(password)) {
+      setError("Password must contain exactly 6 digits.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      console.log("Calling Cognito signIn...");
-      const result = await signIn(email, password);
-      console.log("Cognito signIn success:", result);
-
-      if (typeof window !== "undefined") {
-        window.alert("Login successful! Welcome back.");
-      }
-
-      // Explicitly navigate to profile
+      await signIn(email, password);
       await navigate({ to: "/profile" });
     } catch (err: unknown) {
       const errorObj = err as Error;
-      console.error("Login error details:", errorObj);
-
-      const msg = errorObj.message || "Invalid email or password.";
+      const msg = errorObj.message?.toLowerCase().includes("password")
+        ? "Password must contain exactly 6 digits."
+        : errorObj.message || "Invalid email or password.";
       setError(msg);
-
-      if (typeof window !== "undefined") {
-        window.alert("Login Error: " + msg);
-      }
     } finally {
       setLoading(false);
     }
@@ -108,9 +100,16 @@ function SignUpPage() {
                   type="password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm outline-none focus:border-brand"
-                  placeholder="••••••••"
+                  onChange={(e) =>
+                    setPassword(e.target.value.replace(/\D/g, "").slice(0, PASSWORD_LENGTH))
+                  }
+                  inputMode="numeric"
+                  autoComplete="current-password"
+                  pattern="[0-9]{6}"
+                  minLength={PASSWORD_LENGTH}
+                  maxLength={PASSWORD_LENGTH}
+                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm tracking-[0.35em] outline-none focus:border-brand"
+                  placeholder="••••••"
                 />
               </div>
             </div>

@@ -403,18 +403,28 @@ let repositoryPromise: Promise<MarketRepository> | undefined;
 export async function getMarketRepository(): Promise<MarketRepository> {
   if (!repositoryPromise) {
     const apiBaseUrl = getApiBaseUrl();
-    const preview = import.meta.env.VITE_MARKET_PREVIEW !== "false" || !apiBaseUrl;
-    repositoryPromise = Promise.resolve(
-      preview ? createPreviewRepository() : createProductionRepository(apiBaseUrl),
-    );
+    const isProductionBuild = import.meta.env.PROD;
+    if (isProductionBuild && !apiBaseUrl) {
+      repositoryPromise = Promise.reject(
+        new Error("Market service is not configured for this production deployment."),
+      );
+    } else {
+      const preview =
+        !isProductionBuild && (import.meta.env.VITE_MARKET_PREVIEW !== "false" || !apiBaseUrl);
+      repositoryPromise = Promise.resolve(
+        preview ? createPreviewRepository() : createProductionRepository(apiBaseUrl ?? ""),
+      );
+    }
   }
   return repositoryPromise;
 }
 
 export function getMarketRuntimeMode() {
-  return import.meta.env.VITE_MARKET_PREVIEW !== "false" || !getApiBaseUrl()
-    ? "preview"
-    : "production";
+  const isProductionBuild = import.meta.env.PROD;
+  return isProductionBuild ||
+    (import.meta.env.VITE_MARKET_PREVIEW === "false" && Boolean(getApiBaseUrl()))
+    ? "production"
+    : "preview";
 }
 
 export { getMarketCategory };

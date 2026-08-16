@@ -57,7 +57,12 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-2xl flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
-            <img src={LOGO} alt="FarmX" className="h-9 w-9 rounded-full object-cover" />
+            <img
+              src={LOGO}
+              alt="FarmX"
+              decoding="async"
+              className="h-9 w-9 rounded-full object-cover"
+            />
             <span className="font-black text-lg tracking-tight">
               Farm<span className="text-brand">X</span>
             </span>
@@ -275,7 +280,13 @@ function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose:
         </Link>
 
         <div className="mt-8 flex flex-col items-center gap-1 pb-4">
-          <img src={LOGO} alt="" className="h-8 w-8 rounded-full object-cover opacity-80" />
+          <img
+            src={LOGO}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="h-8 w-8 rounded-full object-cover opacity-80"
+          />
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
             FarmX Marketplace
           </p>

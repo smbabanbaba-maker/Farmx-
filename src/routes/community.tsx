@@ -469,6 +469,8 @@ function Avatar({ author }: { author: CommunityPost["author"] }) {
     <img
       src={author.photo}
       alt=""
+      loading="lazy"
+      decoding="async"
       className="h-10 w-10 rounded-full border border-border object-cover"
     />
   ) : (
@@ -479,7 +481,13 @@ function Avatar({ author }: { author: CommunityPost["author"] }) {
 }
 function ListingImage({ image }: { image?: string }) {
   return image?.startsWith("http") ? (
-    <img src={image} alt="" className="h-12 w-16 rounded-xl object-cover" />
+    <img
+      src={image}
+      alt=""
+      loading="lazy"
+      decoding="async"
+      className="h-12 w-16 rounded-xl object-cover"
+    />
   ) : (
     <div className="flex h-12 w-16 items-center justify-center rounded-xl bg-brand/10 text-brand">
       <Sparkles className="h-5 w-5" />
