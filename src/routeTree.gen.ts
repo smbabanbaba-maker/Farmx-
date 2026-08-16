@@ -52,6 +52,7 @@ import { Route as MarketSearchRouteImport } from './routes/market.search'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as ProfileCenterSectionRouteImport } from './routes/profile-center.$section'
+import { Route as SettingsSectionRouteImport } from './routes/settings.$section'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as ApiPaymentsWebhookRouteImport } from './routes/api.payments.webhook'
 import { Route as MarketCategoryCategoryRouteImport } from './routes/market.category.$category'
@@ -271,6 +272,11 @@ const ProfileCenterSectionRoute = ProfileCenterSectionRouteImport.update({
   path: '/profile-center/$section',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsSectionRoute = SettingsSectionRouteImport.update({
+  id: '/$section',
+  path: '/$section',
+  getParentRoute: () => SettingsRoute,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -312,7 +318,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
@@ -331,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/settings/$section': typeof SettingsSectionRoute
   '/u/$username': typeof UUsernameRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
@@ -360,7 +367,7 @@ export interface FileRoutesByTo {
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/settings/$section': typeof SettingsSectionRoute
   '/u/$username': typeof UUsernameRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
@@ -409,7 +417,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/saved': typeof SavedRoute
   '/search': typeof SearchRoute
-  '/settings': typeof SettingsRoute
+  '/settings': typeof SettingsRouteWithChildren
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staff': typeof StaffRoute
@@ -428,6 +436,7 @@ export interface FileRoutesById {
   '/messages/$id': typeof MessagesIdRoute
   '/product/$id': typeof ProductIdRoute
   '/profile-center/$section': typeof ProfileCenterSectionRoute
+  '/settings/$section': typeof SettingsSectionRoute
   '/u/$username': typeof UUsernameRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/market/category/$category': typeof MarketCategoryCategoryRoute
@@ -478,6 +487,7 @@ export interface FileRouteTypes {
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
+    | '/settings/$section'
     | '/u/$username'
     | '/api/payments/webhook'
     | '/market/category/$category'
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
+    | '/settings/$section'
     | '/u/$username'
     | '/api/payments/webhook'
     | '/market/category/$category'
@@ -574,6 +585,7 @@ export interface FileRouteTypes {
     | '/messages/$id'
     | '/product/$id'
     | '/profile-center/$section'
+    | '/settings/$section'
     | '/u/$username'
     | '/api/payments/webhook'
     | '/market/category/$category'
@@ -604,7 +616,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SavedRoute: typeof SavedRoute
   SearchRoute: typeof SearchRoute
-  SettingsRoute: typeof SettingsRoute
+  SettingsRoute: typeof SettingsRouteWithChildren
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StaffRoute: typeof StaffRoute
@@ -924,6 +936,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileCenterSectionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings/$section': {
+      id: '/settings/$section'
+      path: '/$section'
+      fullPath: '/settings/$section'
+      preLoaderRoute: typeof SettingsSectionRouteImport
+      parentRoute: typeof SettingsRoute
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -1007,6 +1026,18 @@ const MessagesRouteWithChildren = MessagesRoute._addFileChildren(
   MessagesRouteChildren,
 )
 
+interface SettingsRouteChildren {
+  SettingsSectionRoute: typeof SettingsSectionRoute
+}
+
+const SettingsRouteChildren: SettingsRouteChildren = {
+  SettingsSectionRoute: SettingsSectionRoute,
+}
+
+const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
+  SettingsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
@@ -1032,7 +1063,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SavedRoute: SavedRoute,
   SearchRoute: SearchRoute,
-  SettingsRoute: SettingsRoute,
+  SettingsRoute: SettingsRouteWithChildren,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StaffRoute: StaffRoute,

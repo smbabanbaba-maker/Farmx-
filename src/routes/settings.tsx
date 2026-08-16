@@ -1,511 +1,514 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { AppShell } from "@/components/AppShell";
-import { useI18n, LANGUAGES, type Lang } from "@/lib/i18n";
-import { useTheme } from "@/lib/theme";
-import { usePrefs } from "@/lib/prefs";
-import { useCompany } from "@/lib/company-store";
-import { useProfileData } from "@/lib/use-profile";
-import { useAuth } from "@/lib/use-auth";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  User,
-  Building2,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
+import {
+  Activity,
+  ArrowRight,
   BadgeCheck,
-  Phone,
-  Mail,
-  Languages,
-  Share2,
-  MessageSquareOff,
-  StarOff,
-  PhoneCall,
   Bell,
-  Moon,
-  KeyRound,
-  Trash2,
-  LogOut,
-  Info,
-  Wifi,
-  Star,
+  BriefcaseBusiness,
+  Building2,
   ChevronRight,
+  CircleHelp,
+  CreditCard,
+  Globe2,
+  Heart,
+  Languages,
+  LockKeyhole,
+  LogOut,
+  MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  Receipt,
+  Search,
+  Settings2,
   ShieldCheck,
-  X,
-  ExternalLink,
-  MapPin as MapPinIcon,
-  WalletCards as WalletIcon,
-  Sparkles as SparklesIcon,
+  ShoppingBag,
+  Sparkles,
+  Trash2,
+  User,
+  UserRoundCheck,
+  Users,
+  WalletCards,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { AppShell } from "@/components/AppShell";
+import { useI18n } from "@/lib/i18n";
+import { useProfileData } from "@/lib/use-profile";
+import { settingsText } from "@/lib/settings-copy";
+import { usePrefs } from "@/lib/prefs";
+import { useAuth } from "@/lib/use-auth";
+import { getMyProfilePhotoUrl } from "@/lib/profile.functions";
+import { getSubscriptionSummary } from "@/lib/subscription.functions";
+import type { UserSubscription } from "@/lib/subscription.types";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — FarmX" },
+      { title: "Settings Center — FarmX" },
       {
         name: "description",
         content:
-          "Control your FarmX personal and business info, verification, language, notifications, privacy and account options.",
-      },
-      { property: "og:title", content: "FarmX Settings" },
-      {
-        property: "og:description",
-        content: "Language, notifications, privacy and account controls.",
+          "Manage your FarmX account, privacy, marketplace preferences, payments, safety and support.",
       },
     ],
   }),
   component: SettingsPage,
 });
 
-type Panel = "security" | "delete" | "about" | "rating" | null;
+type SettingItem = {
+  slug: string;
+  label: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
+};
+
+type SettingGroup = { title: string; items: SettingItem[] };
+
+const SETTING_GROUPS: SettingGroup[] = [
+  {
+    title: "Account",
+    items: [
+      {
+        slug: "personal-info",
+        label: "Personal information",
+        description: "Name, photo, username, phone and email",
+        icon: User,
+      },
+      {
+        slug: "business",
+        label: "Business profile",
+        description: "Business identity, public details and verification",
+        icon: Building2,
+      },
+      {
+        slug: "login-methods",
+        label: "Login & connected accounts",
+        description: "Email, phone and connected sign-in methods",
+        icon: MoreHorizontal,
+      },
+      {
+        slug: "security",
+        label: "Password & security",
+        description: "Password, verification and account protection",
+        icon: LockKeyhole,
+      },
+    ],
+  },
+  {
+    title: "Preferences",
+    items: [
+      {
+        slug: "language",
+        label: "Language & region",
+        description: "Language, country, currency and date preferences",
+        icon: Languages,
+      },
+      {
+        slug: "notifications",
+        label: "Notifications",
+        description: "Account, marketplace, social and payment alerts",
+        icon: Bell,
+      },
+      {
+        slug: "privacy",
+        label: "Privacy",
+        description: "Visibility, search and activity controls",
+        icon: ShieldCheck,
+      },
+      {
+        slug: "communication",
+        label: "Communication",
+        description: "Messaging, calls, receipts and indicators",
+        icon: MessageCircle,
+      },
+    ],
+  },
+  {
+    title: "Marketplace",
+    items: [
+      {
+        slug: "buying",
+        label: "Buying preferences",
+        description: "Categories, delivery and preferred locations",
+        icon: ShoppingBag,
+      },
+      {
+        slug: "selling",
+        label: "Selling & posting",
+        description: "Plan, posting allowance and listing controls",
+        icon: BriefcaseBusiness,
+      },
+      {
+        slug: "saved-searches",
+        label: "Saved searches",
+        description: "Search criteria and alert preferences",
+        icon: Search,
+      },
+      {
+        slug: "location",
+        label: "Location preferences",
+        description: "Marketplace location and search radius",
+        icon: MapPin,
+      },
+    ],
+  },
+  {
+    title: "Payments & services",
+    items: [
+      {
+        slug: "balance",
+        label: "FarmX Balance",
+        description: "Service credits and available funds",
+        icon: WalletCards,
+      },
+      {
+        slug: "payments",
+        label: "Payment history",
+        description: "Verified subscriptions, boosts and service payments",
+        icon: Receipt,
+      },
+      {
+        slug: "subscription",
+        label: "Subscription",
+        description: "Plan, expiry, usage and billing options",
+        icon: CreditCard,
+      },
+      {
+        slug: "boosting",
+        label: "Boosting",
+        description: "Active promotions and boost history",
+        icon: Sparkles,
+      },
+    ],
+  },
+  {
+    title: "Trust & safety",
+    items: [
+      {
+        slug: "verification",
+        label: "Verification",
+        description: "Email, phone, identity, business and seller status",
+        icon: UserRoundCheck,
+      },
+      {
+        slug: "blocked",
+        label: "Blocked users",
+        description: "Review and manage blocked accounts",
+        icon: Users,
+      },
+      {
+        slug: "safety",
+        label: "Reports & safety",
+        description: "Report concerns and read safety guidance",
+        icon: ShieldCheck,
+      },
+    ],
+  },
+  {
+    title: "Activity",
+    items: [
+      {
+        slug: "activity",
+        label: "My activity",
+        description: "Ads, searches, saves, follows and community activity",
+        icon: Activity,
+      },
+      {
+        slug: "recently-viewed",
+        label: "Recently viewed",
+        description: "Listings you opened recently",
+        icon: MoreHorizontal,
+      },
+      {
+        slug: "saved",
+        label: "Saved ads",
+        description: "Saved listings and current availability",
+        icon: Heart,
+      },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      {
+        slug: "support",
+        label: "Help & support",
+        description: "Help centre, support and problem reports",
+        icon: CircleHelp,
+      },
+      {
+        slug: "legal",
+        label: "Terms & policies",
+        description: "Terms, privacy, marketplace and payment rules",
+        icon: ShieldCheck,
+      },
+      {
+        slug: "about",
+        label: "About FarmX",
+        description: "Version, mission, contact and licences",
+        icon: Globe2,
+      },
+    ],
+  },
+];
 
 function SettingsPage() {
-  const { t, lang, setLang } = useI18n();
-  const { mode, setMode } = useTheme();
+  const { t, lang } = useI18n();
+  const { profile, stats, status: profileStatus, refresh } = useProfileData();
   const { toggles, setToggle } = usePrefs();
-  const { state: companyState } = useCompany();
-  const { profile, status: profileStatus, refresh: refreshProfile } = useProfileData();
   const { signOut } = useAuth();
-  const navigate = useNavigate();
-  const [langOpen, setLangOpen] = useState(false);
-  const [note, setNote] = useState<string | null>(null);
-  const [panel, setPanel] = useState<Panel>(null);
-  const [deletePhrase, setDeletePhrase] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const companyProfile = companyState.personal;
-  const fullName = profile?.fullName ?? companyProfile?.fullName ?? "Not set";
-  const phone = profile?.phone ?? companyProfile?.phone ?? "Not set";
-  const email = profile?.email ?? companyProfile?.email ?? "Not set";
-  const companyName = companyState.company?.name ?? "Not set";
-
-  const ping = async () => {
-    const start = Date.now();
+  const loadSubscription = useCallback(async () => {
     try {
-      await fetch("/favicon.png", { cache: "no-store" });
-      setNote(`✓ ${t("checkConnection")} — ${Date.now() - start}ms`);
-    } catch {
-      setNote(`✕ ${t("checkConnection")}`);
+      setSubscription(await getSubscriptionSummary());
+      setSubscriptionError(null);
+    } catch (error) {
+      setSubscriptionError(
+        error instanceof Error ? error.message : "Subscription status unavailable.",
+      );
     }
-  };
+  }, []);
 
-  const logOut = () => {
+  useEffect(() => {
+    void loadSubscription();
+  }, [loadSubscription]);
+
+  useEffect(() => {
+    let active = true;
+    if (!profile?.photoKey) {
+      setPhotoUrl(null);
+      return () => {
+        active = false;
+      };
+    }
+    void getMyProfilePhotoUrl({ data: { objectKey: profile.photoKey } })
+      .then(({ downloadUrl }) => {
+        if (active) setPhotoUrl(downloadUrl);
+      })
+      .catch(() => {
+        if (active) setPhotoUrl(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [profile?.photoKey]);
+
+  const fullName = profile?.fullName ?? "FarmX member";
+  const location = profile?.location || profile?.state || "Location not set";
+  const verificationLabel =
+    profile?.verification === "approved"
+      ? "Verified"
+      : profile?.verification === "pending"
+        ? "Pending review"
+        : "Not verified";
+  const subscriptionLabel = subscription?.tier ?? "FREE";
+  const initials = fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+  const handleLogout = () => {
     signOut();
-    navigate({ to: "/login" });
-  };
-
-  const removeDeviceData = () => {
-    if (deletePhrase !== "DELETE") return;
-    try {
-      [
-        "farmx-company-state-v1",
-        "farmx-prefs-v1",
-        "farmx-messages-v2",
-        "farmx-messages-v3",
-        "farmx-notifications-v1",
-        "farmx-notifications-v2",
-      ].forEach((key) => localStorage.removeItem(key));
-    } catch {
-      /* no local storage available */
-    }
-    setPanel(null);
-    setNote(
-      "Data saved on this device has been removed. For full account deletion, contact FarmX support from your verified account.",
-    );
-    navigate({ to: "/" });
+    setMessage("You have been logged out securely.");
+    window.setTimeout(() => window.location.assign("/login"), 250);
   };
 
   return (
     <AppShell title={t("settings")}>
-      <div className="space-y-4 pb-6">
+      <div className="space-y-5 pb-8">
         {profileStatus === "error" && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
-            Profile details could not be refreshed. Your saved settings remain available.
-            <button type="button" onClick={() => void refreshProfile()} className="ml-2 underline">
-              Retry
-            </button>
-          </div>
+          <Notice tone="error" action={{ label: "Retry", onClick: () => void refresh() }}>
+            Your account details could not be refreshed. No changes were made.
+          </Notice>
         )}
-        <section className="rounded-2xl border border-brand/20 bg-gradient-to-r from-brand/10 via-brand/5 to-transparent p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand text-sm font-black text-brand-foreground">
-              {fullName.slice(0, 2).toUpperCase()}
-            </div>
+        {subscriptionError && (
+          <Notice tone="error">Subscription details are temporarily unavailable.</Notice>
+        )}
+        {message && <Notice tone="success">{message}</Notice>}
+
+        <section className="overflow-hidden rounded-3xl border border-brand/20 bg-gradient-to-br from-brand/10 via-card to-card p-4 shadow-sm sm:p-5">
+          <div className="flex items-start gap-3">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={fullName}
+                loading="lazy"
+                decoding="async"
+                className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-2 ring-brand/15"
+              />
+            ) : (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand text-sm font-black text-brand-foreground">
+                {initials || "FX"}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-bold">{fullName}</p>
-              <p className="truncate text-xs text-muted-foreground">
-                {profile?.location || profile?.state || "Location not set"}, Nigeria ·{" "}
-                {profile?.role ?? "Role not set"}
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-base font-black">{fullName}</h1>
+                {profile?.verification === "approved" && (
+                  <BadgeCheck className="h-4 w-4 text-brand" aria-label="Verified" />
+                )}
+              </div>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                @{profile?.username ?? "username"}
+              </p>
+              <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                <MapPin className="h-3 w-3" />
+                {location}
               </p>
             </div>
             <Link
               to="/profile"
-              className="rounded-lg border border-brand/30 px-2.5 py-1.5 text-xs font-bold text-brand"
+              className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-brand/30 px-3 py-2 text-xs font-black text-brand"
             >
-              Profile
+              View profile <ArrowRight className="h-3.5 w-3.5" />
             </Link>
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <HeaderStat label="Account type" value={profile?.role ?? "Member"} />
+            <HeaderStat label="Verification" value={verificationLabel} />
+            <HeaderStat label="Subscription" value={subscriptionLabel} />
+            <HeaderStat label="Active ads" value={String(stats?.activeAds ?? 0)} />
           </div>
         </section>
 
-        <Group title="Account & business">
-          <Row
-            icon={User}
-            label={t("personalInfo")}
-            value="Edit profile"
-            onClick={() => navigate({ to: "/edit-profile" })}
-          />
-          <Row
-            icon={Building2}
-            label={t("businessInfo")}
-            value={companyName}
-            onClick={() => navigate({ to: "/company" })}
-          />
-          <Row
-            icon={BadgeCheck}
-            label={t("verifiedBadge")}
-            value={companyState.tier === "none" ? "Get subscribed" : "Active"}
-            onClick={() => navigate({ to: "/subscribe" })}
-          />
-          <Row
-            icon={Phone}
-            label={t("phoneNumbers")}
-            value={phone}
-            onClick={() => navigate({ to: "/edit-profile" })}
-          />
-          <Row
-            icon={Mail}
-            label={t("changeEmail")}
-            value={email}
-            onClick={() => navigate({ to: "/edit-profile" })}
-          />
-        </Group>
-
-        <Group title="Preferences">
-          <Row
-            icon={Languages}
-            label={t("changeLanguage")}
-            value={LANGUAGES.find((item) => item.code === lang)?.label}
-            onClick={() => setLangOpen((open) => !open)}
-          />
-          {langOpen && (
-            <div className="grid grid-cols-2 gap-2 bg-accent/30 p-3">
-              {LANGUAGES.map((language) => (
-                <button
-                  key={language.code}
-                  onClick={() => {
-                    setLang(language.code as Lang);
-                    setLangOpen(false);
-                  }}
-                  className={`rounded-lg border px-3 py-2 text-sm font-semibold ${lang === language.code ? "border-brand bg-brand text-brand-foreground" : "border-border bg-background hover:border-brand/40"}`}
-                >
-                  {language.label}
-                </button>
+        {SETTING_GROUPS.map((group, index) => (
+          <section key={group.title}>
+            <h2 className="mb-2 px-1 text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+              {settingsText(
+                lang,
+                `group.${["account", "preferences", "marketplace", "payments", "trust", "activity", "support"][index]}`,
+                group.title,
+              )}
+            </h2>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
+              {group.items.map((item) => (
+                <SettingsRow key={item.slug} item={item} lang={lang} />
               ))}
             </div>
-          )}
-          <Row
-            icon={Bell}
-            label="Notification centre"
-            value="Channels & push alerts"
-            onClick={() => navigate({ to: "/notifications" })}
-          />
-          <Toggle
-            icon={Bell}
-            label="Enable notifications"
-            on={!!toggles.notifications}
-            set={(value) => setToggle("notifications", value)}
-          />
-          <Toggle
-            icon={Share2}
-            label={t("autoAdSharing")}
-            on={!!toggles.autoAdSharing}
-            set={(value) => setToggle("autoAdSharing", value)}
-          />
-          <Toggle
-            icon={MessageSquareOff}
-            label={t("disableChats")}
-            on={!!toggles.disableChats}
-            set={(value) => setToggle("disableChats", value)}
-          />
-          <Toggle
-            icon={StarOff}
-            label={t("disableFeedback")}
-            on={!!toggles.disableFeedback}
-            set={(value) => setToggle("disableFeedback", value)}
-          />
-          <Toggle
-            icon={PhoneCall}
-            label={t("inAppCalls")}
-            on={!!toggles.inAppCalls}
-            set={(value) => setToggle("inAppCalls", value)}
-          />
-          <Toggle
-            icon={Moon}
-            label={t("darkMode")}
-            on={mode === "dark"}
-            set={(value) => setMode(value ? "dark" : "light")}
-          />
-        </Group>
+          </section>
+        ))}
 
-        <Group title="Marketplace">
-          <Row
-            icon={Share2}
-            label="Saved searches & ads"
-            value="Manage saved activity"
-            onClick={() => navigate({ to: "/saved" })}
-          />
-          <Row
-            icon={Star}
-            label="Ad analytics"
-            value="Views, saves and contacts"
-            onClick={() => navigate({ to: "/analytics" })}
-          />
-          <Row
-            icon={MapPinIcon}
-            label="Location preferences"
-            value={profile?.location || profile?.state || "Not set"}
-            onClick={() => navigate({ to: "/edit-profile" })}
-          />
-        </Group>
+        <section className="rounded-2xl border border-border bg-card p-3">
+          <div className="flex items-center gap-3">
+            <Bell className="h-4 w-4 text-brand" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold">Quick notification control</p>
+              <p className="text-[11px] text-muted-foreground">
+                Turn all non-critical in-app notifications on or off.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToggle("notifications", !toggles.notifications)}
+              aria-pressed={!!toggles.notifications}
+              className={`relative h-6 w-11 rounded-full transition ${toggles.notifications ? "bg-brand" : "bg-muted-foreground/30"}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${toggles.notifications ? "left-5.5" : "left-0.5"}`}
+              />
+            </button>
+          </div>
+        </section>
 
-        <Group title="Payments & services">
-          <Row
-            icon={WalletIcon}
-            label="FarmX Balance"
-            value="Payments and service credits"
-            onClick={() => navigate({ to: "/wallet" })}
-          />
-          <Row
-            icon={BadgeCheck}
-            label="Subscription"
-            value="Plans, limits and receipts"
-            onClick={() => navigate({ to: "/subscribe" })}
-          />
-          <Row
-            icon={SparklesIcon}
-            label="Boosting"
-            value="Promote an existing advert"
-            onClick={() => navigate({ to: "/upgrade" })}
-          />
-        </Group>
-
-        <Group title="Security & support">
-          <Row
-            icon={KeyRound}
-            label={t("changePassword")}
-            value="Cognito account"
-            onClick={() => setPanel("security")}
-          />
-          <Row
-            icon={ShieldCheck}
-            label="Buyer protection"
-            value="Orders, escrow & disputes"
-            onClick={() => navigate({ to: "/buyer-protection" })}
-          />
-          <Row
-            icon={Info}
-            label={t("aboutApp")}
-            value="FarmX v1.0"
-            onClick={() => setPanel("about")}
-          />
-          <Row icon={Wifi} label={t("checkConnection")} onClick={ping} />
-          <Row
-            icon={Star}
-            label={t("rateUs")}
-            value="Share feedback"
-            onClick={() => setPanel("rating")}
-          />
-        </Group>
-
-        <Group>
-          <Row icon={Trash2} label={t("deleteAccount")} danger onClick={() => setPanel("delete")} />
-          <Row icon={LogOut} label={t("logout")} danger onClick={logOut} />
-        </Group>
-
-        {note && (
-          <p className="rounded-xl bg-brand/5 px-3 py-2 text-center text-xs font-semibold text-brand">
-            {note}
-          </p>
-        )}
-
-        <Link to="/profile" className="block text-center text-xs text-muted-foreground">
-          ← {t("profile")}
-        </Link>
+        <section className="rounded-2xl border border-brand/20 bg-brand/[0.03] p-4">
+          <div className="flex items-start gap-3">
+            <Settings2 className="mt-0.5 h-4 w-4 text-brand" />
+            <div>
+              <h2 className="text-sm font-black">Account actions</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                FarmX keeps private account data behind your authenticated session. Changes made in
+                a child page are saved to the relevant service and reflected here when you return.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-black text-brand-foreground"
+            >
+              <LogOut className="h-4 w-4" /> {t("logout")}
+            </button>
+            <Link
+              to="/settings/$section"
+              params={{ section: "security" }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-black"
+            >
+              <Trash2 className="h-4 w-4 text-brand" /> Delete account
+            </Link>
+          </div>
+        </section>
       </div>
-
-      {panel && (
-        <AccountPanel
-          panel={panel}
-          close={() => {
-            setPanel(null);
-            setDeletePhrase("");
-          }}
-          deletePhrase={deletePhrase}
-          setDeletePhrase={setDeletePhrase}
-          removeDeviceData={removeDeviceData}
-        />
-      )}
     </AppShell>
   );
 }
 
-function Group({ children, title }: { children: ReactNode; title?: string }) {
+function SettingsRow({ item, lang }: { item: SettingItem; lang: import("@/lib/i18n").Lang }) {
+  const Icon = item.icon;
+  const label = settingsText(lang, `item.${item.slug}.label`, item.label);
+  const description = settingsText(lang, `item.${item.slug}.description`, item.description);
   return (
-    <section>
-      {title && (
-        <h2 className="mb-1.5 px-1 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          {title}
-        </h2>
-      )}
-      <div className="overflow-hidden rounded-2xl border border-border bg-card divide-y divide-border">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function Row({
-  icon: Icon,
-  label,
-  value,
-  onClick,
-  danger,
-}: {
-  icon: typeof User;
-  label: string;
-  value?: string;
-  onClick?: () => void;
-  danger?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-accent active:scale-[0.99] ${danger ? "text-brand" : ""}`}
+    <Link
+      to="/settings/$section"
+      params={{ section: item.slug }}
+      className="group flex items-center gap-3 px-3 py-3.5 text-left transition hover:bg-accent/70"
     >
-      <Icon className={`h-4 w-4 shrink-0 ${danger ? "" : "text-brand"}`} />
-      <span className="min-w-0 flex-1 text-sm font-medium">{label}</span>
-      {value && (
-        <span className="max-w-32 truncate text-[11px] text-muted-foreground">{value}</span>
-      )}
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-    </button>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">
+        <Icon className="h-4 w-4" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-bold">{label}</span>
+        <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">
+          {description}
+        </span>
+      </span>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-brand" />
+    </Link>
   );
 }
 
-function Toggle({
-  icon: Icon,
-  label,
-  on,
-  set,
-}: {
-  icon: typeof User;
-  label: string;
-  on: boolean;
-  set: (value: boolean) => void;
-}) {
+function HeaderStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3 px-3 py-3">
-      <Icon className="h-4 w-4 text-brand" />
-      <span className="flex-1 text-sm font-medium">{label}</span>
-      <button
-        onClick={() => set(!on)}
-        aria-pressed={on}
-        aria-label={`${label}: ${on ? "on" : "off"}`}
-        className={`relative h-6 w-11 rounded-full transition-colors ${on ? "bg-brand" : "bg-muted-foreground/30"}`}
-      >
-        <span
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${on ? "left-5.5" : "left-0.5"}`}
-        />
-      </button>
+    <div className="rounded-xl bg-background/70 p-2.5">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className="mt-1 truncate text-xs font-black capitalize">{value}</p>
     </div>
   );
 }
 
-function AccountPanel({
-  panel,
-  close,
-  deletePhrase,
-  setDeletePhrase,
-  removeDeviceData,
+function Notice({
+  children,
+  tone,
+  action,
 }: {
-  panel: Exclude<Panel, null>;
-  close: () => void;
-  deletePhrase: string;
-  setDeletePhrase: (value: string) => void;
-  removeDeviceData: () => void;
+  children: ReactNode;
+  tone: "error" | "success";
+  action?: { label: string; onClick: () => void };
 }) {
-  const content = {
-    security: {
-      title: "Password & sign-in",
-      body: "FarmX keeps account sign-in protected through AWS Cognito. To change a live password, use the password reset option from the Cognito sign-in screen linked to your verified email address.",
-    },
-    about: {
-      title: "About FarmX",
-      body: "FarmX is a Nigerian agricultural marketplace for buying, selling, messaging, secure payments and delivery coordination. Version 1.0 uses Paystack-ready payments and AWS-ready data services.",
-    },
-    rating: {
-      title: "Rate FarmX",
-      body: "Your feedback helps make FarmX safer and more useful for farmers, buyers and agribusinesses. You can send feedback from the Community page or contact support through the app.",
-    },
-  } as const;
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-3 sm:items-center"
-      onClick={close}
+      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold ${tone === "error" ? "border-amber-300 bg-amber-50 text-amber-950" : "border-emerald-300 bg-emerald-50 text-emerald-950"}`}
+      role="status"
     >
-      <div
-        className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold">
-              {panel === "delete" ? "Remove account data" : content[panel].title}
-            </h3>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {panel === "delete"
-                ? "This removes FarmX information stored on this device, including saved ads, chats and local profile settings. It does not delete a live AWS Cognito account."
-                : content[panel].body}
-            </p>
-          </div>
-          <button onClick={close} className="rounded-full p-1.5 hover:bg-accent" aria-label="Close">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {panel === "security" && (
-          <div className="mt-4 flex items-center gap-2 rounded-xl border border-brand/20 bg-brand/5 p-3 text-xs font-semibold text-brand">
-            <ExternalLink className="h-4 w-4" /> Use the verified-email password reset during
-            sign-in.
-          </div>
-        )}
-
-        {panel === "delete" && (
-          <label className="mt-4 block">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Type DELETE to continue
-            </span>
-            <input
-              value={deletePhrase}
-              onChange={(event) => setDeletePhrase(event.target.value)}
-              placeholder="DELETE"
-              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-brand"
-            />
-          </label>
-        )}
-
-        <div className="mt-5 flex gap-2">
-          <button onClick={close} className="flex-1 rounded-xl bg-muted py-2.5 text-sm font-bold">
-            Close
-          </button>
-          {panel === "delete" && (
-            <button
-              onClick={removeDeviceData}
-              disabled={deletePhrase !== "DELETE"}
-              className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-foreground disabled:opacity-40"
-            >
-              Remove local data
-            </button>
-          )}
-        </div>
-      </div>
+      <span className="min-w-0 flex-1">{children}</span>
+      {action && (
+        <button type="button" onClick={action.onClick} className="underline">
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }
