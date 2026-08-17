@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ListingRail, MarketListingCard } from "@/components/MarketListingCard";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
-import type { MarketCategory } from "@/lib/market-dev-data";
+import type { MarketCategory } from "@/lib/market-types";
 import { useCompany } from "@/lib/company-store";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useI18n } from "@/lib/i18n";

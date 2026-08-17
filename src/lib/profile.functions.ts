@@ -103,6 +103,23 @@ const profileSchema = z.object({
       coverKey: z.string().max(300).optional(),
     })
     .optional(),
+  verificationDetails: z
+    .object({
+      fullName: z.string().trim().max(120),
+      idType: z.string().trim().max(80),
+      idNumber: z.string().trim().max(40),
+      email: z.string().email().max(120),
+      phone: z.string().trim().max(30),
+      businessName: z.string().trim().max(160),
+      address: z.string().trim().max(240),
+      documentKey: z
+        .string()
+        .regex(/^verification\/[a-zA-Z0-9_-]+\/[a-z0-9-]+\.(jpg|jpeg|png|webp|pdf)$/i),
+      submittedAt: z.string().datetime(),
+      reviewedAt: z.string().datetime().optional(),
+      reviewNote: z.string().trim().max(1000).optional(),
+    })
+    .optional(),
 });
 
 const photoInputSchema = z.object({
@@ -116,6 +133,18 @@ const businessMediaKeySchema = z.object({
   objectKey: z
     .string()
     .regex(/^business\/[a-z0-9-]+\/(logo|cover)\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/i),
+});
+const verificationSubmissionSchema = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  idType: z.string().trim().min(2).max(80),
+  idNumber: z.string().trim().min(4).max(40),
+  email: z.string().email().max(120),
+  phone: z.string().trim().min(7).max(30),
+  businessName: z.string().trim().min(2).max(160),
+  address: z.string().trim().min(3).max(240),
+  documentKey: z
+    .string()
+    .regex(/^verification\/[a-zA-Z0-9_-]+\/[a-z0-9-]+\.(jpg|jpeg|png|webp|pdf)$/i),
 });
 
 const usernameInputSchema = z.object({
@@ -444,7 +473,37 @@ export const getPublicProfile = createServerFn({ method: "GET" })
         agriculturalInterests: profile.agriculturalInterests,
         photoKey: profile.photoKey,
         verification: profile.verification,
+        business: profile.business
+          ? {
+              name: profile.business.name,
+              description: profile.business.description,
+              category: profile.business.category,
+              businessType: profile.business.businessType,
+              address: profile.business.address,
+              state: profile.business.state,
+              lga: profile.business.lga,
+              website: profile.business.website,
+              socialLinks: profile.business.socialLinks,
+              yearsInBusiness: profile.business.yearsInBusiness,
+              services: profile.business.services,
+              logoKey: profile.business.logoKey,
+              coverKey: profile.business.coverKey,
+            }
+          : null,
       },
+      listings: listings
+        .filter((listing) => listing.status === "ACTIVE")
+        .map((listing) => ({
+          id: String(listing.listingId ?? listing.id ?? ""),
+          title: String(listing.title ?? "Untitled listing"),
+          price: Number(listing.price ?? 0),
+          images: Array.isArray(listing.images) ? listing.images : [],
+          category: String(listing.category ?? ""),
+          subcategory: String(listing.subcategory ?? ""),
+          location: String(listing.location ?? ""),
+          state: String(listing.state ?? ""),
+          condition: String(listing.condition ?? ""),
+        })),
       stats: {
         activeAds,
         followers: followerResult.Count ?? 0,
@@ -594,7 +653,23 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
     reviews: null,
   };
 
-  return { profile, stats, profileExists: !!profile };
+  return {
+    profile,
+    stats,
+    profileExists: !!profile,
+    activeListings: activeListings.map((listing) => ({
+      id: String(listing.listingId ?? listing.id ?? ""),
+      title: String(listing.title ?? "Untitled listing"),
+      price: Number(listing.price ?? 0),
+      images: Array.isArray(listing.images) ? listing.images : [],
+      location: String(listing.location ?? ""),
+      category: String(listing.category ?? ""),
+      views: Number(listing.viewCount ?? 0),
+      saves: Number(listing.saveCount ?? 0),
+      shares: Number(listing.shareCount ?? 0),
+      inquiries: Number(listing.inquiryCount ?? 0),
+    })),
+  };
 });
 
 export const saveMyProfile = createServerFn({ method: "POST" })
@@ -747,6 +822,50 @@ export const saveMyBusinessProfile = createServerFn({ method: "POST" })
       }),
     );
     return { business: data };
+  });
+
+export const getMyVerification = createServerFn({ method: "GET" }).handler(async () => {
+  privateResponse();
+  const config = getConfig();
+  const actor = await requireAuthenticatedUser();
+  const result = await createDocumentClient(config.region).send(
+    new GetCommand({
+      TableName: config.profileTable,
+      Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+      ProjectionExpression: "#verification, verificationDetails",
+      ExpressionAttributeNames: { "#verification": "verification" },
+    }),
+  );
+  return {
+    status: result.Item?.verification ?? "not_started",
+    details: result.Item?.verificationDetails ?? null,
+  };
+});
+
+export const submitVerification = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => verificationSubmissionSchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    const submittedAt = new Date().toISOString();
+    const details = { ...data, submittedAt };
+    await createDocumentClient(config.region).send(
+      new UpdateCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        UpdateExpression:
+          "SET #verification = :pending, verificationDetails = :details, updatedAt = :updatedAt",
+        ExpressionAttributeNames: { "#verification": "verification" },
+        ExpressionAttributeValues: {
+          ":pending": "pending",
+          ":details": details,
+          ":updatedAt": submittedAt,
+        },
+        ConditionExpression: "attribute_exists(pk)",
+      }),
+    );
+    return { status: "pending" as const, details };
   });
 
 export const createProfilePhotoUpload = createServerFn({ method: "POST" })

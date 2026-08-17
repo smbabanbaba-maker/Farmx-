@@ -44,10 +44,10 @@ function AnalyticsDashboard() {
       try {
         const repo = await getAnalyticsRepository();
         const [u, s, j, e, a] = await Promise.all([
-          repo.getUserAnalytics("preview-user", range),
-          repo.getSellerAnalytics("preview-user", range),
-          repo.getJobSeekerAnalytics("preview-user", range),
-          repo.getEmployerAnalytics("preview-user", range),
+          repo.getUserAnalytics(undefined, range),
+          repo.getSellerAnalytics(undefined, range),
+          repo.getJobSeekerAnalytics(undefined, range),
+          repo.getEmployerAnalytics(undefined, range),
           repo.getAdminAnalytics(range),
         ]);
         if (cancelled) return;

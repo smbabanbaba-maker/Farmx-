@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { BadgeCheck, Bookmark, Eye, MapPin, MessageCircle, Share2, Star } from "lucide-react";
 import { usePrefs } from "@/lib/prefs";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import { getMarketRepository } from "@/lib/market-repository";
 import { ListingImage } from "@/components/ListingImage";
 

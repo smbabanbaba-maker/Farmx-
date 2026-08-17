@@ -1,5 +1,4 @@
 import {
-  getCommunityRuntimeMode,
   getCommunityViewer,
   createCommunityComment,
   createCommunityPost,
@@ -474,19 +473,10 @@ function createProductionRepository(): CommunityRepository {
 
 let repositoryPromise: Promise<CommunityRepository> | undefined;
 export async function getCommunityRepository(): Promise<CommunityRepository> {
-  if (!repositoryPromise)
-    repositoryPromise = getCommunityRuntimeMode()
-      .then(({ mode }) =>
-        mode === "production" ? createProductionRepository() : createPreviewRepository(),
-      )
-      .catch((error) => {
-        if (import.meta.env.PROD) throw error;
-        return createPreviewRepository();
-      });
+  repositoryPromise ??= Promise.resolve(createProductionRepository());
   return repositoryPromise;
 }
 export function getCommunityRuntimeModeClient() {
-  const isProd = import.meta.env.PROD || import.meta.env.VITE_COMMUNITY_PREVIEW === "false";
-  return isProd ? ("production" as const) : ("preview" as const);
+  return "production" as const;
 }
 export { COMMUNITY_TOPICS, topicLabel };

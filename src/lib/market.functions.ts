@@ -18,7 +18,7 @@ import type {
   MarketListing,
   SellerType,
   VerificationLevel,
-} from "@/lib/market-dev-data";
+} from "@/lib/market-types";
 import { getCategory, getSubcategory } from "@/lib/market-categories";
 import { getAwsClientOptions } from "@/lib/aws-config";
 
@@ -507,5 +507,150 @@ export const getSavedListings = createServerFn({ method: "GET" }).handler(async 
       (item): item is Record<string, unknown> =>
         Boolean(item) && (item as Record<string, unknown>).status === "ACTIVE",
     )
+    .map(toMarketListing);
+});
+
+const reportSchema = z.object({
+  listingId: z.string().trim().min(1).max(128),
+  reason: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(1000).optional(),
+});
+const searchSchema = z.object({ query: z.string().trim().min(1).max(160) });
+
+function getProfileConfig() {
+  const region = process.env.AWS_REGION;
+  const profileTable = process.env.FARMX_PROFILE_TABLE;
+  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  if (!region || !profileTable || !listingsTable)
+    throw new Error("Profile and listings tables are not configured.");
+  return { region, profileTable, listingsTable };
+}
+
+export const reportListing = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => reportSchema.parse(input))
+  .handler(async ({ data }) => {
+    const config = getProfileConfig();
+    const actor = await requireAuthenticatedUser();
+    const reportId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    await DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(config.region))).send(
+      new PutCommand({
+        TableName: config.listingsTable,
+        Item: {
+          pk: `LISTING#${data.listingId}`,
+          sk: `REPORT#${reportId}`,
+          entityType: "LISTING_REPORT",
+          reportId,
+          listingId: data.listingId,
+          reporterId: actor.userId,
+          reason: data.reason,
+          description: data.description ?? "",
+          status: "open",
+          createdAt: now,
+        },
+        ConditionExpression: "attribute_not_exists(pk)",
+      }),
+    );
+    return {
+      id: reportId,
+      listingId: data.listingId,
+      reason: data.reason,
+      description: data.description,
+      status: "open" as const,
+      createdAt: now,
+    };
+  });
+
+export const recordSearch = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => searchSchema.parse(input))
+  .handler(async ({ data }) => {
+    const config = getProfileConfig();
+    const actor = await requireAuthenticatedUser();
+    const query = data.query.toLowerCase();
+    await DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(config.region))).send(
+      new PutCommand({
+        TableName: config.profileTable,
+        Item: {
+          pk: `USER#${actor.userId}`,
+          sk: `SEARCH#${encodeURIComponent(query)}`,
+          entityType: "SEARCH_HISTORY",
+          query: data.query,
+          updatedAt: new Date().toISOString(),
+        },
+      }),
+    );
+    return { saved: true };
+  });
+
+export const removeSearch = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => searchSchema.parse(input))
+  .handler(async ({ data }) => {
+    const config = getProfileConfig();
+    const actor = await requireAuthenticatedUser();
+    await DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(config.region))).send(
+      new DeleteCommand({
+        TableName: config.profileTable,
+        Key: {
+          pk: `USER#${actor.userId}`,
+          sk: `SEARCH#${encodeURIComponent(data.query.toLowerCase())}`,
+        },
+      }),
+    );
+    return { deleted: true };
+  });
+
+export const clearSearchHistory = createServerFn({ method: "POST" }).handler(async () => {
+  const config = getProfileConfig();
+  const actor = await requireAuthenticatedUser();
+  const client = DynamoDBDocumentClient.from(
+    new DynamoDBClient(getAwsClientOptions(config.region)),
+  );
+  const result = await client.send(
+    new QueryCommand({
+      TableName: config.profileTable,
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+      ExpressionAttributeValues: { ":pk": `USER#${actor.userId}`, ":prefix": "SEARCH#" },
+      ProjectionExpression: "pk, sk",
+    }),
+  );
+  await Promise.all(
+    (result.Items ?? []).map((item) =>
+      client.send(
+        new DeleteCommand({ TableName: config.profileTable, Key: { pk: item.pk, sk: item.sk } }),
+      ),
+    ),
+  );
+  return { deleted: true };
+});
+
+export const getRecentlyViewedListings = createServerFn({ method: "GET" }).handler(async () => {
+  const config = getProfileConfig();
+  const actor = await requireAuthenticatedUser();
+  const client = DynamoDBDocumentClient.from(
+    new DynamoDBClient(getAwsClientOptions(config.region)),
+  );
+  const recent = await client.send(
+    new QueryCommand({
+      TableName: config.profileTable,
+      KeyConditionExpression: "pk = :pk AND begins_with(sk, :prefix)",
+      ExpressionAttributeValues: { ":pk": `USER#${actor.userId}`, ":prefix": "RECENTLY_VIEWED#" },
+      ScanIndexForward: false,
+      Limit: 20,
+    }),
+  );
+  const items = await Promise.all(
+    (recent.Items ?? []).map((item) =>
+      client.send(
+        new GetCommand({
+          TableName: config.listingsTable,
+          Key: { pk: `LISTING#${String(item.listingId)}`, sk: `LISTING#${String(item.listingId)}` },
+        }),
+      ),
+    ),
+  );
+  return items
+    .map((result) => result.Item as Record<string, unknown> | undefined)
+    .filter((item): item is Record<string, unknown> => Boolean(item))
+    .filter((item) => ["ACTIVE", "published"].includes(String(item.status)))
     .map(toMarketListing);
 });

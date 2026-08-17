@@ -75,10 +75,10 @@ function JobDetailView() {
   const [applying, setApplying] = useState(false);
 
   // Application form state
-  const [fullName, setFullName] = useState("Ibrahim Abubakar");
-  const [email, setEmail] = useState("ibrahim@farmx.ng");
-  const [phone, setPhone] = useState("+234 803 000 1122");
-  const [location, setLocation] = useState("Kano, Nigeria");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [location, setLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -89,8 +89,8 @@ function JobDetailView() {
         const repo = await getJobRepository();
         const [nextJob, nextApps, nextSaved] = await Promise.all([
           repo.getJobById(id),
-          repo.getApplications("preview-user"),
-          repo.getSavedJobIds("preview-user"),
+          repo.getApplications(),
+          repo.getSavedJobIds(),
         ]);
         if (cancelled) return;
         setJob(nextJob?.status === "published" ? nextJob : null);
@@ -110,7 +110,7 @@ function JobDetailView() {
 
   const toggleSave = async () => {
     const repo = await getJobRepository();
-    const next = await repo.toggleSaveJob("preview-user", id);
+    const next = await repo.toggleSaveJob(undefined, id);
     setSaved(next);
     toast.success(next ? "Job saved to your bookmarks" : "Job removed from bookmarks");
   };
@@ -125,7 +125,7 @@ function JobDetailView() {
         jobId: job.id,
         jobTitle: job.title,
         companyName: job.company,
-        userId: "preview-user",
+        userId: "",
         applicantName: fullName,
         applicantEmail: email,
         applicantPhone: phone,

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { usePrefs } from "@/lib/prefs";
 import { getMarketRepository } from "@/lib/market-repository";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import { getCommunityRepository } from "@/lib/community-repository";
 import type { CommunityPost } from "@/lib/community.types";
 import { Heart, MapPin, MessageCircle } from "lucide-react";

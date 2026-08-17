@@ -14,7 +14,6 @@ import { getJobRepository } from "@/lib/job-repository";
 import { getCommunityRepository } from "@/lib/community-repository";
 import type { JobPost } from "@/lib/job.types";
 import type { CommunityPost } from "@/lib/community.types";
-import { news } from "@/lib/mock-data";
 import {
   ShoppingBag,
   Wallet,
@@ -405,18 +404,10 @@ function Dashboard() {
         <section>
           <div className="flex items-center justify-between mb-2">
             <h2 className="font-bold">{t("news")}</h2>
-            <span className="text-xs text-muted-foreground">{t("news")}</span>
           </div>
-          <div className="space-y-2">
-            {news.map((article) => (
-              <div key={article.id} className="p-3 rounded-xl bg-card border border-border">
-                <p className="text-sm font-medium">{article.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {article.source} · {article.time}
-                </p>
-              </div>
-            ))}
-          </div>
+          <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
+            {t("home.empty")}
+          </p>
         </section>
 
         <section>

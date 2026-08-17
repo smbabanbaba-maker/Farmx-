@@ -1,235 +1,199 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useCompany, TIER_META } from "@/lib/company-store";
-import { COUNTRIES } from "@/lib/currency";
+import { ArrowLeft, BadgeCheck, Building2, MapPin, MessageCircle, Share2 } from "lucide-react";
+import { ListingImage } from "@/components/ListingImage";
+import { getPublicProfile } from "@/lib/profile.functions";
 import { createSeoHead } from "@/lib/seo";
-import { products } from "@/lib/mock-data";
-import {
-  type LucideIcon,
-  BadgeCheck,
-  Crown,
-  Sparkles,
-  MapPin,
-  Star,
-  Users2,
-  TrendingUp,
-  Share2,
-  ArrowLeft,
-  MessageCircle,
-  Facebook,
-  Linkedin,
-} from "lucide-react";
-import { useState } from "react";
 
 export const Route = createFileRoute("/c/$slug")({
-  component: MiniSite,
-  head: ({ params }) =>
-    createSeoHead({
-      title: `${params.slug} — FarmX Company`,
-      description: `FarmX company mini-site for ${params.slug}.`,
+  loader: async ({ params }) => {
+    try {
+      return await getPublicProfile({ data: { username: params.slug } });
+    } catch {
+      return null;
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const profile = loaderData?.profile;
+    const name = profile?.business?.name || profile?.fullName || params.slug;
+    return createSeoHead({
+      title: `${name} — FarmX Company`,
+      description:
+        profile?.business?.description ||
+        profile?.bio ||
+        `Public FarmX company profile for ${name}.`,
       path: `/c/${encodeURIComponent(params.slug)}`,
       type: "website",
-      noindex: true,
-    }),
+      noindex: !profile,
+    });
+  },
+  component: MiniSite,
 });
 
 function MiniSite() {
+  const data = Route.useLoaderData();
   const { slug } = Route.useParams();
-  const { state, isBadgeActive } = useCompany();
-  const [copied, setCopied] = useState(false);
+  if (!data) throw notFound();
 
-  const company = state.company && state.company.slug === slug ? state.company : null;
-  if (!company) throw notFound();
+  const { profile, listings, stats } = data;
+  const business = profile.business;
+  const name = business?.name || profile.fullName;
+  const description = business?.description || profile.bio;
+  const logoKey = business?.logoKey || profile.photoKey;
+  const location =
+    [business?.lga, business?.state || profile.state].filter(Boolean).join(", ") ||
+    profile.location;
+  const services = business?.services ?? [];
+  const verified = profile.verification === "approved";
+  const url = typeof window !== "undefined" ? window.location.href : `/c/${slug}`;
 
-  const badgeActive = isBadgeActive();
-  const tierMeta = state.tier !== "none" ? TIER_META[state.tier] : null;
-  const country = COUNTRIES.find((c) => c.code === company.country);
-  const theme = company.themeColor;
-  const url = typeof window !== "undefined" ? `${window.location.origin}/c/${slug}` : `/c/${slug}`;
-
-  const share = (target: "wa" | "fb" | "li" | "ig" | "copy") => {
-    const text = `${company.name} on FarmX — ${company.bio}`;
-    const enc = encodeURIComponent;
-    if (target === "wa") window.open(`https://wa.me/?text=${enc(text + " " + url)}`, "_blank");
-    else if (target === "fb")
-      window.open(`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`, "_blank");
-    else if (target === "li")
-      window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`, "_blank");
-    else if (target === "ig") {
-      navigator.clipboard?.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } else {
-      navigator.clipboard?.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+  const share = async () => {
+    if (navigator.share) {
+      await navigator.share({ title: name, text: description || name, url });
+      return;
     }
+    await navigator.clipboard?.writeText(url);
   };
-
-  const companyProducts = products
-    .filter((p) => p.seller.toLowerCase().includes(company.name.split(" ")[0].toLowerCase()))
-    .slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto">
-        <div className="p-4 flex items-center justify-between">
+      <div className="mx-auto max-w-md pb-10">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
           <Link
             to="/market"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Market
           </Link>
-          <button onClick={() => share("copy")} className="p-2 rounded-full hover:bg-accent">
+          <button
+            type="button"
+            onClick={() => void share()}
+            className="rounded-full p-2 hover:bg-accent"
+            aria-label="Share company"
+          >
             <Share2 className="h-5 w-5" />
           </button>
         </div>
 
         <div className="relative">
-          <div className="h-32" style={{ background: `linear-gradient(135deg, ${theme}, #000)` }} />
-          <div className="px-4 -mt-10">
-            <div className="h-20 w-20 rounded-2xl bg-white border-4 border-background flex items-center justify-center text-4xl shadow-lg">
-              {company.logo}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5">
-              <h1 className="text-xl font-bold">{company.name}</h1>
-              {badgeActive && tierMeta && (
-                <span title={`${tierMeta.label} verified`}>
-                  {state.tier === "platinum" ? (
-                    <Crown className="h-4 w-4" style={{ color: tierMeta.color }} />
-                  ) : state.tier === "gold" ? (
-                    <Sparkles className="h-4 w-4" style={{ color: tierMeta.color }} />
-                  ) : (
-                    <BadgeCheck className="h-4 w-4" style={{ color: tierMeta.color }} />
-                  )}
-                </span>
+          <div className="h-32 bg-gradient-to-br from-red-100 via-white to-red-200">
+            {business?.coverKey && (
+              <ListingImage
+                src={business.coverKey}
+                alt={`${name} cover`}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+          <div className="-mt-10 px-4">
+            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-background bg-white shadow-lg">
+              {logoKey ? (
+                <ListingImage
+                  src={logoKey}
+                  alt={`${name} logo`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Building2 className="h-9 w-9 text-brand" />
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {company.productType} · CEO {company.ceo}
-            </p>
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-              <MapPin className="h-3 w-3" /> {company.state}, {country?.name ?? company.country}
-            </p>
-            <p className="text-[11px] mt-0.5" style={{ color: theme }}>
-              {url.replace(/^https?:\/\//, "")}
-            </p>
-            {company.bio && <p className="mt-3 text-sm">{company.bio}</p>}
-          </div>
-        </div>
-
-        <div className="px-4 mt-4 grid grid-cols-3 gap-2 text-center">
-          <Stat
-            icon={Users2}
-            label="Followers"
-            value={(company.followers || 1240).toLocaleString()}
-          />
-          <Stat icon={TrendingUp} label="Orders" value={state.orders.toLocaleString()} />
-          <Stat icon={Star} label="Rating" value={avgRating(state.reviews).toFixed(1)} />
-        </div>
-
-        <div className="px-4 mt-4 flex gap-2">
-          <button
-            onClick={() => share("wa")}
-            className="flex-1 py-2 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1"
-            style={{ background: "#25D366" }}
-          >
-            <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-          </button>
-          <button
-            onClick={() => share("fb")}
-            className="flex-1 py-2 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1"
-            style={{ background: "#1877F2" }}
-          >
-            <Facebook className="h-3.5 w-3.5" /> Facebook
-          </button>
-          <button
-            onClick={() => share("li")}
-            className="flex-1 py-2 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1"
-            style={{ background: "#0A66C2" }}
-          >
-            <Linkedin className="h-3.5 w-3.5" /> LinkedIn
-          </button>
-        </div>
-        {copied && <p className="px-4 mt-2 text-xs text-brand">Link copied!</p>}
-
-        {!badgeActive && (
-          <div className="mx-4 mt-4 p-3 rounded-xl bg-brand/10 border border-brand/30 text-xs">
-            Badge not active.{" "}
-            <Link to="/upgrade" className="font-bold text-brand">
-              Renew subscription
-            </Link>{" "}
-            to display the verified badge.
-          </div>
-        )}
-
-        <section className="px-4 mt-6">
-          <h2 className="font-bold mb-2">Products</h2>
-          {companyProducts.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No products listed yet.</p>
-          ) : (
-            <div className="grid grid-cols-3 gap-2">
-              {companyProducts.map((p) => (
-                <div key={p.id} className="rounded-lg bg-card border border-border p-2 text-center">
-                  <div className="text-3xl">{p.image}</div>
-                  <p className="text-[11px] font-medium mt-1 truncate">{p.name}</p>
-                  <p className="text-[10px] text-brand font-bold">₦{p.price.toLocaleString()}</p>
-                </div>
-              ))}
+            <div className="mt-3 flex items-center gap-1.5">
+              <h1 className="text-xl font-bold">{name}</h1>
+              {verified && <BadgeCheck className="h-5 w-5 text-brand" aria-label="Verified" />}
             </div>
-          )}
-        </section>
-
-        <section className="px-4 mt-6">
-          <h2 className="font-bold mb-2">Reviews</h2>
-          <div className="space-y-2">
-            {state.reviews.map((r) => (
-              <div key={r.id} className="p-3 rounded-xl bg-card border border-border">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold">{r.author}</p>
-                  <div className="flex items-center gap-0.5 text-xs">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3 w-3 ${i < r.rating ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground"}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{r.time}</p>
-              </div>
-            ))}
+            <p className="text-xs text-muted-foreground">
+              {business?.businessType || business?.category || profile.role}
+            </p>
+            {location && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" /> {location}
+              </p>
+            )}
+            {description && <p className="mt-3 text-sm leading-6">{description}</p>}
           </div>
-        </section>
+        </div>
 
-        {company.partners.length > 0 && (
-          <section className="px-4 mt-6 mb-8">
-            <h2 className="font-bold mb-2">Partners</h2>
+        <div className="mt-5 grid grid-cols-3 gap-2 px-4 text-center">
+          <Stat label="Active listings" value={String(stats.activeAds)} />
+          <Stat label="Followers" value={String(stats.followers)} />
+          <Stat label="Verification" value={verified ? "Verified" : "Not verified"} />
+        </div>
+
+        <div className="mt-4 flex gap-2 px-4">
+          <Link
+            to="/messages"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-bold text-brand-foreground"
+          >
+            <MessageCircle className="h-4 w-4" /> Message
+          </Link>
+          <button
+            type="button"
+            onClick={() => void share()}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border py-3 text-xs font-bold"
+          >
+            <Share2 className="h-4 w-4" /> Share
+          </button>
+        </div>
+
+        {services.length > 0 && (
+          <section className="mt-7 px-4">
+            <h2 className="mb-2 font-bold">Services</h2>
             <div className="flex flex-wrap gap-2">
-              {company.partners.map((p, i) => (
-                <span key={i} className="text-xs px-3 py-1.5 rounded-full bg-muted">
-                  {p}
+              {services.map((service) => (
+                <span key={service} className="rounded-full bg-muted px-3 py-1.5 text-xs">
+                  {service}
                 </span>
               ))}
             </div>
           </section>
         )}
+
+        <section className="mt-7 px-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="font-bold">Active listings</h2>
+            <span className="text-xs text-muted-foreground">{listings.length}</span>
+          </div>
+          {listings.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              No active listings yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {listings.map((listing) => (
+                <Link
+                  key={listing.id}
+                  to="/product/$id"
+                  params={{ id: listing.id }}
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                >
+                  <ListingImage
+                    src={listing.images[0]}
+                    alt={listing.title}
+                    className="h-32 w-full object-cover"
+                  />
+                  <div className="p-3">
+                    <p className="truncate text-xs font-bold">{listing.title}</p>
+                    <p className="mt-1 text-sm font-black text-brand">
+                      ₦{listing.price.toLocaleString()}
+                    </p>
+                    <p className="mt-1 truncate text-[10px] text-muted-foreground">
+                      {listing.location || listing.state}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
 }
 
-function Stat({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-3 rounded-xl bg-card border border-border">
-      <Icon className="h-4 w-4 mx-auto text-brand" />
-      <p className="font-bold mt-1">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
+    <div className="rounded-xl border border-border bg-card p-3">
+      <p className="font-bold">{value}</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">{label}</p>
     </div>
   );
-}
-
-function avgRating(rs: { rating: number }[]) {
-  if (!rs.length) return 0;
-  return rs.reduce((a, b) => a + b.rating, 0) / rs.length;
 }

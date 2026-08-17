@@ -29,8 +29,15 @@ function getS3Client(region: string) {
 }
 
 const generatedUploadSchema = z.object({
-  folder: z.enum(["listings", "products", "community", "messages"]),
-  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"]),
+  folder: z.enum(["listings", "products", "community", "messages", "verification"]),
+  contentType: z.enum([
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "video/mp4",
+    "video/webm",
+    "application/pdf",
+  ]),
 });
 
 function extensionForContentType(contentType: string) {
@@ -45,6 +52,8 @@ function extensionForContentType(contentType: string) {
       return "mp4";
     case "video/webm":
       return "webm";
+    case "application/pdf":
+      return "pdf";
     default:
       return "bin";
   }

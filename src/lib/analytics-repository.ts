@@ -8,22 +8,24 @@ import type {
 } from "./analytics.types";
 import { getJobRepository } from "./job-repository";
 import { getMarketRepository } from "./market-repository";
+import { getMyProfile } from "./profile.functions";
 
 export class AnalyticsRepository {
-  async getUserAnalytics(userId: string, _range: TimeRange): Promise<UserAnalytics> {
+  async getUserAnalytics(_userId: string | undefined, _range: TimeRange): Promise<UserAnalytics> {
     const jobRepo = await getJobRepository();
     const marketRepo = await getMarketRepository();
-    const [apps, savedJobs, savedListings] = await Promise.all([
-      jobRepo.getApplications(userId),
-      jobRepo.getSavedJobIds(userId),
+    const [profileData, apps, savedJobs, savedListings] = await Promise.all([
+      getMyProfile(),
+      jobRepo.getApplications(),
+      jobRepo.getSavedJobIds(),
       marketRepo.getSavedListings(),
     ]);
 
     return {
-      listingsPosted: 0,
-      listingViews: 0,
+      listingsPosted: profileData.stats.totalAds,
+      listingViews: profileData.stats.totalAdViews,
       listingSaves: savedListings.length,
-      listingInquiries: 0,
+      listingInquiries: profileData.stats.buyerInquiries ?? 0,
       jobsApplied: apps.length,
       jobsSaved: savedJobs.length,
       coursesEnrolled: 0,
@@ -32,37 +34,45 @@ export class AnalyticsRepository {
     };
   }
 
-  async getSellerAnalytics(_userId: string, _range: TimeRange): Promise<SellerAnalytics> {
-    const marketRepo = await getMarketRepository();
-    const page = await marketRepo.getListings({ page: 1, pageSize: 50, sort: "views" });
-    const listings = page.listings;
-    const totalViews = listings.reduce((sum, listing) => sum + listing.stats.views, 0);
-    const totalSaves = listings.reduce((sum, listing) => sum + listing.stats.saves, 0);
-    const totalShares = listings.reduce((sum, listing) => sum + listing.stats.shares, 0);
-    const totalInquiries = listings.reduce((sum, listing) => sum + listing.stats.inquiries, 0);
+  async getSellerAnalytics(
+    _userId: string | undefined,
+    _range: TimeRange,
+  ): Promise<SellerAnalytics> {
+    const profileData = await getMyProfile();
+    const listings = profileData.activeListings;
+    const totalViews = listings.reduce((sum, listing) => sum + listing.views, 0);
+    const totalSaves = listings.reduce((sum, listing) => sum + listing.saves, 0);
+    const totalShares = listings.reduce((sum, listing) => sum + listing.shares, 0);
+    const totalInquiries = listings.reduce((sum, listing) => sum + listing.inquiries, 0);
 
     return {
-      totalListings: page.total,
-      activeListings: listings.filter((listing) => listing.status === "published").length,
+      totalListings: profileData.stats.totalAds,
+      activeListings: profileData.stats.activeAds,
       totalViews,
       totalSaves,
       totalShares,
       totalInquiries,
-      topListings: listings.slice(0, 5).map((listing) => ({
-        id: listing.id,
-        title: listing.title,
-        views: listing.stats.views,
-        price: listing.price ?? 0,
-      })),
+      topListings: [...listings]
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 5)
+        .map((listing) => ({
+          id: listing.id,
+          title: listing.title,
+          views: listing.views,
+          price: listing.price,
+        })),
       viewsOverTime: [],
     };
   }
 
-  async getJobSeekerAnalytics(userId: string, _range: TimeRange): Promise<JobSeekerAnalytics> {
+  async getJobSeekerAnalytics(
+    _userId: string | undefined,
+    _range: TimeRange,
+  ): Promise<JobSeekerAnalytics> {
     const jobRepo = await getJobRepository();
     const [apps, savedJobs] = await Promise.all([
-      jobRepo.getApplications(userId),
-      jobRepo.getSavedJobIds(userId),
+      jobRepo.getApplications(),
+      jobRepo.getSavedJobIds(),
     ]);
     const statusCounts: Record<string, number> = {
       Applied: 0,
@@ -88,11 +98,15 @@ export class AnalyticsRepository {
     };
   }
 
-  async getEmployerAnalytics(employerId: string, _range: TimeRange): Promise<EmployerAnalytics> {
+  async getEmployerAnalytics(
+    _employerId: string | undefined,
+    _range: TimeRange,
+  ): Promise<EmployerAnalytics> {
     const jobRepo = await getJobRepository();
-    const jobs = await jobRepo.getJobs();
-    const employerJobs = jobs.filter((job) => job.employerId === employerId);
-    const applications = await jobRepo.getApplications(undefined, employerId);
+    const [jobs, applications] = await Promise.all([
+      jobRepo.getJobs(),
+      jobRepo.getApplications(undefined, undefined),
+    ]);
     const shortlisted = applications.filter(
       (application) => application.status === "Shortlisted",
     ).length;
@@ -102,15 +116,15 @@ export class AnalyticsRepository {
     const selected = applications.filter((application) => application.status === "Selected").length;
 
     return {
-      totalJobs: employerJobs.length,
-      activeJobs: employerJobs.filter((job) => job.status === "published").length,
-      totalViews: employerJobs.reduce((sum, job) => sum + job.stats.views, 0),
+      totalJobs: jobs.length,
+      activeJobs: jobs.filter((job) => job.status === "published").length,
+      totalViews: jobs.reduce((sum, job) => sum + job.stats.views, 0),
       totalApplications: applications.length,
       shortlisted,
       interviews,
       selected,
       hiringRate: applications.length > 0 ? Math.round((selected / applications.length) * 100) : 0,
-      jobPerformance: employerJobs.map((job) => ({
+      jobPerformance: jobs.map((job) => ({
         id: job.id,
         title: job.title,
         views: job.stats.views,

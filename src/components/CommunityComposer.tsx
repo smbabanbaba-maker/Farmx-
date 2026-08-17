@@ -10,7 +10,7 @@ import {
   type CommunityTopic,
 } from "@/lib/community.types";
 import { getMarketRepository } from "@/lib/market-repository";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import {
   AlertCircle,
   Camera,

@@ -71,17 +71,26 @@ export async function putFileToSignedUrl(
 export async function uploadFileToS3(folder: string, file: File): Promise<{ objectKey: string }> {
   // Normalize content type to avoid charset additions by browser that break signatures
   const contentType = (file.type || "application/octet-stream").split(";")[0].toLowerCase().trim();
-  if (!["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"].includes(contentType)) {
-    throw new Error("Unsupported image or video format.");
+  if (
+    ![
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+      "application/pdf",
+    ].includes(contentType)
+  ) {
+    throw new Error("Unsupported media format.");
   }
-  if (!["listings", "products", "community", "messages"].includes(folder)) {
+  if (!["listings", "products", "community", "messages", "verification"].includes(folder)) {
     throw new Error("Unsupported storage folder.");
   }
   const { objectKey, uploadUrl, method } = await createS3UploadUrl({
     data: {
-      folder: folder as "listings" | "products" | "community" | "messages",
+      folder: folder as "listings" | "products" | "community" | "messages" | "verification",
       contentType: contentType as
-        "image/jpeg" | "image/png" | "image/webp" | "video/mp4" | "video/webm",
+        "image/jpeg" | "image/png" | "image/webp" | "video/mp4" | "video/webm" | "application/pdf",
     },
   });
   await putFileToSignedUrl(uploadUrl, file, contentType);

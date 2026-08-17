@@ -1,9 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
-import { useCommerce } from "@/lib/commerce-store";
-import { BadgeCheck, ShieldCheck, Clock, XCircle, Upload } from "lucide-react";
+import { getMyVerification, submitVerification } from "@/lib/profile.functions";
+import { uploadFileToS3 } from "@/lib/s3-client";
+import { BadgeCheck, Clock, Loader2, ShieldCheck, Upload, XCircle } from "lucide-react";
 
 export const Route = createFileRoute("/verify")({
   head: () => ({
@@ -11,13 +12,7 @@ export const Route = createFileRoute("/verify")({
       { title: "Seller Verification (KYC) — FarmX" },
       {
         name: "description",
-        content:
-          "Submit ID and business documents for FarmX seller verification. Only approved sellers receive orders and escrow payments.",
-      },
-      { property: "og:title", content: "FarmX Seller Verification" },
-      {
-        property: "og:description",
-        content: "KYC review with admin approval unlocks orders and escrow.",
+        content: "Submit identity and business documents for FarmX seller verification.",
       },
     ],
   }),
@@ -25,167 +20,266 @@ export const Route = createFileRoute("/verify")({
 });
 
 const ID_TYPES = ["NIN", "Passport", "Driver's licence", "Voter's card", "CAC certificate"];
+type VerificationStatus = "not_started" | "pending" | "approved" | "rejected" | "more_information";
+type VerificationForm = {
+  fullName: string;
+  idType: string;
+  idNumber: string;
+  email: string;
+  phone: string;
+  businessName: string;
+  address: string;
+  documentKey: string;
+};
+
+type VerificationDetails = VerificationForm & {
+  submittedAt: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+};
+
+const emptyForm: VerificationForm = {
+  fullName: "",
+  idType: ID_TYPES[0],
+  idNumber: "",
+  email: "",
+  phone: "",
+  businessName: "",
+  address: "",
+  documentKey: "",
+};
 
 function VerifyPage() {
   const { t } = useI18n();
-  const { kyc, submitKyc, reviewKyc, resetKyc } = useCommerce();
-  const [f, setF] = useState({
-    fullName: kyc.fullName,
-    idType: kyc.idType,
-    idNumber: kyc.idNumber,
-    email: kyc.email,
-    phone: kyc.phone,
-    businessName: kyc.businessName,
-    address: kyc.address,
-    documentKey: kyc.documentKey,
-  });
+  const [status, setStatus] = useState<VerificationStatus>("not_started");
+  const [details, setDetails] = useState<VerificationDetails | null>(null);
+  const [form, setForm] = useState<VerificationForm>(emptyForm);
+  const [documentName, setDocumentName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const submit = () => {
-    if (!f.fullName.trim()) return setErr(t("kycNeedName"));
-    if (!/^\d{6,20}$/.test(f.idNumber)) return setErr(t("kycNeedId"));
-    if (!/^\S+@\S+\.\S+$/.test(f.email)) return setErr(t("kycNeedEmail"));
-    if (!/^\d{7,15}$/.test(f.phone)) return setErr(t("kycNeedPhone"));
-    if (!f.documentKey) return setErr(t("kycNeedDoc"));
-    setErr(null);
-    submitKyc(f);
+  useEffect(() => {
+    let active = true;
+    void getMyVerification()
+      .then((result) => {
+        if (!active) return;
+        const nextStatus = String(result.status) as VerificationStatus;
+        const nextDetails = result.details as VerificationDetails | null;
+        setStatus(nextStatus);
+        setDetails(nextDetails);
+        if (nextDetails) {
+          setForm({
+            fullName: nextDetails.fullName,
+            idType: nextDetails.idType,
+            idNumber: nextDetails.idNumber,
+            email: nextDetails.email,
+            phone: nextDetails.phone,
+            businessName: nextDetails.businessName,
+            address: nextDetails.address,
+            documentKey: nextDetails.documentKey,
+          });
+          setDocumentName("Document uploaded");
+        }
+      })
+      .catch(() => {
+        if (active) setErr("Unable to load verification status. Please try again.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const update = (key: keyof VerificationForm, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
   };
 
-  const badge = {
-    none: { icon: ShieldCheck, cls: "bg-accent text-muted-foreground", label: t("notSubmitted") },
+  const handleDocument = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setErr("The verification document must be 10 MB or smaller.");
+      return;
+    }
+    const contentType = (file.type || "").split(";")[0].toLowerCase();
+    if (
+      !contentType ||
+      !(["image/jpeg", "image/png", "image/webp", "application/pdf"] as string[]).includes(
+        contentType,
+      )
+    ) {
+      setErr("Upload a JPG, PNG, WEBP, or PDF document.");
+      return;
+    }
+    setErr(null);
+    setUploading(true);
+    try {
+      const uploaded = await uploadFileToS3("verification", file);
+      update("documentKey", uploaded.objectKey);
+      setDocumentName(file.name);
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Document upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!form.fullName.trim()) return setErr(t("kycNeedName"));
+    if (!/^\d{6,20}$/.test(form.idNumber)) return setErr(t("kycNeedId"));
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return setErr(t("kycNeedEmail"));
+    if (!/^\d{7,15}$/.test(form.phone)) return setErr(t("kycNeedPhone"));
+    if (!form.businessName.trim() || !form.address.trim())
+      return setErr("Business name and address are required.");
+    if (!form.documentKey) return setErr(t("kycNeedDoc"));
+    setErr(null);
+    setSubmitting(true);
+    try {
+      const result = await submitVerification({ data: form });
+      setStatus(result.status);
+      setDetails(result.details as VerificationDetails);
+    } catch (error) {
+      setErr(error instanceof Error ? error.message : "Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const statusMeta = {
+    not_started: {
+      icon: ShieldCheck,
+      cls: "bg-accent text-muted-foreground",
+      label: t("notSubmitted"),
+    },
     pending: { icon: Clock, cls: "bg-amber-500/15 text-amber-600", label: t("awaitingReview") },
     approved: { icon: BadgeCheck, cls: "bg-green-500/15 text-green-600", label: t("approved") },
     rejected: { icon: XCircle, cls: "bg-brand/15 text-brand", label: t("rejected") },
-  }[kyc.status];
+    more_information: {
+      icon: Clock,
+      cls: "bg-amber-500/15 text-amber-600",
+      label: "More information required",
+    },
+  }[status];
+  const StatusIcon = statusMeta.icon;
+
+  if (loading) {
+    return (
+      <AppShell title={t("sellerVerification")}>
+        <div className="flex min-h-48 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-brand" />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell title={t("sellerVerification")}>
       <div className="space-y-4 pb-8">
-        <div className="rounded-2xl bg-card border border-border p-4">
+        <div className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-2">
-            <badge.icon className="h-5 w-5" />
-            <span className={`text-xs px-2 py-1 rounded-full font-bold ${badge.cls}`}>
-              {badge.label}
+            <StatusIcon className="h-5 w-5" />
+            <span className={`rounded-full px-2 py-1 text-xs font-bold ${statusMeta.cls}`}>
+              {statusMeta.label}
             </span>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">{t("kycGate")}</p>
-          {kyc.reviewNote && <p className="mt-2 text-xs text-brand">{kyc.reviewNote}</p>}
-          {kyc.submittedAt && (
+          {details?.reviewNote && (
+            <p className="mt-2 text-xs font-semibold text-brand">{details.reviewNote}</p>
+          )}
+          {details?.submittedAt && (
             <p className="mt-1 text-[11px] text-muted-foreground">
-              {t("submitted")}: {new Date(kyc.submittedAt).toLocaleString()}
-              {kyc.reviewedAt
-                ? ` · ${t("reviewed")}: ${new Date(kyc.reviewedAt).toLocaleString()}`
-                : ""}
+              {t("submitted")}: {new Date(details.submittedAt).toLocaleString()}
             </p>
           )}
         </div>
 
-        {kyc.status !== "approved" && (
-          <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
-            <h2 className="font-bold text-sm">{t("kycForm")}</h2>
+        {status === "approved" ? (
+          <div className="rounded-2xl border border-green-500/30 bg-green-500/10 p-5 text-center">
+            <BadgeCheck className="mx-auto h-10 w-10 text-green-600" />
+            <p className="mt-2 text-sm font-bold text-green-800">{t("approved")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Your verification was reviewed and approved by FarmX.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+            <h2 className="text-sm font-bold">
+              {status === "pending" ? "Verification under review" : t("kycForm")}
+            </h2>
             <Input
               label={t("name")}
-              value={f.fullName}
-              onChange={(v) => setF({ ...f, fullName: v })}
+              value={form.fullName}
+              onChange={(v) => update("fullName", v)}
             />
             <div>
               <label className="text-xs font-semibold">{t("idType")}</label>
               <select
-                value={f.idType}
-                onChange={(e) => setF({ ...f, idType: e.target.value })}
-                className="mt-1 w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm"
+                value={form.idType}
+                onChange={(e) => update("idType", e.target.value)}
+                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
               >
-                {ID_TYPES.map((x) => (
-                  <option key={x}>{x}</option>
+                {ID_TYPES.map((idType) => (
+                  <option key={idType}>{idType}</option>
                 ))}
               </select>
             </div>
             <Input
               label={t("idNumber")}
-              value={f.idNumber}
-              onChange={(v) => setF({ ...f, idNumber: v.replace(/\D/g, "") })}
+              value={form.idNumber}
+              onChange={(v) => update("idNumber", v.replace(/\D/g, ""))}
             />
             <Input
               label={t("changeEmail")}
-              value={f.email}
-              onChange={(v) => setF({ ...f, email: v })}
+              value={form.email}
+              onChange={(v) => update("email", v)}
             />
             <Input
               label={t("phoneNumber")}
-              value={f.phone}
-              onChange={(v) => setF({ ...f, phone: v.replace(/\D/g, "") })}
+              value={form.phone}
+              onChange={(v) => update("phone", v.replace(/\D/g, ""))}
             />
             <Input
               label={t("businessInfo")}
-              value={f.businessName}
-              onChange={(v) => setF({ ...f, businessName: v })}
+              value={form.businessName}
+              onChange={(v) => update("businessName", v)}
             />
             <Input
               label={t("address")}
-              value={f.address}
-              onChange={(v) => setF({ ...f, address: v })}
+              value={form.address}
+              onChange={(v) => update("address", v)}
             />
-
-            <label className="flex items-center gap-2 px-3 py-3 rounded-xl border border-dashed border-border text-xs cursor-pointer">
-              <Upload className="h-4 w-4 text-brand" />
-              <span className="flex-1 truncate">{f.documentKey || t("uploadDocument")}</span>
+            <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border px-3 py-3 text-xs">
+              {uploading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-brand" />
+              ) : (
+                <Upload className="h-4 w-4 text-brand" />
+              )}
+              <span className="flex-1 truncate">{documentName || t("uploadDocument")}</span>
               <input
                 type="file"
-                accept="image/*,application/pdf"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
                 className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setF({ ...f, documentKey: file.name });
-                }}
+                disabled={uploading || submitting}
+                onChange={(e) => void handleDocument(e.target.files?.[0])}
               />
             </label>
-
-            {err && <p className="text-xs text-brand font-semibold">{err}</p>}
+            {err && <p className="text-xs font-semibold text-brand">{err}</p>}
             <button
-              onClick={submit}
-              className="w-full py-2.5 rounded-xl bg-brand text-brand-foreground text-sm font-bold"
+              type="button"
+              onClick={() => void submit()}
+              disabled={uploading || submitting || status === "pending"}
+              className="w-full rounded-xl bg-brand py-2.5 text-sm font-bold text-brand-foreground disabled:opacity-60"
             >
-              {kyc.status === "pending" ? t("resubmit") : t("submitForReview")}
+              {submitting
+                ? "Submitting..."
+                : status === "pending"
+                  ? "Awaiting review"
+                  : t("submitForReview")}
             </button>
           </div>
-        )}
-
-        {kyc.status === "pending" && (
-          <div className="rounded-2xl border border-border p-4">
-            <p className="text-xs font-bold">{t("adminReview")}</p>
-            <p className="text-[11px] text-muted-foreground mt-1">{t("adminReviewNote")}</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button
-                onClick={() => reviewKyc(true)}
-                className="py-2 rounded-lg bg-brand text-brand-foreground text-xs font-bold"
-              >
-                {t("approve")}
-              </button>
-              <button
-                onClick={() => reviewKyc(false, t("rejectNote"))}
-                className="py-2 rounded-lg border border-border text-xs font-semibold"
-              >
-                {t("reject")}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {kyc.status === "approved" && (
-          <>
-            <Link
-              to="/orders"
-              className="block text-center py-2.5 rounded-xl bg-brand text-brand-foreground text-sm font-bold"
-            >
-              {t("orders")}
-            </Link>
-            <button
-              onClick={resetKyc}
-              className="w-full py-2 rounded-xl border border-border text-xs font-semibold"
-            >
-              {t("resetVerification")}
-            </button>
-          </>
         )}
       </div>
     </AppShell>
@@ -199,7 +293,7 @@ function Input({
 }: {
   label: string;
   value: string;
-  onChange: (v: string) => void;
+  onChange: (value: string) => void;
 }) {
   return (
     <div>
@@ -207,7 +301,7 @@ function Input({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full px-3 py-2.5 rounded-xl bg-background border border-border text-sm"
+        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
       />
     </div>
   );

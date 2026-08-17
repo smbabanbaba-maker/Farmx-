@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { LOCATIONS, type LocationName } from "./mock-data";
+import { LOCATIONS, type LocationName } from "./locations";
 
 type Ctx = {
   location: LocationName;

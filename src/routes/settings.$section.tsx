@@ -70,7 +70,7 @@ import {
 import { SUBSCRIPTION_PLANS } from "@/lib/subscription-repository";
 import type { UserSubscription } from "@/lib/subscription.types";
 import { getMarketRepository } from "@/lib/market-repository";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import { getTransactions, getWalletSummary, type WalletSummary } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/settings/$section")({
@@ -208,7 +208,7 @@ const TITLES: Record<string, { title: string; description: string }> = {
   saved: { title: "Saved ads", description: "Listings saved through your FarmX account." },
   support: {
     title: "Help & support",
-    description: "Find help and contact FarmX without creating fake tickets.",
+    description: "Find help, contact FarmX, and track your support requests.",
   },
   legal: {
     title: "Terms & policies",
@@ -1887,7 +1887,7 @@ function SafetyPage() {
         />
         <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
           Reports are submitted only through supported FarmX report actions. This page does not
-          create a fake report record.
+          create a report record.
         </p>
         <Link
           to="/faq"

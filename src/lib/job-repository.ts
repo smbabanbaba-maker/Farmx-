@@ -1,4 +1,17 @@
 import type { JobPost, JobApplication, JobCategory } from "./job.types";
+import {
+  applyForJob as applyForJobFn,
+  createJob as createJobFn,
+  deleteJob as deleteJobFn,
+  getApplications as getApplicationsFn,
+  getJobById as getJobByIdFn,
+  getJobRuntimeMode,
+  getPublishedJobs,
+  getSavedJobIds as getSavedJobIdsFn,
+  toggleSaveJob as toggleSaveJobFn,
+  updateApplicationStatus as updateApplicationStatusFn,
+  updateJob as updateJobFn,
+} from "./job.functions";
 
 const STORAGE_JOBS = "farmx_jobs_v1";
 const STORAGE_APPLICATIONS = "farmx_job_applications_v1";
@@ -199,8 +212,8 @@ export interface JobRepository {
     notes?: string,
     interview?: JobApplication["interview"],
   ): Promise<JobApplication>;
-  getSavedJobIds(userId: string): Promise<string[]>;
-  toggleSaveJob(userId: string, jobId: string): Promise<boolean>;
+  getSavedJobIds(userId?: string): Promise<string[]>;
+  toggleSaveJob(userId: string | undefined, jobId: string): Promise<boolean>;
 }
 
 class PreviewJobRepository implements JobRepository {
@@ -332,12 +345,12 @@ class PreviewJobRepository implements JobRepository {
     return apps[index];
   }
 
-  async getSavedJobIds(userId: string): Promise<string[]> {
+  async getSavedJobIds(userId = "preview-user"): Promise<string[]> {
     const saved = this.getStorage<Record<string, string[]>>(STORAGE_SAVED_JOBS, {});
     return saved[userId] || [];
   }
 
-  async toggleSaveJob(userId: string, jobId: string): Promise<boolean> {
+  async toggleSaveJob(userId = "preview-user", jobId: string): Promise<boolean> {
     const saved = this.getStorage<Record<string, string[]>>(STORAGE_SAVED_JOBS, {});
     const userSaved = new Set(saved[userId] || []);
     const isSaved = userSaved.has(jobId);
@@ -349,8 +362,68 @@ class PreviewJobRepository implements JobRepository {
   }
 }
 
+class ProductionJobRepository implements JobRepository {
+  async getJobs(options?: {
+    category?: JobCategory;
+    search?: string;
+    state?: string;
+    jobType?: string;
+  }): Promise<JobPost[]> {
+    return getPublishedJobs({ data: options ?? {} });
+  }
+
+  async getJobById(id: string): Promise<JobPost | null> {
+    return getJobByIdFn({ data: { jobId: id } });
+  }
+
+  async createJob(
+    job: Omit<JobPost, "id" | "createdAt" | "updatedAt" | "stats">,
+  ): Promise<JobPost> {
+    return createJobFn({ data: { job } });
+  }
+
+  async updateJob(id: string, updates: Partial<JobPost>): Promise<JobPost> {
+    return updateJobFn({ data: { jobId: id, updates } });
+  }
+
+  async deleteJob(id: string): Promise<void> {
+    await deleteJobFn({ data: { jobId: id } });
+  }
+
+  async getApplications(userId?: string, employerId?: string): Promise<JobApplication[]> {
+    return getApplicationsFn({ data: { userId, employerId } });
+  }
+
+  async applyForJob(
+    input: Omit<JobApplication, "id" | "appliedAt" | "updatedAt" | "status">,
+  ): Promise<JobApplication> {
+    return applyForJobFn({ data: input });
+  }
+
+  async updateApplicationStatus(
+    applicationId: string,
+    status: JobApplication["status"],
+    notes?: string,
+    interview?: JobApplication["interview"],
+  ): Promise<JobApplication> {
+    return updateApplicationStatusFn({ data: { applicationId, status, notes, interview } });
+  }
+
+  async getSavedJobIds(_userId?: string): Promise<string[]> {
+    return getSavedJobIdsFn();
+  }
+
+  async toggleSaveJob(_userId: string | undefined, jobId: string): Promise<boolean> {
+    return toggleSaveJobFn({ data: { jobId } });
+  }
+}
+
 let instance: JobRepository | null = null;
 export async function getJobRepository(): Promise<JobRepository> {
-  if (!instance) instance = new PreviewJobRepository();
+  if (!instance) {
+    const mode = await getJobRuntimeMode();
+    instance =
+      mode.mode === "production" ? new ProductionJobRepository() : new PreviewJobRepository();
+  }
   return instance;
 }

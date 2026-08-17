@@ -1,12 +1,11 @@
 import { getCommunityRepository, type CommunityRepository } from "@/lib/community-repository";
 import {
   getMarketRepository,
-  getMarketRuntimeMode,
   type MarketFilters,
   type MarketRepository,
   type MarketSort,
 } from "@/lib/market-repository";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import type { CommunityPost } from "@/lib/community.types";
 import type { JobPost } from "@/lib/job.types";
 import { getJobRepository } from "@/lib/job-repository";
@@ -101,14 +100,11 @@ export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSear
     input.tab === "jobs"
       ? { posts: [], hasMore: false }
       : await community.getFeed({ tab: "latest", search: input.query, limit: pageSize });
-  const isProduction = getMarketRuntimeMode() === "production";
   const jobRepo = await getJobRepository();
-  const jobsList = isProduction
-    ? []
-    : await jobRepo.getJobs({
-        search: input.query,
-        state: input.filters?.state,
-      });
+  const jobsList = await jobRepo.getJobs({
+    search: input.query,
+    state: input.filters?.state,
+  });
   const counts: Record<GlobalSearchTab, number> = {
     all: marketPage.total + communityPage.posts.length + jobsList.length,
     listings: marketPage.total,

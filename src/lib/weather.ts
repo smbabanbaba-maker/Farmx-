@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { LocationName } from "./mock-data";
+import type { LocationName } from "./locations";
 
 type Coordinates = { latitude: number; longitude: number };
 

@@ -5,7 +5,7 @@ import { MarketListingCard } from "@/components/MarketListingCard";
 import { PublicShareActions } from "@/components/PublicShareActions";
 import { PublicDeepLinkPrompt } from "@/components/PublicDeepLinkPrompt";
 import { ListingImage } from "@/components/ListingImage";
-import type { MarketListing } from "@/lib/market-dev-data";
+import type { MarketListing } from "@/lib/market-types";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import { usePrefs } from "@/lib/prefs";
 import { useMessages } from "@/lib/messages-store";

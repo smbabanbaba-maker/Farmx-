@@ -11,7 +11,7 @@ export type Country = {
   locale: string;
 };
 
-// Rough demo rates — replace with a live FX call from AWS backend.
+// Indicative exchange-rate table used for display; payment settlement remains in the configured transaction currency.
 export const COUNTRIES: Country[] = [
   {
     code: "AR",

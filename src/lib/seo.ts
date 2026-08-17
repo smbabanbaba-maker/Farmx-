@@ -1,5 +1,5 @@
 import type { JobPost } from "@/lib/job.types";
-import type { MarketCategory, MarketListing } from "@/lib/market-dev-data";
+import type { MarketCategory, MarketListing } from "@/lib/market-types";
 import type { Course } from "@/lib/learn.types";
 
 const FALLBACK_SITE_URL = "https://farmx.ng";

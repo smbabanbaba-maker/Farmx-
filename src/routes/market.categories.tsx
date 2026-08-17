@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { getMarketRepository } from "@/lib/market-repository";
-import type { MarketCategory } from "@/lib/market-dev-data";
+import type { MarketCategory } from "@/lib/market-types";
 import { ChevronLeft, ChevronRight, Search, Tags } from "lucide-react";
 import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 

@@ -1,510 +1,405 @@
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { ListingImage } from "@/components/ListingImage";
+import { getMyProfile, saveMyBusinessProfile } from "@/lib/profile.functions";
 import { useI18n } from "@/lib/i18n";
-import { getMarketRepository, type MarketListing } from "@/lib/market-repository";
-import { getJobRepository } from "@/lib/job-repository";
-import type { JobPost } from "@/lib/job.types";
-import { PRICING } from "@/lib/pricing";
-import {
-  type LucideIcon,
-  BadgeCheck,
-  Users2,
-  TrendingUp,
-  Link as LinkIcon,
-  Plus,
-  MapPin,
-  Loader2,
-  Check,
-  X,
-  Copy,
-  Sparkles,
-  Crown,
-  ExternalLink,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-import { PayModal } from "@/components/PayModal";
-import { useCompany, TIER_META } from "@/lib/company-store";
+import { BadgeCheck, Building2, Copy, ExternalLink, Loader2, MapPin, Save, X } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/company")({ component: CompanyPage });
 
-interface CompanyKYC {
+type BusinessForm = {
   name: string;
-  ceo: string;
-  email: string;
+  description: string;
+  category: string;
+  businessType: string;
   phone: string;
+  email: string;
   address: string;
   state: string;
-  country: string;
-  gps: string;
-  partners: string[];
+  lga: string;
+  website: string;
+  socialLinks: string[];
+  yearsInBusiness: number;
+  services: string[];
+  logoKey?: string;
+  coverKey?: string;
+};
+
+function emptyBusiness(profile?: {
+  fullName?: string;
+  phone?: string;
+  email?: string;
+  state?: string;
+}): BusinessForm {
+  return {
+    name: "",
+    description: "",
+    category: "",
+    businessType: "",
+    phone: profile?.phone ?? "",
+    email: profile?.email ?? "",
+    address: "",
+    state: profile?.state ?? "",
+    lga: "",
+    website: "",
+    socialLinks: [],
+    yearsInBusiness: 0,
+    services: [],
+  };
 }
 
 function CompanyPage() {
   const { t } = useI18n();
-  const { state: cState, isBadgeActive, saveCompany } = useCompany();
-  const [kycOpen, setKycOpen] = useState(false);
-  const [payOpen, setPayOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [localProducts, setLocalProducts] = useState<MarketListing[]>([]);
-  const [localJobs, setLocalJobs] = useState<JobPost[]>([]);
+  const [data, setData] = useState<Awaited<ReturnType<typeof getMyProfile>> | null>(null);
+  const [form, setForm] = useState<BusinessForm>(emptyBusiness());
+  const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const company = cState.company;
-  const bluetekActive = isBadgeActive();
-  const activeTier = bluetekActive && cState.tier !== "none" ? cState.tier : null;
-  const tierMeta = activeTier ? TIER_META[activeTier] : null;
+  const load = async () => {
+    setLoading(true);
+    try {
+      const next = await getMyProfile();
+      setData(next);
+      setForm((current) => ({
+        ...emptyBusiness(next.profile),
+        ...(next.profile.business ?? current),
+      }));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to load company profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let active = true;
-    const loadData = async () => {
-      try {
-        const [marketRepo, jobRepo] = await Promise.all([
-          getMarketRepository(),
-          getJobRepository(),
-        ]);
-        const [marketPage, jobsList] = await Promise.all([
-          marketRepo.getListings({ pageSize: 3 }),
-          jobRepo.getJobs(),
-        ]);
-        if (!active) return;
-        setLocalProducts(marketPage.listings);
-        setLocalJobs(jobsList.slice(0, 2));
-      } catch (err) {
-        console.error("Error loading company data:", err);
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    loadData();
-    return () => {
-      active = false;
-    };
+    void load();
   }, []);
 
-  const uniqueLink = company
-    ? `www.${company.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.com.farmx`
-    : "";
+  const profile = data?.profile;
+  const business = profile?.business;
+  const listings = data?.activeListings ?? [];
+  const companyName = business?.name || profile?.fullName || "FarmX business";
+  const slug = profile?.username;
+  const companyUrl = useMemo(() => (slug ? `${window.location.origin}/c/${slug}` : ""), [slug]);
 
-  const copyLink = () => {
-    if (!uniqueLink) return;
-    navigator.clipboard?.writeText(uniqueLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  const update = <K extends keyof BusinessForm>(key: K, value: BusinessForm[K]) => {
+    setForm((current) => ({ ...current, [key]: value }));
   };
+
+  const save = async () => {
+    if (!form.name.trim()) {
+      toast.error("Enter a business name.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await saveMyBusinessProfile({ data: form });
+      toast.success("Business profile saved.");
+      setEditing(false);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save business profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const copyLink = async () => {
+    if (!companyUrl) return;
+    await navigator.clipboard?.writeText(companyUrl);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1500);
+  };
+
+  if (loading) {
+    return (
+      <AppShell title={t("company")}>
+        <div className="flex min-h-48 items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-brand" />
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell title={t("company")}>
-      <div className="space-y-5">
-        {!activeTier && (
-          <Link
-            to="/upgrade"
-            className="block p-4 rounded-2xl bg-gradient-to-r from-brand to-black text-white"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <BadgeCheck className="h-4 w-4" />
-                  <p className="font-bold text-sm">Upgrade to get verified</p>
-                </div>
-                <p className="text-[11px] text-white/80 mt-0.5">
-                  Bluetek · Gold · Platinum — starts at ₦4,500/mo
-                </p>
-              </div>
-              <span className="text-xs font-bold">Start →</span>
-            </div>
-          </Link>
-        )}
-        {activeTier && cState.company && tierMeta && (
-          <Link
-            to="/c/$slug"
-            params={{ slug: cState.company.slug }}
-            className="flex items-center justify-between p-3 rounded-xl bg-card border border-border"
-          >
-            <div className="flex items-center gap-2">
-              {activeTier === "platinum" ? (
-                <Crown className="h-4 w-4" style={{ color: tierMeta.color }} />
-              ) : activeTier === "gold" ? (
-                <Sparkles className="h-4 w-4" style={{ color: tierMeta.color }} />
-              ) : (
-                <BadgeCheck className="h-4 w-4" style={{ color: tierMeta.color }} />
-              )}
-              <div>
-                <p className="text-sm font-bold">{tierMeta.label} verified</p>
-                <p className="text-[11px] text-muted-foreground">View your mini website</p>
-              </div>
-            </div>
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-          </Link>
-        )}
-        {!company ? (
+      <div className="space-y-5 pb-10">
+        {!business && !editing && (
           <button
-            onClick={() => setKycOpen(true)}
-            className="w-full p-5 rounded-2xl border-2 border-dashed border-border text-center hover:border-brand"
+            type="button"
+            onClick={() => setEditing(true)}
+            className="w-full rounded-2xl border-2 border-dashed border-border p-6 text-center hover:border-brand"
           >
-            <Plus className="h-6 w-6 mx-auto text-brand" />
-            <p className="mt-2 font-semibold">{t("company.createPrompt")}</p>
-            <p className="text-xs text-muted-foreground">{t("company.kycPrompt")}</p>
+            <Building2 className="mx-auto h-8 w-8 text-brand" />
+            <p className="mt-2 text-sm font-bold">Create your business profile</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Add real business information for buyers and customers.
+            </p>
           </button>
-        ) : (
-          <div className="rounded-2xl bg-card border border-border overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-brand to-black" />
-            <div className="p-4 -mt-8">
-              <div className="h-16 w-16 rounded-2xl bg-white border-4 border-card flex items-center justify-center text-3xl shadow-lg">
-                🌾
-              </div>
-              <div className="mt-2 flex items-center gap-1">
-                <h2 className="font-bold text-lg">{company.name}</h2>
-                {bluetekActive && <BadgeCheck className="h-4 w-4 text-brand" />}
-              </div>
-              <p className="text-xs text-muted-foreground">CEO: {company.ceo}</p>
-              <div className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
-                <MapPin className="h-3 w-3" /> {company.state}, {company.country} · {company.gps}
-              </div>
-              <button
-                onClick={copyLink}
-                className="mt-2 text-xs text-brand flex items-center gap-1"
-              >
-                <LinkIcon className="h-3 w-3" /> {uniqueLink}
-                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              </button>
-              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-                <Stat label="Followers" value="12.4k" icon={Users2} />
-                <Stat label="Products" value="48" icon={TrendingUp} />
-                <Stat label="Partners" value={String(company.partners.length)} icon={BadgeCheck} />
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => setKycOpen(true)}
-                  className="flex-1 py-2 rounded-lg border border-border text-sm font-semibold"
-                >
-                  Edit KYC
-                </button>
-                <button className="flex-1 py-2 rounded-lg bg-brand text-brand-foreground text-sm font-semibold">
-                  Share
-                </button>
-              </div>
-            </div>
-          </div>
         )}
 
-        {/* Bluetek subscription */}
-        <div className="rounded-2xl p-4 border border-brand/40 bg-brand/5">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <BadgeCheck className="h-4 w-4 text-brand" />
-                <p className="font-bold text-sm">Bluetek Verified Badge</p>
+        {business && !editing && (
+          <section className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="h-24 bg-gradient-to-r from-red-100 via-white to-red-200">
+              {business.coverKey && (
+                <ListingImage
+                  src={business.coverKey}
+                  alt={`${companyName} cover`}
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </div>
+            <div className="-mt-8 p-4">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-white shadow-lg">
+                {business.logoKey ? (
+                  <ListingImage
+                    src={business.logoKey}
+                    alt={`${companyName} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Building2 className="h-7 w-7 text-brand" />
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Wata-wata · ₦{PRICING.bluetekMonthly.toLocaleString()}
+              <div className="mt-3 flex items-center gap-1.5">
+                <h2 className="text-lg font-bold">{companyName}</h2>
+                {profile?.verification === "approved" && (
+                  <BadgeCheck className="h-4 w-4 text-brand" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {business.businessType || business.category}
               </p>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Yana ba wa masu saye tabbaci akan kamfaninka.
+              {(business.lga || business.state) && (
+                <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <MapPin className="h-3 w-3" /> {business.lga}, {business.state}
+                </p>
+              )}
+              {business.description && (
+                <p className="mt-3 text-sm leading-6">{business.description}</p>
+              )}
+              <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <Stat label="Active listings" value={String(data?.stats.activeAds ?? 0)} />
+                <Stat label="Followers" value={String(data?.stats.followers ?? 0)} />
+                <Stat label="Views" value={String(data?.stats.totalAdViews ?? 0)} />
+              </div>
+              <div className="mt-4 flex gap-2">
+                {slug && (
+                  <Link
+                    to="/c/$slug"
+                    params={{ slug }}
+                    className="flex-1 rounded-xl bg-brand py-2.5 text-center text-xs font-bold text-brand-foreground"
+                  >
+                    View public page
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  className="flex-1 rounded-xl border border-border py-2.5 text-xs font-bold"
+                >
+                  Edit profile
+                </button>
+              </div>
+              {companyUrl && (
+                <button
+                  type="button"
+                  onClick={() => void copyLink()}
+                  className="mt-3 flex items-center gap-1 text-xs text-brand"
+                >
+                  <Copy className="h-3 w-3" /> {copied ? "Copied" : companyUrl}
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
+        {editing && (
+          <section className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-sm font-bold">Business profile</h2>
+              <button type="button" onClick={() => setEditing(false)} aria-label="Close">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <Input
+                label="Business name"
+                value={form.name}
+                onChange={(value) => update("name", value)}
+              />
+              <Input
+                label="Business type"
+                value={form.businessType}
+                onChange={(value) => update("businessType", value)}
+              />
+              <Input
+                label="Category"
+                value={form.category}
+                onChange={(value) => update("category", value)}
+              />
+              <Input
+                label="Description"
+                value={form.description}
+                onChange={(value) => update("description", value)}
+                multiline
+              />
+              <Input
+                label="Phone"
+                value={form.phone}
+                onChange={(value) => update("phone", value)}
+              />
+              <Input
+                label="Email"
+                value={form.email}
+                onChange={(value) => update("email", value)}
+              />
+              <Input
+                label="Address"
+                value={form.address}
+                onChange={(value) => update("address", value)}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  label="State"
+                  value={form.state}
+                  onChange={(value) => update("state", value)}
+                />
+                <Input label="LGA" value={form.lga} onChange={(value) => update("lga", value)} />
+              </div>
+              <Input
+                label="Website"
+                value={form.website}
+                onChange={(value) => update("website", value)}
+              />
+              <Input
+                label="Years in business"
+                type="number"
+                value={String(form.yearsInBusiness)}
+                onChange={(value) => update("yearsInBusiness", Number(value) || 0)}
+              />
+              <button
+                type="button"
+                onClick={() => void save()}
+                disabled={saving}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-bold text-brand-foreground disabled:opacity-60"
+              >
+                <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save business profile"}
+              </button>
+            </div>
+          </section>
+        )}
+
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold">Seller verification</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Status:{" "}
+                {profile?.verification === "approved"
+                  ? "Verified"
+                  : profile?.verification === "pending"
+                    ? "Pending review"
+                    : "Not verified"}
               </p>
             </div>
-            {bluetekActive ? (
-              <span className="text-[10px] px-2 py-1 rounded-full bg-brand text-brand-foreground font-bold">
-                ACTIVE
-              </span>
-            ) : (
-              <button
-                onClick={() => setPayOpen(true)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-brand text-brand-foreground font-semibold"
-              >
-                Subscribe
-              </button>
-            )}
+            <Link to="/verify" className="text-xs font-bold text-brand">
+              Open verification
+            </Link>
           </div>
         </div>
 
         <section>
-          <h3 className="font-bold mb-2">Products</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {localProducts.map((p) => (
-              <div key={p.id} className="rounded-lg bg-card border border-border p-2 text-center">
-                <div className="aspect-square bg-brand/5 flex items-center justify-center overflow-hidden rounded-md mb-1">
-                  {p.images?.[0] ? (
-                    <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-4 w-4 bg-brand/20 rounded" />
-                  )}
-                </div>
-                <p className="text-[11px] font-medium truncate">{p.title}</p>
-              </div>
-            ))}
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="font-bold">Your active listings</h3>
+            <span className="text-xs text-muted-foreground">{listings.length}</span>
           </div>
-        </section>
-
-        <section>
-          <h3 className="font-bold mb-2">Open Jobs</h3>
-          <div className="space-y-2">
-            {localJobs.map((j) => (
-              <div
-                key={j.id}
-                className="p-3 rounded-xl bg-card border border-border flex justify-between"
-              >
-                <div>
-                  <p className="text-sm font-semibold">{j.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {j.state} · {j.jobType}
-                  </p>
-                </div>
-                <span className="text-xs font-bold text-brand self-center">
-                  {j.salaryAmount ? `₦${(j.salaryAmount / 1000).toFixed(0)}k` : t("negotiable")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h3 className="font-bold mb-2">Partners</h3>
-          <div className="space-y-2">
-            {[
-              {
-                id: "1",
-                name: "FarmX Logistics Hub",
-                type: "Transport Partner",
-                verified: true,
-                logo: "🚚",
-              },
-              {
-                id: "2",
-                name: "AgroInputs Nigeria Ltd",
-                type: "Seed Supplier",
-                verified: true,
-                logo: "🌱",
-              },
-            ].map((p) => (
-              <div
-                key={p.id}
-                className="p-3 rounded-xl bg-card border border-border flex items-center gap-3"
-              >
-                <div className="text-2xl">{p.logo}</div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-1">
-                    <p className="text-sm font-semibold">{p.name}</p>
-                    {p.verified && <BadgeCheck className="h-3.5 w-3.5 text-brand" />}
+          {listings.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+              No active listings yet.
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {listings.map((listing) => (
+                <Link
+                  key={listing.id}
+                  to="/product/$id"
+                  params={{ id: listing.id }}
+                  className="overflow-hidden rounded-xl border border-border bg-card"
+                >
+                  <ListingImage
+                    src={listing.images[0]}
+                    alt={listing.title}
+                    className="h-32 w-full object-cover"
+                  />
+                  <div className="p-3">
+                    <p className="truncate text-xs font-bold">{listing.title}</p>
+                    <p className="mt-1 text-sm font-black text-brand">
+                      ₦{listing.price.toLocaleString()}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">{p.type}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
+
+        <Link
+          to="/verify"
+          className="flex items-center justify-between rounded-xl border border-border bg-card p-4 text-xs font-bold"
+        >
+          <span>Company verification and KYC</span>
+          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+        </Link>
       </div>
-
-      <KYCModal
-        open={kycOpen}
-        onClose={() => setKycOpen(false)}
-        initial={company}
-        onSave={async (c) => {
-          await saveCompany({
-            name: c.name,
-            slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-            logo: "🌾",
-            cacNumber: c.email ? "CAC-" + c.email.slice(0, 6) : "CAC-FARMX",
-            bio: `Official FarmX profile for ${c.name}.`,
-            address: c.address,
-            email: c.email,
-            ceo: c.ceo,
-            phone: c.phone,
-            productType: "Agricultural Produce",
-            country: c.country,
-            state: c.state,
-            gps: c.gps,
-            partners: c.partners,
-          });
-          setKycOpen(false);
-        }}
-      />
-
-      <PayModal
-        open={payOpen}
-        onClose={() => setPayOpen(false)}
-        title="Bluetek Verified Badge (monthly)"
-        amountNaira={PRICING.bluetekMonthly}
-        purpose={{ kind: "bluetek_subscription", companyId: "company_1" }}
-        onPaid={() => window.location.reload()}
-      />
     </AppShell>
   );
 }
 
-function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: LucideIcon }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  multiline = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  multiline?: boolean;
+}) {
   return (
-    <div className="p-2 rounded-lg bg-muted">
-      <Icon className="h-3.5 w-3.5 mx-auto text-brand" />
-      <p className="text-sm font-bold mt-0.5">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{label}</p>
-    </div>
+    <label className="block text-xs font-semibold">
+      {label}
+      {multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal"
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal"
+        />
+      )}
+    </label>
   );
 }
 
-function KYCModal({
-  open,
-  onClose,
-  initial,
-  onSave,
-}: {
-  open: boolean;
-  onClose: () => void;
-  initial: CompanyKYC | null;
-  onSave: (c: CompanyKYC) => void;
-}) {
-  const [f, setF] = useState<CompanyKYC>(
-    initial ?? {
-      name: "",
-      ceo: "",
-      email: "",
-      phone: "",
-      address: "",
-      state: "",
-      country: "Nigeria",
-      gps: "",
-      partners: [],
-    },
-  );
-  const [partnerInput, setPartnerInput] = useState("");
-  const [gpsBusy, setGpsBusy] = useState(false);
-
-  if (!open) return null;
-
-  const useMyLocation = () => {
-    if (!navigator.geolocation) return;
-    setGpsBusy(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setF({
-          ...f,
-          gps: `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`,
-        });
-        setGpsBusy(false);
-      },
-      () => setGpsBusy(false),
-    );
-  };
-
-  const addPartner = () => {
-    if (partnerInput.trim()) {
-      setF({ ...f, partners: [...f.partners, partnerInput.trim()] });
-      setPartnerInput("");
-    }
-  };
-
-  const canSave = f.name && f.ceo && f.email && f.phone && f.address && f.state && f.country;
-
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center"
-      onClick={onClose}
-    >
-      <div
-        className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between">
-          <h3 className="font-bold">Company KYC</h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-accent">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div className="p-4 space-y-3">
-          {(
-            [
-              ["name", "Company name"],
-              ["ceo", "CEO name"],
-              ["email", "Email"],
-              ["phone", "Phone number"],
-              ["address", "Address"],
-              ["state", "State"],
-              ["country", "Country"],
-            ] as const
-          ).map(([k, label]) => (
-            <div key={k}>
-              <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
-                {label}
-              </label>
-              <input
-                value={f[k]}
-                onChange={(e) => setF({ ...f, [k]: e.target.value })}
-                className="w-full mt-1 px-3 py-2 rounded-lg bg-background border border-border text-sm"
-              />
-            </div>
-          ))}
-          <div>
-            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
-              Location (GPS)
-            </label>
-            <div className="mt-1 flex gap-2">
-              <input
-                value={f.gps}
-                onChange={(e) => setF({ ...f, gps: e.target.value })}
-                placeholder="lat, lng"
-                className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm"
-              />
-              <button
-                type="button"
-                onClick={useMyLocation}
-                className="px-3 py-2 rounded-lg border border-border text-xs font-semibold flex items-center gap-1"
-              >
-                {gpsBusy ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <MapPin className="h-3 w-3" />
-                )}{" "}
-                Auto
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="text-[11px] text-muted-foreground uppercase tracking-wide">
-              Partners
-            </label>
-            <div className="mt-1 flex gap-2">
-              <input
-                value={partnerInput}
-                onChange={(e) => setPartnerInput(e.target.value)}
-                placeholder="Partner name"
-                className="flex-1 px-3 py-2 rounded-lg bg-background border border-border text-sm"
-              />
-              <button
-                type="button"
-                onClick={addPartner}
-                className="px-3 py-2 rounded-lg bg-brand text-brand-foreground text-xs font-semibold"
-              >
-                Add
-              </button>
-            </div>
-            {f.partners.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {f.partners.map((p, i) => (
-                  <span
-                    key={i}
-                    className="text-[11px] px-2 py-1 rounded-full bg-muted flex items-center gap-1"
-                  >
-                    {p}
-                    <button
-                      onClick={() => setF({ ...f, partners: f.partners.filter((_, j) => j !== i) })}
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="sticky bottom-0 bg-card border-t border-border p-4">
-          <button
-            disabled={!canSave}
-            onClick={() => canSave && onSave(f)}
-            className="w-full py-2.5 rounded-xl bg-brand text-brand-foreground font-semibold disabled:opacity-50"
-          >
-            Save KYC
-          </button>
-        </div>
-      </div>
+    <div className="rounded-xl border border-border bg-background p-3">
+      <p className="font-bold">{value}</p>
+      <p className="mt-1 text-[10px] text-muted-foreground">{label}</p>
     </div>
   );
 }
