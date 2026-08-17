@@ -212,11 +212,6 @@ function PostProduct() {
     [form.state],
   );
 
-  const priceText = useMemo(() => {
-    if (form.priceType === "free") return "Free";
-    if (form.priceType === "request") return "Price on request";
-    return form.price ? `₦${form.price.toLocaleString()}` : "₦0";
-  }, [form.price, form.priceType]);
   const hasUploadingPhotos = form.photos.some((photo) => photo.uploading);
 
   if (authLoading) {
@@ -1106,57 +1101,46 @@ function PostProduct() {
             </div>
           </section>
 
-          {/* 9. Seller Information */}
-          <section className="space-y-6 pt-6 border-t border-border">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-xl bg-brand/10 flex items-center justify-center">
-                <Phone className="h-4 w-4 text-brand" />
-              </div>
-              <div>
-                <h3 className="text-sm font-black">{t("post.contactInfo")}</h3>
-                <p className="text-[10px] text-muted-foreground">{t("post.verifiedProfile")}</p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-border bg-card p-4">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
-                Using your FarmX profile
-              </p>
-              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground">Name</p>
-                  <p className="font-black">{form.contactName || "Name not added"}</p>
+          {/* 9. Seller contact: profile data stays private and is used automatically. */}
+          {(!form.contactPhone || profileStatus === "error") && (
+            <section className="space-y-4 border-t border-border pt-6">
+              <div className="flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10">
+                  <Phone className="h-4 w-4 text-brand" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground">Phone</p>
-                  <p className="font-black">{form.contactPhone || "Phone number not added"}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground">Location</p>
-                  <p className="font-black">
-                    {[form.city, form.lga, form.state].filter(Boolean).join(", ") ||
-                      "Location not added"}
+                  <h3 className="text-sm font-black">Phone number</h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    Add a phone number before publishing this ad.
                   </p>
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-muted-foreground">Account type</p>
-                  <p className="font-black capitalize">{profile?.role || "Member"}</p>
-                </div>
               </div>
-              <Link
-                to="/edit-profile"
-                className="mt-4 inline-flex rounded-xl border border-brand px-3 py-2 text-[10px] font-black text-brand"
-              >
-                Edit Profile
-              </Link>
-            </div>
-            {profileStatus === "error" && (
-              <InlineError message="Your profile could not be loaded. Refresh and try again." />
-            )}
-            {!form.contactPhone && (
-              <InlineError message="Add a verified phone number to your Profile before publishing." />
-            )}
-          </section>
+
+              {profileStatus === "error" && (
+                <InlineError message="Your profile could not be loaded. Refresh and try again." />
+              )}
+
+              {!form.contactPhone && (
+                <div className="space-y-2">
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    placeholder="Phone number"
+                    value={form.contactPhone}
+                    onChange={(event) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        contactPhone: normalizePhone(event.target.value),
+                      }))
+                    }
+                    className={`w-full rounded-2xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors.contactPhone ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+                  />
+                  {errors.contactPhone && <InlineError message={errors.contactPhone} />}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* 10. Promotion */}
           <section className="space-y-6 pt-6 border-t border-border">
@@ -1192,51 +1176,6 @@ function PostProduct() {
                   </div>
                 </button>
               ))}
-            </div>
-          </section>
-
-          {/* 11. Preview Card */}
-          <section className="space-y-4 pt-6 border-t border-border">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                {t("post.adPreview")}
-              </h3>
-            </div>
-            <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-sm opacity-80">
-              <div className="aspect-[4/3] relative bg-muted">
-                {form.photos[0] ? (
-                  <img src={form.photos[0].url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground/20" />
-                  </div>
-                )}
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="px-3 py-1 rounded-full bg-black/50 text-white text-[10px] font-black backdrop-blur-md">
-                    {category?.name || t("category")}
-                  </span>
-                </div>
-              </div>
-              <div className="p-5 space-y-4">
-                <div>
-                  <h2 className="text-lg font-black leading-tight">
-                    {form.title || t("post.noTitle")}
-                  </h2>
-                  <div className="flex items-center gap-1.5 text-brand mt-1">
-                    <span className="text-xl font-black">{priceText}</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <div className="px-3 py-1.5 rounded-xl bg-muted text-[10px] font-bold flex items-center gap-1.5">
-                    <MapPin className="h-3 w-3" />
-                    {form.city || t("city")}, {form.state}
-                  </div>
-                  <div className="px-3 py-1.5 rounded-xl bg-muted text-[10px] font-bold">
-                    {subcategory?.name || t("subcategory")}
-                  </div>
-                </div>
-              </div>
             </div>
           </section>
 
