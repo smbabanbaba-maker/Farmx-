@@ -39,13 +39,11 @@ import {
   Sparkles,
   Loader2,
   Image as ImageIcon,
-  Video,
   MapPin,
   Phone,
   Info,
   AlertCircle,
   Eye,
-  ShieldCheck,
   Trash2,
   ExternalLink,
 } from "lucide-react";
@@ -805,21 +803,6 @@ function PostProduct() {
               }}
             />
           </section>
-
-          {/* 4. Video */}
-          <section className="space-y-4">
-            <label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Video className="h-3.5 w-3.5" />
-              Video Link
-            </label>
-            <input
-              type="text"
-              placeholder="YouTube or Facebook video URL"
-              value={form.videoLink}
-              onChange={(e) => setForm({ ...form, videoLink: e.target.value })}
-              className="w-full p-4 rounded-2xl bg-card border border-border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-all"
-            />
-          </section>
         </div>
         <div className="space-y-8">
           {/* 5. Location */}
@@ -1178,24 +1161,6 @@ function PostProduct() {
               ))}
             </div>
           </section>
-
-          {/* Safety Reminder */}
-          <div className="p-5 rounded-3xl bg-amber-50 border border-amber-100 space-y-3">
-            <div className="flex items-center gap-2 text-amber-800">
-              <ShieldCheck className="h-5 w-5" />
-              <h4 className="text-xs font-black">{t("post.safetyTitle")}</h4>
-            </div>
-            <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
-              {t("post.safetyTip")}
-            </p>
-            <Link
-              to="/profile-center/$section"
-              params={{ section: "safety" }}
-              className="text-[10px] font-black text-amber-900 underline"
-            >
-              {t("post.readSafety")}
-            </Link>
-          </div>
         </div>
         {/* Single publish action at the end of the scrolling form */}
         <section className="border-t border-border pt-6">

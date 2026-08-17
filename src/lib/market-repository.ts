@@ -7,6 +7,7 @@ import {
   type MarketListing,
   type MarketReport,
 } from "@/lib/market-dev-data";
+import { getPublicMarketListing, getPublicMarketListings } from "@/lib/market.functions";
 
 export type { MarketListing } from "@/lib/market-dev-data";
 
@@ -369,21 +370,48 @@ function createProductionRepository(apiBaseUrl: string): MarketRepository {
     request<void>(path, { method: "POST", body: JSON.stringify(body) });
   return {
     mode: "production",
-    getListings: (query) => request<MarketPage>(`/market/listings?${queryString(query)}`),
-    getListingById: (id) =>
-      request<MarketListing | null>(`/market/listings/${encodeURIComponent(id)}`),
-    getCategories: () => request<MarketCategory[]>("/market/categories"),
-    getFeaturedListings: () => request<MarketListing[]>("/market/listings/featured"),
-    getSponsoredListings: () => request<MarketListing[]>("/market/listings/sponsored"),
-    getNearbyListings: (state) =>
-      request<MarketListing[]>(
-        `/market/listings/nearby${state ? `?state=${encodeURIComponent(state)}` : ""}`,
-      ),
-    getPopularListings: () => request<MarketListing[]>("/market/listings/popular"),
-    getRelatedListings: (listing, limit = 6) =>
-      request<MarketListing[]>(
-        `/market/listings/${encodeURIComponent(listing.id)}/related?limit=${limit}`,
-      ),
+    // Production marketplace reads directly from the real DynamoDB ListingsTable.
+    // This avoids depending on an external /market REST service that is not part of FarmX.
+    getListings: (query) => getPublicMarketListings({ data: query ?? {} }),
+    getListingById: (id) => getPublicMarketListing({ data: { id } }),
+    getCategories: async () => ALL_CATEGORIES,
+    getFeaturedListings: async () =>
+      (
+        await getPublicMarketListings({
+          data: { filters: { featured: true }, pageSize: 12 },
+        })
+      ).listings,
+    getSponsoredListings: async () =>
+      (
+        await getPublicMarketListings({
+          data: { filters: { sponsored: true }, pageSize: 12 },
+        })
+      ).listings,
+    getNearbyListings: async (state) =>
+      (
+        await getPublicMarketListings({
+          data: { filters: state ? { state } : undefined, pageSize: 12 },
+        })
+      ).listings,
+    getPopularListings: async () =>
+      (
+        await getPublicMarketListings({
+          data: { sort: "views", pageSize: 12 },
+        })
+      ).listings,
+    getRelatedListings: async (listing, limit = 6) => {
+      const result = await getPublicMarketListings({
+        data: {
+          filters: {
+            category: String(listing.metadata?.sourceCategoryId ?? listing.category),
+          },
+          pageSize: Math.min(50, limit + 1),
+        },
+      });
+      return result.listings
+        .filter((item: MarketListing) => item.id !== listing.id)
+        .slice(0, limit);
+    },
     getSavedListings: () => request<MarketListing[]>("/market/saved"),
     getRecentlyViewed: () => request<MarketListing[]>("/market/recently-viewed"),
     saveListing: (id) => action("/market/saved", { listingId: id }),
@@ -406,17 +434,11 @@ export async function getMarketRepository(): Promise<MarketRepository> {
   if (!repositoryPromise) {
     const apiBaseUrl = getApiBaseUrl();
     const isProductionBuild = import.meta.env.PROD;
-    if (isProductionBuild && !apiBaseUrl) {
-      repositoryPromise = Promise.reject(
-        new Error("Market service is not configured for this production deployment."),
-      );
-    } else {
-      const preview =
-        !isProductionBuild && (import.meta.env.VITE_MARKET_PREVIEW !== "false" || !apiBaseUrl);
-      repositoryPromise = Promise.resolve(
-        preview ? createPreviewRepository() : createProductionRepository(apiBaseUrl ?? ""),
-      );
-    }
+    const preview =
+      !isProductionBuild && (import.meta.env.VITE_MARKET_PREVIEW !== "false" || !apiBaseUrl);
+    repositoryPromise = Promise.resolve(
+      preview ? createPreviewRepository() : createProductionRepository(apiBaseUrl ?? ""),
+    );
   }
   return repositoryPromise;
 }
