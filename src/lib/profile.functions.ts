@@ -765,7 +765,6 @@ export const createProfilePhotoUpload = createServerFn({ method: "POST" })
         Bucket: config.bucket,
         Key: objectKey,
         ContentType: data.contentType,
-        ServerSideEncryption: "AES256",
       }),
       { expiresIn: 300, signableHeaders: new Set(["content-type"]) },
     );
@@ -788,7 +787,6 @@ export const createBusinessMediaUpload = createServerFn({ method: "POST" })
         Bucket: config.bucket,
         Key: objectKey,
         ContentType: data.contentType,
-        ServerSideEncryption: "AES256",
       }),
       { expiresIn: 300, signableHeaders: new Set(["content-type"]) },
     );

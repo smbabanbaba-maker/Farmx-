@@ -6,12 +6,18 @@ import { PRICING } from "@/lib/pricing";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useLocation } from "@/lib/location";
 import type { PaymentPurpose } from "@/lib/paystack";
-import { useSubscription } from "@/lib/subscription";
 import { useCommerce } from "@/lib/commerce-store";
 import { useNotifications } from "@/lib/notifications-store";
-import { useCompany } from "@/lib/company-store";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/use-auth";
+import { useProfileData } from "@/lib/use-profile";
+import { getS3ViewUrl } from "@/lib/s3-client";
+import {
+  createLocalPhotoId,
+  MAX_LISTING_PHOTOS,
+  optimizeListingImage,
+  validateListingImage,
+} from "@/lib/listing-media";
 import {
   UNIVERSAL_CATEGORIES,
   getCategory,
@@ -21,6 +27,7 @@ import {
 import {
   getListingRepository,
   type ListingFormState,
+  type ListingPhoto,
   type ListingRepository,
 } from "@/lib/listing-repository";
 import {
@@ -83,15 +90,47 @@ const DEFAULT_PRICE_UNITS = [
 const NIGERIA_STATES = Object.keys(NIGERIA_STATES_LGAS).sort();
 const POST_STEPS = ["details", "media", "location", "publish"] as const;
 
+function revokeObjectUrl(url: string) {
+  if (url.startsWith("blob:")) URL.revokeObjectURL(url);
+}
+
+function normalizePhone(value: string) {
+  return value.replace(/[^\d+]/g, "").replace(/^00/, "+");
+}
+
+function verifyImageUrl(url: string) {
+  return new Promise<void>((resolve, reject) => {
+    if (!url) {
+      reject(new Error("The stored image URL is empty."));
+      return;
+    }
+    const image = new Image();
+    const timeout = window.setTimeout(() => {
+      image.src = "";
+      reject(new Error("The image took too long to load."));
+    }, 15000);
+    image.onload = () => {
+      window.clearTimeout(timeout);
+      resolve();
+    };
+    image.onerror = () => {
+      window.clearTimeout(timeout);
+      reject(new Error("The stored image could not be loaded."));
+    };
+    image.src = url;
+  });
+}
+
 function PostProduct() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { location: currentLoc } = useLocation();
-  const { canPost, consumeListing } = useSubscription();
   const { createNotification } = useNotifications();
-  const { state: companyState } = useCompany();
+  const { profile, status: profileStatus } = useProfileData();
   const { isLoggedIn, loading: authLoading } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+  const draftLoadedRef = useRef(false);
+  const draftPresentRef = useRef(false);
 
   const [repository, setRepository] = useState<ListingRepository | null>(null);
 
@@ -114,11 +153,11 @@ function PostProduct() {
     priceType: "fixed",
     negotiation: "Not sure",
     availability: "available",
-    state: currentLoc || "Kano",
-    lga: "",
-    city: "",
-    contactName: companyState.personal?.fullName || companyState.company?.name || "",
-    contactPhone: companyState.personal?.phone || companyState.company?.phone || "",
+    state: profile?.state || currentLoc || "",
+    lga: profile?.business?.lga || "",
+    city: profile?.location || "",
+    contactName: profile?.fullName || "",
+    contactPhone: normalizePhone(profile?.phone || ""),
     promoId: "none",
     priceUnit: "per item",
   });
@@ -139,14 +178,37 @@ function PostProduct() {
 
   // Initialize repository and load draft
   useEffect(() => {
-    void getListingRepository().then((repo) => {
+    let active = true;
+    void getListingRepository().then(async (repo) => {
+      if (!active) return;
       setRepository(repo);
       const draft = repo.getDraft();
-      if (draft) {
-        setForm((prev) => ({ ...prev, ...draft }));
-      }
+      const hydrated = draft ? await repo.hydrateDraft(draft) : null;
+      if (!active) return;
+      draftPresentRef.current = Boolean(hydrated);
+      draftLoadedRef.current = true;
+      if (hydrated) setForm((prev) => ({ ...prev, ...hydrated }));
     });
+    return () => {
+      active = false;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!draftLoadedRef.current || !profile) return;
+    setForm((prev) => ({
+      ...prev,
+      state: draftPresentRef.current ? prev.state : profile.state || prev.state || currentLoc || "",
+      lga: draftPresentRef.current ? prev.lga : profile.business?.lga || prev.lga || "",
+      city: draftPresentRef.current ? prev.city : profile.location || prev.city || "",
+      contactName: draftPresentRef.current
+        ? prev.contactName
+        : profile.fullName || prev.contactName || "",
+      contactPhone: draftPresentRef.current
+        ? prev.contactPhone
+        : normalizePhone(profile.phone || prev.contactPhone || ""),
+    }));
+  }, [currentLoc, profile, repository]);
 
   // Save draft on form change
   useEffect(() => {
@@ -182,6 +244,7 @@ function PostProduct() {
     if (form.priceType === "request") return "Price on request";
     return form.price ? `₦${form.price.toLocaleString()}` : "₦0";
   }, [form.price, form.priceType]);
+  const hasUploadingPhotos = form.photos.some((photo) => photo.uploading);
 
   if (authLoading) {
     return (
@@ -199,99 +262,125 @@ function PostProduct() {
     { label: t("preview"), caption: `${t("price")} & publish` },
   ];
 
+  const setPhotoById = (photoId: string, update: (photo: ListingPhoto) => ListingPhoto) => {
+    setForm((prev) => ({
+      ...prev,
+      photos: prev.photos.map((photo) => (photo.id === photoId ? update(photo) : photo)),
+    }));
+  };
+
+  const uploadPhotoDraft = async (photoId: string, file: File) => {
+    if (!repository) return;
+    let previewUrl = URL.createObjectURL(file);
+    setPhotoById(photoId, (photo) => ({
+      ...photo,
+      url: previewUrl,
+      name: file.name,
+      file,
+      objectKey: undefined,
+      verified: false,
+      uploading: true,
+      error: undefined,
+    }));
+    try {
+      const optimized = await optimizeListingImage(file);
+      if (optimized !== file) {
+        const optimizedUrl = URL.createObjectURL(optimized);
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = optimizedUrl;
+        setPhotoById(photoId, (photo) => ({ ...photo, url: previewUrl, file: optimized }));
+      }
+      const { objectKey } = await repository.uploadPhoto(optimized);
+      const finalUrl =
+        repository.mode === "production" ? await getS3ViewUrl(objectKey) : previewUrl;
+      if (repository.mode === "production") await verifyImageUrl(finalUrl);
+      setPhotoById(photoId, (photo) => ({
+        ...photo,
+        url: finalUrl,
+        objectKey,
+        file: optimized,
+        verified: true,
+        uploading: false,
+        error: undefined,
+      }));
+    } catch (reason) {
+      setPhotoById(photoId, (photo) => ({
+        ...photo,
+        uploading: false,
+        verified: false,
+        error: reason instanceof Error ? reason.message : "Upload failed. Try again.",
+      }));
+    }
+  };
+
+  const retryPhoto = async (photo: ListingPhoto) => {
+    if (photo.file) {
+      await uploadPhotoDraft(photo.id, photo.file);
+      return;
+    }
+    if (!repository || !photo.objectKey) return;
+    setPhotoById(photo.id, (current) => ({ ...current, uploading: true, error: undefined }));
+    try {
+      const url = await getS3ViewUrl(photo.objectKey);
+      await verifyImageUrl(url);
+      setPhotoById(photo.id, (current) => ({
+        ...current,
+        url,
+        verified: true,
+        uploading: false,
+        error: undefined,
+      }));
+    } catch (reason) {
+      setPhotoById(photo.id, (current) => ({
+        ...current,
+        uploading: false,
+        verified: false,
+        error: reason instanceof Error ? reason.message : "Upload failed. Try again.",
+      }));
+    }
+  };
+
   const onPickFiles = async (files: FileList | null) => {
     if (!files || !repository) return;
     setErrors((prev) => ({ ...prev, photos: "" }));
     const accepted: File[] = [];
-    Array.from(files).forEach((f) => {
-      if (f.size > 10 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, photos: `${f.name} ya wuce 10MB.` }));
-        return;
-      }
-      if (
-        !/image\/(jpeg|jpg|png|heic|webp)/i.test(f.type) &&
-        !/\.(jpe?g|png|heic|webp)$/i.test(f.name)
-      ) {
-        setErrors((prev) => ({ ...prev, photos: `Format ba a yarda ba: ${f.name}` }));
-        return;
-      }
-      accepted.push(f);
+    const rejected: string[] = [];
+    Array.from(files).forEach((file) => {
+      const validationError = validateListingImage(file);
+      if (validationError) rejected.push(`${file.name}: ${validationError}`);
+      else accepted.push(file);
     });
+    if (rejected.length) setErrors((prev) => ({ ...prev, photos: rejected.join(" ") }));
     if (!accepted.length) return;
 
     if (replaceIndex !== null) {
-      const file = accepted[0];
-      const idx = replaceIndex;
+      const target = form.photos[replaceIndex];
       setReplaceIndex(null);
-      setForm((prev) => ({
-        ...prev,
-        photos: prev.photos.map((photo, photoIndex) =>
-          photoIndex === idx
-            ? { url: URL.createObjectURL(file), name: file.name, uploading: true }
-            : photo,
-        ),
-      }));
-      try {
-        const { objectKey } = await repository.uploadPhoto(file);
-        setForm((prev) => ({
-          ...prev,
-          photos: prev.photos.map((photo, photoIndex) =>
-            photoIndex === idx ? { ...photo, objectKey, uploading: false } : photo,
-          ),
-        }));
-      } catch (e) {
-        setForm((prev) => ({
-          ...prev,
-          photos: prev.photos.map((photo, photoIndex) =>
-            photoIndex === idx
-              ? {
-                  ...photo,
-                  uploading: false,
-                  error: e instanceof Error ? e.message : "Upload failed",
-                }
-              : photo,
-          ),
-        }));
+      if (target) {
+        await uploadPhotoDraft(target.id, accepted[0]);
       }
       return;
     }
 
-    const available = Math.max(0, 15 - form.photos.length);
+    const available = Math.max(0, MAX_LISTING_PHOTOS - form.photos.length);
     const filesToUpload = accepted.slice(0, available);
-    const start = form.photos.length;
-    const placeholders = filesToUpload.map((file) => ({
+    if (accepted.length > filesToUpload.length) {
+      setErrors((prev) => ({
+        ...prev,
+        photos: `You can upload up to ${MAX_LISTING_PHOTOS} listing photos.`,
+      }));
+    }
+    const placeholders = filesToUpload.map<ListingPhoto>((file) => ({
+      id: createLocalPhotoId(),
       url: URL.createObjectURL(file),
       name: file.name,
+      file,
       uploading: true,
+      verified: false,
     }));
     setForm((prev) => ({ ...prev, photos: [...prev.photos, ...placeholders] }));
-
     await Promise.all(
-      filesToUpload.map(async (file, offset) => {
-        const idx = start + offset;
-        try {
-          const { objectKey } = await repository.uploadPhoto(file);
-          setForm((prev) => ({
-            ...prev,
-            photos: prev.photos.map((photo, photoIndex) =>
-              photoIndex === idx ? { ...photo, objectKey, uploading: false } : photo,
-            ),
-          }));
-        } catch (e) {
-          setForm((prev) => ({
-            ...prev,
-            photos: prev.photos.map((photo, photoIndex) =>
-              photoIndex === idx
-                ? {
-                    ...photo,
-                    uploading: false,
-                    error: e instanceof Error ? e.message : "Upload failed",
-                  }
-                : photo,
-            ),
-          }));
-        }
-      }),
+      placeholders.map((photo, index) => uploadPhotoDraft(photo.id, filesToUpload[index])),
     );
   };
 
@@ -306,7 +395,9 @@ function PostProduct() {
     if (currentStep === 1) {
       if (form.photos.length === 0) newErrors.photos = t("post.error.photosRequired");
       if (form.photos.some((p) => p.uploading)) newErrors.photos = t("post.error.photosUploading");
-      if (form.photos.some((p) => p.error)) newErrors.photos = t("post.error.photosError");
+      if (form.photos.some((p) => p.error || !p.objectKey || !p.verified)) {
+        newErrors.photos = t("post.error.photosError");
+      }
     }
     if (currentStep === 2) {
       if (!form.state) newErrors.state = t("post.error.stateRequired");
@@ -352,6 +443,9 @@ function PostProduct() {
 
     if (form.photos.length === 0) newErrors.photos = t("post.error.photosRequired");
     if (form.photos.some((p) => p.uploading)) newErrors.photos = t("post.error.photosUploading");
+    if (form.photos.some((p) => p.error || !p.objectKey || !p.verified)) {
+      newErrors.photos = t("post.error.photosError");
+    }
 
     if (!form.state) newErrors.state = t("post.error.stateRequired");
     if (!form.lga?.trim()) newErrors.lga = t("post.error.lgaRequired");
@@ -381,7 +475,8 @@ function PostProduct() {
     }
 
     if (!form.contactName.trim()) newErrors.contactName = t("post.error.contactNameRequired");
-    if (!/^\d{7,15}$/.test(form.contactPhone))
+    const phoneDigits = form.contactPhone.replace(/\D/g, "");
+    if (phoneDigits.length < 7 || phoneDigits.length > 15)
       newErrors.contactPhone = t("post.error.phoneRequired");
 
     setErrors(newErrors);
@@ -399,12 +494,6 @@ function PostProduct() {
     if (!validateForm()) {
       const firstError = document.querySelector("[data-error]");
       if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
-
-    if (!canPost) {
-      setErrors({ global: t("post.error.quotaExhausted") });
-      navigate({ to: "/subscribe" });
       return;
     }
 
@@ -446,7 +535,6 @@ function PostProduct() {
         },
         targetUrl: `/product/${published.id}`,
       });
-      consumeListing();
       repository.clearDraft();
       setDone(true);
       window.scrollTo(0, 0);
@@ -460,6 +548,7 @@ function PostProduct() {
   };
 
   const clearForm = () => {
+    form.photos.forEach((photo) => revokeObjectUrl(photo.url));
     setForm({
       categoryId: "",
       subcategoryId: "",
@@ -472,11 +561,11 @@ function PostProduct() {
       priceType: "fixed",
       negotiation: "Not sure",
       availability: "available",
-      state: currentLoc || "Kano",
-      lga: "",
-      city: "",
-      contactName: companyState.personal?.fullName || companyState.company?.name || "",
-      contactPhone: companyState.personal?.phone || companyState.company?.phone || "",
+      state: profile?.state || currentLoc || "",
+      lga: profile?.business?.lga || "",
+      city: profile?.location || "",
+      contactName: profile?.fullName || "",
+      contactPhone: normalizePhone(profile?.phone || ""),
       promoId: "none",
       priceUnit: "per item",
     });
@@ -643,7 +732,7 @@ function PostProduct() {
               <div className="flex items-center justify-between">
                 <FieldLabel label={t("photos")} />
                 <span className="text-[10px] font-bold text-muted-foreground">
-                  {form.photos.length}/15
+                  {form.photos.length}/{MAX_LISTING_PHOTOS}
                 </span>
               </div>
               <div className="rounded-2xl border border-dashed border-brand/30 bg-brand/[0.03] p-4">
@@ -652,7 +741,11 @@ function PostProduct() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-sm shadow-brand/20 transition active:scale-[0.98]"
+                  disabled={
+                    form.photos.length >= MAX_LISTING_PHOTOS ||
+                    form.photos.some((photo) => photo.uploading)
+                  }
+                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-sm shadow-brand/20 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Camera className="h-4 w-4" /> {t("post.addPhotosButton")}
                 </button>
@@ -662,7 +755,7 @@ function PostProduct() {
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {form.photos.map((p, i) => (
                     <div
-                      key={`${p.url}-${i}`}
+                      key={p.id}
                       className="group relative overflow-hidden rounded-2xl border border-border bg-muted"
                     >
                       <button
@@ -671,11 +764,26 @@ function PostProduct() {
                         className="block aspect-square w-full"
                         aria-label={`Preview photo ${i + 1}`}
                       >
-                        <img
-                          src={p.url}
-                          alt={`Listing photo ${i + 1}`}
-                          className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
-                        />
+                        {p.url ? (
+                          <img
+                            src={p.url}
+                            alt={`Listing photo ${i + 1}`}
+                            onError={() => {
+                              if (!p.error) {
+                                setPhotoById(p.id, (photo) => ({
+                                  ...photo,
+                                  verified: false,
+                                  error: "Image failed to load. Try again.",
+                                }));
+                              }
+                            }}
+                            className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02]"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center">
+                            <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                          </div>
+                        )}
                       </button>
                       {i === 0 && (
                         <span className="absolute left-2 top-2 rounded-lg bg-brand px-2 py-1 text-[8px] font-black text-brand-foreground shadow-sm">
@@ -683,13 +791,23 @@ function PostProduct() {
                         </span>
                       )}
                       {p.uploading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/45">
-                          <Loader2 className="h-6 w-6 animate-spin text-white" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/55 text-white">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                          <span className="text-[10px] font-black">Uploading…</span>
                         </div>
                       )}
-                      {p.error && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-red-600/60">
-                          <AlertCircle className="h-6 w-6 text-white" />
+                      {p.error && !p.uploading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-red-700/80 p-3 text-center text-white">
+                          <AlertCircle className="h-6 w-6" />
+                          <span className="text-[10px] font-black">Upload failed</span>
+                          <span className="text-[9px] leading-tight">{p.error}</span>
+                          <button
+                            type="button"
+                            onClick={() => void retryPhoto(p)}
+                            className="rounded-lg bg-white px-3 py-1.5 text-[10px] font-black text-red-700"
+                          >
+                            Try again
+                          </button>
                         </div>
                       )}
                       <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
@@ -715,12 +833,13 @@ function PostProduct() {
                           </button>
                           <button
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
+                              revokeObjectUrl(p.url);
                               setForm((prev) => ({
                                 ...prev,
-                                photos: prev.photos.filter((_, photoIndex) => photoIndex !== i),
-                              }))
-                            }
+                                photos: prev.photos.filter((photo) => photo.id !== p.id),
+                              }));
+                            }}
                             className="rounded-lg bg-black/65 p-1.5 text-white backdrop-blur"
                             aria-label="Delete photo"
                           >
@@ -787,7 +906,7 @@ function PostProduct() {
                 ref={fileRef}
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/webp,image/heic"
+                accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 onChange={(e) => {
                   void onPickFiles(e.target.files);
@@ -1107,32 +1226,44 @@ function PostProduct() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground px-1">
-                    {t("name")}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={t("name")}
-                    value={form.contactName}
-                    onChange={(e) => setForm({ ...form, contactName: e.target.value })}
-                    className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.contactName ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
-                  />
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-muted-foreground">
+                  Using your FarmX profile
+                </p>
+                <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground">Name</p>
+                    <p className="font-black">{form.contactName || "Name not added"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground">Phone</p>
+                    <p className="font-black">{form.contactPhone || "Phone number not added"}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground">Location</p>
+                    <p className="font-black">
+                      {[form.city, form.lga, form.state].filter(Boolean).join(", ") ||
+                        "Location not added"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-muted-foreground">Account type</p>
+                    <p className="font-black capitalize">{profile?.role || "Member"}</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-muted-foreground px-1">
-                    {t("phoneNumber")}
-                  </label>
-                  <input
-                    type="tel"
-                    placeholder="08012345678"
-                    value={form.contactPhone}
-                    onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
-                    className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.contactPhone ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
-                  />
-                </div>
+                <Link
+                  to="/edit-profile"
+                  className="mt-4 inline-flex rounded-xl border border-brand px-3 py-2 text-[10px] font-black text-brand"
+                >
+                  Edit Profile
+                </Link>
               </div>
+              {profileStatus === "error" && (
+                <InlineError message="Your profile could not be loaded. Refresh and try again." />
+              )}
+              {!form.contactPhone && (
+                <InlineError message="Add a verified phone number to your Profile before publishing." />
+              )}
             </section>
 
             {/* 10. Promotion */}
@@ -1256,7 +1387,7 @@ function PostProduct() {
                 <button
                   type="button"
                   onClick={goBack}
-                  disabled={loading}
+                  disabled={loading || hasUploadingPhotos}
                   className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl border border-border bg-card font-black transition hover:border-brand hover:text-brand disabled:opacity-50"
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -1267,7 +1398,8 @@ function PostProduct() {
                 <button
                   type="button"
                   onClick={goNext}
-                  className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-brand font-black text-brand-foreground shadow-lg shadow-brand/20 transition hover:opacity-90"
+                  disabled={loading || hasUploadingPhotos}
+                  className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-brand font-black text-brand-foreground shadow-lg shadow-brand/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t("continue")}
                   <ChevronRight className="h-5 w-5" />
@@ -1276,8 +1408,8 @@ function PostProduct() {
                 <button
                   type="button"
                   onClick={handlePost}
-                  disabled={loading}
-                  className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-brand font-black text-brand-foreground shadow-lg shadow-brand/20 transition hover:opacity-90 disabled:opacity-50"
+                  disabled={loading || hasUploadingPhotos}
+                  className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-brand font-black text-brand-foreground shadow-lg shadow-brand/20 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? (
                     <Loader2 className="h-6 w-6 animate-spin" />

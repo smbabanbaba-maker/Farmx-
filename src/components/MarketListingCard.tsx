@@ -3,6 +3,7 @@ import { BadgeCheck, Bookmark, Eye, MapPin, MessageCircle, Share2, Star } from "
 import { usePrefs } from "@/lib/prefs";
 import type { MarketListing } from "@/lib/market-dev-data";
 import { getMarketRepository } from "@/lib/market-repository";
+import { ListingImage } from "@/components/ListingImage";
 
 export function MarketListingCard({
   listing,
@@ -62,8 +63,13 @@ export function MarketListingCard({
         className="block"
         aria-label={`Open ${listing.title}`}
       >
-        <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand/10 via-accent to-brand/5 text-5xl">
-          <span aria-hidden="true">{listing.imagePlaceholder}</span>
+        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-brand/10 via-accent to-brand/5 text-5xl">
+          <ListingImage
+            src={listing.images[0]}
+            alt={listing.title}
+            placeholder={listing.imagePlaceholder}
+            className="h-full w-full object-cover"
+          />
           <div className="absolute left-2 top-2 flex flex-wrap gap-1">
             {listing.featured && (
               <span className="rounded-full bg-brand px-2 py-1 text-[9px] font-black text-brand-foreground">

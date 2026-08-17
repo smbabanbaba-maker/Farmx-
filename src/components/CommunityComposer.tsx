@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getCommunityRepository } from "@/lib/community-repository";
+import { ListingImage } from "@/components/ListingImage";
 import {
   COMMUNITY_TOPICS,
   type CommunityListingReference,
@@ -140,7 +141,7 @@ export function CommunityComposer({
       id: item.id,
       title: item.title,
       price: item.price,
-      image: item.imagePlaceholder,
+      image: item.images[0] || item.imagePlaceholder,
       location: `${item.city}, ${item.state}`,
       status:
         item.status === "published"
@@ -582,11 +583,15 @@ function ListingPicker({
   );
 }
 function ListingThumb({ image }: { image?: string }) {
-  return image?.startsWith("http") ? (
-    <img src={image} alt="" className="h-11 w-14 rounded-xl object-cover" />
-  ) : (
-    <div className="flex h-11 w-14 items-center justify-center rounded-xl bg-brand/10 text-brand">
-      <ShoppingBag className="h-4 w-4" />
+  return (
+    <div className="flex h-11 w-14 items-center justify-center overflow-hidden rounded-xl bg-brand/10 text-brand">
+      <ListingImage
+        src={image}
+        alt="Attached FarmX listing"
+        placeholder=""
+        className="h-full w-full object-cover"
+      />
+      {!image && <ShoppingBag className="h-4 w-4" />}
     </div>
   );
 }

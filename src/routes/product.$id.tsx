@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { MarketListingCard } from "@/components/MarketListingCard";
 import { PublicShareActions } from "@/components/PublicShareActions";
 import { PublicDeepLinkPrompt } from "@/components/PublicDeepLinkPrompt";
+import { ListingImage } from "@/components/ListingImage";
 import type { MarketListing } from "@/lib/market-dev-data";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import { usePrefs } from "@/lib/prefs";
@@ -311,8 +312,13 @@ function ProductPage() {
           title={listing.title}
         />
         <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
-          <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-brand/15 via-brand/5 to-accent text-8xl">
-            <span aria-label={listing.title}>{currentImage}</span>
+          <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-brand/15 via-brand/5 to-accent text-8xl">
+            <ListingImage
+              src={currentImage}
+              alt={listing.title}
+              placeholder={currentImage}
+              className="h-full w-full object-cover"
+            />
             <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
               {listing.featured && (
                 <span className="rounded-full bg-brand px-2.5 py-1 text-[10px] font-black text-brand-foreground">
@@ -345,7 +351,12 @@ function ProductPage() {
                   className={`flex aspect-square items-center justify-center rounded-xl border bg-accent/30 text-2xl ${index === photoIndex ? "border-brand bg-brand/10" : "border-border"}`}
                   aria-label={`View listing photo ${index + 1}`}
                 >
-                  {image}
+                  <ListingImage
+                    src={image}
+                    alt={`${listing.title} photo ${index + 1}`}
+                    placeholder={image}
+                    className="h-full w-full object-cover"
+                  />
                 </button>
               ))}
           </div>
@@ -475,8 +486,13 @@ function ProductPage() {
         </section>
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-start gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand/10 text-xl font-bold text-brand">
-              {listing.seller.photo}
+            <div className="flex h-14 w-14 overflow-hidden items-center justify-center rounded-2xl bg-brand/10 text-xl font-bold text-brand">
+              <ListingImage
+                src={listing.seller.photo}
+                alt={`${listing.seller.name} profile photo`}
+                placeholder={listing.seller.photo}
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">

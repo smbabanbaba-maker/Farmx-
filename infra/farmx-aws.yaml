@@ -33,7 +33,9 @@ Resources:
         CorsRules:
           - AllowedHeaders: ["content-type"]
             AllowedMethods: [GET, PUT]
-            AllowedOrigins: [!Ref ApplicationOrigin]
+            AllowedOrigins:
+              - !Ref ApplicationOrigin
+              - https://farmx-rvrb.vercel.app
             ExposedHeaders: [ETag]
             MaxAge: 300
       LifecycleConfiguration:

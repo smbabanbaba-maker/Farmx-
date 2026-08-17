@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { ListingImage } from "@/components/ListingImage";
 import { ProfileServicePanels } from "@/components/ProfileServicePanels";
 import { ProfileTrustPanels } from "@/components/ProfileTrustPanels";
 import { useProfileData } from "@/lib/use-profile";
@@ -423,10 +424,13 @@ function MyAdCard({
   return (
     <article className="rounded-2xl border border-border bg-card p-3">
       <div className="flex gap-3">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-center text-[10px] font-bold text-brand">
-          {ad.imageKeys.length
-            ? `${ad.imageKeys.length} photo${ad.imageKeys.length === 1 ? "" : "s"}`
-            : "No photo"}
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-brand/10 text-center text-[10px] font-bold text-brand">
+          <ListingImage
+            src={ad.imageKeys[0]}
+            alt={ad.title}
+            placeholder={ad.imageKeys.length ? `${ad.imageKeys.length} photos` : "No photo"}
+            className="h-full w-full object-cover"
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">

@@ -1,33 +1,43 @@
-import { getS3SignedUploadUrl, getS3SignedDownloadUrl } from "./storage.functions";
+import { createS3UploadUrl, getS3SignedDownloadUrl } from "./storage.functions";
 
-function safeName(name: string) {
-  return name.replace(/[^a-zA-Z0-9._-]+/g, "-").toLowerCase();
-}
-
-export function makeObjectKey(folder: string, file: File) {
-  const ts = Date.now();
-  const rand = Math.random().toString(36).slice(2, 8);
-  return `${folder}/${ts}-${rand}-${safeName(file.name)}`;
+async function describeS3Failure(response: Response) {
+  const body = await response.text().catch(() => "");
+  const code = body.match(/<Code>([^<]+)<\/Code>/i)?.[1];
+  const message = body.match(/<Message>([^<]+)<\/Message>/i)?.[1];
+  if (code === "SignatureDoesNotMatch") {
+    return "S3 rejected the upload signature. Refresh the page and try again.";
+  }
+  if (code === "AccessDenied") {
+    return "S3 denied the upload. Check the FarmX media bucket permissions.";
+  }
+  return message
+    ? `S3 upload failed (${response.status}): ${message}`
+    : `S3 upload failed (${response.status}).`;
 }
 
 export async function uploadFileToS3(folder: string, file: File): Promise<{ objectKey: string }> {
-  const objectKey = makeObjectKey(folder, file);
   const contentType = file.type || "application/octet-stream";
-  if (
-    !["image/jpeg", "image/png", "image/heic", "image/webp", "video/mp4", "video/webm"].includes(
-      contentType,
-    )
-  ) {
+  if (!["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"].includes(contentType)) {
     throw new Error("Unsupported image or video format.");
   }
-  const { uploadUrl, method } = await getS3SignedUploadUrl({ data: { objectKey, contentType } });
+  if (!["listings", "products", "community", "messages"].includes(folder)) {
+    throw new Error("Unsupported storage folder.");
+  }
+  const { objectKey, uploadUrl, method } = await createS3UploadUrl({
+    data: {
+      folder: folder as "listings" | "products" | "community" | "messages",
+      contentType: contentType as
+        "image/jpeg" | "image/png" | "image/webp" | "video/mp4" | "video/webm",
+    },
+  });
   const res = await fetch(uploadUrl, {
     method,
     body: file,
     headers: { "Content-Type": contentType },
   });
-  if (!res.ok)
-    throw new Error(`S3 upload failed [${res.status}]: ${await res.text().catch(() => "")}`);
+  if (!res.ok) {
+    throw new Error(await describeS3Failure(res));
+  }
   return { objectKey };
 }
 

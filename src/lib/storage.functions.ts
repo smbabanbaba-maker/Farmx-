@@ -5,18 +5,6 @@ import { z } from "zod";
 import { getAwsClientOptions } from "@/lib/aws-config";
 import { requireAuthenticatedUser } from "@/lib/auth-server";
 
-const keySchema = z.object({
-  objectKey: z.string().regex(/^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i),
-  contentType: z.enum([
-    "image/jpeg",
-    "image/png",
-    "image/heic",
-    "image/webp",
-    "video/mp4",
-    "video/webm",
-  ]),
-});
-
 const viewKeySchema = z.object({
   objectKey: z.string().regex(/^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i),
 });
@@ -38,23 +26,46 @@ function getS3Client(region: string) {
   return new S3Client(getAwsClientOptions(region));
 }
 
-export const getS3SignedUploadUrl = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => keySchema.parse(input))
+const generatedUploadSchema = z.object({
+  folder: z.enum(["listings", "products", "community", "messages"]),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"]),
+});
+
+function extensionForContentType(contentType: string) {
+  switch (contentType) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    case "video/mp4":
+      return "mp4";
+    case "video/webm":
+      return "webm";
+    default:
+      return "bin";
+  }
+}
+
+export const createS3UploadUrl = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => generatedUploadSchema.parse(input))
   .handler(async ({ data }) => {
-    await requireAuthenticatedUser();
+    const actor = await requireAuthenticatedUser();
     const { region, bucket } = getStorageConfig();
+    const safeUserId = actor.userId.replace(/[^a-zA-Z0-9_-]/g, "-");
+    const objectKey = `${data.folder}/${safeUserId}/${crypto.randomUUID()}.${extensionForContentType(data.contentType)}`;
     const command = new PutObjectCommand({
       Bucket: bucket,
-      Key: data.objectKey,
+      Key: objectKey,
       ContentType: data.contentType,
-      ServerSideEncryption: "AES256",
     });
     const uploadUrl = await getSignedUrl(getS3Client(region), command, {
       expiresIn: 300,
       signableHeaders: new Set(["content-type"]),
     });
 
-    return { uploadUrl, method: "PUT" as const, expiresIn: 300 };
+    return { objectKey, uploadUrl, method: "PUT" as const, expiresIn: 300 };
   });
 
 export const getS3SignedDownloadUrl = createServerFn({ method: "POST" })
