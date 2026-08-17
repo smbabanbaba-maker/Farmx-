@@ -61,6 +61,7 @@ function Community() {
     savePost,
     sharePost,
     followUser,
+    viewerId,
   } = useCommunity();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -254,6 +255,7 @@ function Community() {
               <CommunityPostCard
                 key={post.id}
                 post={post}
+                viewerId={viewerId}
                 onLike={() =>
                   void likePost(post.id).catch(() => setNotice("Like could not be updated."))
                 }
@@ -311,8 +313,10 @@ function CommunityPostCard({
   onSave,
   onShare,
   onFollow,
+  viewerId,
 }: {
   post: CommunityPost;
+  viewerId: string | null;
   onLike: () => void;
   onSave: () => void;
   onShare: () => void;
@@ -450,7 +454,7 @@ function CommunityPostCard({
           <Bookmark className={`h-4 w-4 ${post.savedByMe ? "fill-current" : ""}`} />
           {post.saveCount > 0 && post.saveCount}
         </button>
-        {post.author.id !== "preview-user" && !post.followingAuthor && (
+        {Boolean(viewerId) && post.author.id !== viewerId && !post.followingAuthor && (
           <button
             type="button"
             onClick={onFollow}

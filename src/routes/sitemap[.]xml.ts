@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getMarketRepository, getMarketRuntimeMode } from "@/lib/market-repository";
+import { getMarketRepository } from "@/lib/market-repository";
 import { getLearnRepository } from "@/lib/learn-repository";
-import { getLearnRuntimeMode } from "@/lib/learn.functions";
 import { getJobRepository } from "@/lib/job-repository";
 import { publicIndexingEnabled, publicSiteUrl } from "@/lib/seo";
 
@@ -37,7 +36,7 @@ function renderSitemap(urls: SitemapUrl[]) {
 }
 
 async function collectPublishedMarketUrls(urls: Map<string, SitemapUrl>) {
-  if (!publicIndexingEnabled() || getMarketRuntimeMode() !== "production") return;
+  if (!publicIndexingEnabled()) return;
   const repository = await getMarketRepository();
   const listings = [] as Awaited<ReturnType<typeof repository.getListings>>["listings"];
   let page = 1;
@@ -81,8 +80,6 @@ async function collectPublishedMarketUrls(urls: Map<string, SitemapUrl>) {
 
 async function collectPublishedLearnUrls(urls: Map<string, SitemapUrl>) {
   if (!publicIndexingEnabled("learn")) return;
-  const runtime = await getLearnRuntimeMode().catch(() => ({ mode: "preview" as const }));
-  if (runtime.mode !== "production") return;
   const repository = await getLearnRepository();
   const courses = await repository.getCourses();
   for (const course of courses.filter((item) => item.status === "published")) {

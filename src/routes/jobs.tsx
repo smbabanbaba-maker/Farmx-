@@ -64,8 +64,8 @@ function JobsHome() {
         const repo = await getJobRepository();
         const [nextJobs, nextApps, nextSaved] = await Promise.all([
           repo.getJobs({ search: q, category }),
-          repo.getApplications("preview-user"),
-          repo.getSavedJobIds("preview-user"),
+          repo.getApplications(),
+          repo.getSavedJobIds(),
         ]);
         if (cancelled) return;
         setJobs(nextJobs);
@@ -306,7 +306,7 @@ function JobCard({ job, applied, saved }: { job: JobPost; applied: boolean; save
   const toggleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
     const repo = await getJobRepository();
-    const next = await repo.toggleSaveJob("preview-user", job.id);
+    const next = await repo.toggleSaveJob(undefined, job.id);
     setIsSaved(next);
   };
 

@@ -101,8 +101,8 @@ function LearnHome() {
         const repository = await getLearnRepository();
         const [nextCourses, nextEnrollments, nextCertificates, profileResult] = await Promise.all([
           repository.getCourses({ search: q, category }),
-          repository.getEnrollments("preview-user"),
-          repository.getCertificates("preview-user"),
+          repository.getEnrollments(""),
+          repository.getCertificates(""),
           getMyProfile().catch(() => null),
         ]);
         if (cancelled) return;

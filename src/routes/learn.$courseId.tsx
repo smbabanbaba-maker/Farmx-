@@ -18,12 +18,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { getMyProfile } from "@/lib/profile.functions";
-import {
-  getLearnRuntimeMode,
-  getLearnCourseById,
-  enrollInFreeLearnCourse,
-  updateLearnProgress,
-} from "@/lib/learn.functions";
+import { enrollInFreeLearnCourse, updateLearnProgress } from "@/lib/learn.functions";
 import { getLearnRepository } from "@/lib/learn-repository";
 import type { Course, CourseEnrollment, Lesson } from "@/lib/learn.types";
 import { breadcrumbJsonLd, courseJsonLd, createSeoHead, truncateDescription } from "@/lib/seo";
@@ -81,7 +76,7 @@ function LearnCourseDetail() {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(loaderData.course);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
-  const [mode, setMode] = useState<"preview" | "production">("preview");
+  const [mode, setMode] = useState<"preview" | "production">("production");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
@@ -107,19 +102,14 @@ function LearnCourseDetail() {
     async function load() {
       setLoading(true);
       try {
-        const [runtime, profileResult] = await Promise.all([
-          getLearnRuntimeMode().catch(() => ({ mode: "preview" as const })),
+        const [profileResult, repository] = await Promise.all([
           getMyProfile().catch(() => null),
+          getLearnRepository(),
         ]);
-        const nextMode = runtime.mode;
-        const repository = await getLearnRepository();
+        const nextMode = "production" as const;
         const [nextCourse, nextEnrollment] = await Promise.all([
-          nextMode === "production"
-            ? getLearnCourseById({ data: { courseId } })
-            : repository.getCourseById(courseId),
-          nextMode === "production"
-            ? repository.getEnrollment("preview-user", courseId)
-            : repository.getEnrollment("preview-user", courseId),
+          repository.getCourseById(courseId),
+          repository.getEnrollment("", courseId),
         ]);
         if (cancelled) return;
         setMode(nextMode);
@@ -214,19 +204,9 @@ function LearnCourseDetail() {
         );
         return;
       }
-      const nextEnrollment =
-        mode === "production"
-          ? await enrollInFreeLearnCourse({
-              data: { courseId: course.id, registrationDetails },
-            })
-          : await (
-              await getLearnRepository()
-            ).enrollUser({
-              userId: "preview-user",
-              courseId: course.id,
-              status: "active",
-              registrationDetails,
-            });
+      const nextEnrollment = await enrollInFreeLearnCourse({
+        data: { courseId: course.id, registrationDetails },
+      });
       setEnrollment(nextEnrollment);
       setRegistrationOpen(false);
       setAction("success");

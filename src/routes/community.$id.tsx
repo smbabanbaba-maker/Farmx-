@@ -44,7 +44,7 @@ function CommunityPostPage() {
   const navigate = useNavigate();
   const { repository: sharedRepository } = useCommunity();
   const [repository, setRepository] = useState(sharedRepository);
-  const [viewerId, setViewerId] = useState("preview-user");
+  const [viewerId, setViewerId] = useState("");
   const [post, setPost] = useState<CommunityPost | null>(null);
   const [comments, setComments] = useState<CommunityComment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -408,7 +408,7 @@ function CommunityPostPage() {
                     <Bookmark className={`h-4 w-4 ${post.savedByMe ? "fill-current" : ""}`} />{" "}
                     {post.savedByMe ? "Saved" : "Save"}
                   </button>
-                  {post.author.id !== "preview-user" && (
+                  {Boolean(viewerId) && post.author.id !== viewerId && (
                     <button
                       type="button"
                       onClick={follow}
@@ -529,7 +529,9 @@ function CommunityPostPage() {
                         setReportOpen(true);
                       }}
                       canChooseBest={
-                        post.author.id === "preview-user" && post.postType === "question"
+                        Boolean(viewerId) &&
+                        post.author.id === viewerId &&
+                        post.postType === "question"
                       }
                     />
                   ))

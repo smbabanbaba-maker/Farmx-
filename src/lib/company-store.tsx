@@ -92,24 +92,9 @@ const EMPTY: CompanyState = {
   tier: "none",
   subscribedAt: null,
   nextRenewal: null,
-  reviews: [
-    {
-      id: "r1",
-      author: "Aisha M.",
-      rating: 5,
-      comment: "Sabbin kayan, ingantacce da sauri.",
-      time: "2d",
-    },
-    {
-      id: "r2",
-      author: "David O.",
-      rating: 4,
-      comment: "Great communication and packaging.",
-      time: "1w",
-    },
-  ],
-  views: 1240,
-  orders: 87,
+  reviews: [],
+  views: 0,
+  orders: 0,
 };
 
 type Ctx = {
@@ -129,9 +114,6 @@ type Ctx = {
 };
 
 const CompanyCtx = createContext<Ctx | null>(null);
-const STORAGE_KEY = "farmx-company-state-v1";
-const COUNTRY_KEY = "farmx-country";
-
 function slugify(s: string) {
   return s
     .toLowerCase()
@@ -144,37 +126,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CompanyState>(EMPTY);
   const [country, setCountryState] = useState<Country>(DEFAULT_COUNTRY);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setState({ ...EMPTY, ...JSON.parse(raw) });
-      const cc = localStorage.getItem(COUNTRY_KEY);
-      if (cc) {
-        const found = COUNTRIES.find((c) => c.code === cc);
-        if (found) setCountryState(found);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const persist = (next: CompanyState) => {
-    setState(next);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  };
-
-  const setCountry = (c: Country) => {
-    setCountryState(c);
-    try {
-      localStorage.setItem(COUNTRY_KEY, c.code);
-    } catch {
-      /* ignore */
-    }
-  };
+  const persist = (next: CompanyState) => setState(next);
+  const setCountry = (c: Country) => setCountryState(c);
 
   const isBadgeActive = () => {
     if (state.tier === "none") return false;

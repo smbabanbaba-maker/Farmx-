@@ -99,8 +99,6 @@ export const DISPUTE_REASONS = [
 
 export const ESCROW_AUTO_RELEASE_DAYS = 7;
 
-const KEY = "farmx-commerce-v1";
-
 const emptyKyc: KycRecord = {
   status: "none",
   fullName: "",
@@ -161,23 +159,9 @@ export function CommerceProvider({ children }: { children: ReactNode }) {
   const ref = useRef(state);
   ref.current = state;
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setState((s) => ({ ...s, ...JSON.parse(raw) }));
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const persist = useCallback((next: State) => {
     ref.current = next;
     setState(next);
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
   }, []);
 
   /* --- background timers: escrow auto-release + promo expiry reminders --- */

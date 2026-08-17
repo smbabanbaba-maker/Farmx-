@@ -30,12 +30,14 @@ type CommunityContextValue = {
   getComments: (postId: string) => Promise<CommunityComment[]>;
   comment: (input: CreateCommunityCommentInput) => Promise<CommunityComment>;
   repository: CommunityRepository | null;
+  viewerId: string | null;
 };
 
 const CommunityContext = createContext<CommunityContextValue | null>(null);
 
 export function CommunityProvider({ children }: { children: ReactNode }) {
   const [repository, setRepository] = useState<CommunityRepository | null>(null);
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [feed, setFeed] = useState<CommunityFeed>({ posts: [], hasMore: false });
   const [query, setQuery] = useState<{
     tab: "latest" | "popular" | "following";
@@ -54,8 +56,12 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       setError(null);
       try {
         const nextRepository = repository ?? (await getCommunityRepository());
-        const result = await nextRepository.getFeed({ ...next, cursor: undefined });
+        const [result, nextViewerId] = await Promise.all([
+          nextRepository.getFeed({ ...next, cursor: undefined }),
+          nextRepository.getViewerId(),
+        ]);
         setRepository(nextRepository);
+        setViewerId(nextViewerId);
         setFeed(result);
       } catch {
         setError("Unable to load Community.");
@@ -193,6 +199,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       getComments,
       comment,
       repository,
+      viewerId,
     }),
     [
       comment,
@@ -208,6 +215,7 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       refresh,
       repository,
       savePost,
+      viewerId,
       sharePost,
     ],
   );

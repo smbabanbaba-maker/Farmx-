@@ -195,7 +195,8 @@ function makeSubscriptionItem(
 
 export const getSubscriptionSummary = createServerFn({ method: "GET" }).handler(async () => {
   noStore();
-  if (!hasProductionConfig()) return freeSubscription("preview-user");
+  if (!hasProductionConfig())
+    throw new Error("Subscription storage is not configured on the FarmX server.");
   const config = getConfig();
   const actor = await requireUser();
   return getSubscriptionForUser(

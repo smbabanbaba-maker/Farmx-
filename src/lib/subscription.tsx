@@ -118,7 +118,6 @@ interface SubState {
   payments: { at: number; amount: number; reference: string; part: 1 | 2 }[];
 }
 
-const KEY = "farmx-subscription-v1";
 const initial: SubState = {
   tier: "free",
   freeUsed: 0,
@@ -149,23 +148,7 @@ const SubCtx = createContext<Ctx | null>(null);
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SubState>(initial);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setState({ ...initial, ...JSON.parse(raw) });
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  const persist = useCallback((next: SubState) => {
-    setState(next);
-    try {
-      localStorage.setItem(KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const persist = useCallback((next: SubState) => setState(next), []);
 
   const value = useMemo<Ctx>(() => {
     const tier = state.tier === "free" ? undefined : getTier(state.tier);

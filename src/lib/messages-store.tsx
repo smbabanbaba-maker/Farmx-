@@ -111,7 +111,6 @@ type StoreShape = {
   typing: Record<string, boolean>;
 };
 
-const STORAGE_KEY = "farmx-messages-v3";
 const CHANNEL = "farmx-messages-sync-v3";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 const USE_SERVER_MESSAGE_STORE = !API_BASE && import.meta.env.PROD;
@@ -138,22 +137,6 @@ export function scanFraud(text: string | undefined): string[] {
 
 function emptyStore(): StoreShape {
   return { conversations: [], reports: [], typing: {} };
-}
-
-function readLocalStore(): StoreShape | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<StoreShape>;
-    return {
-      conversations: Array.isArray(parsed.conversations) ? parsed.conversations : [],
-      reports: Array.isArray(parsed.reports) ? parsed.reports : [],
-      typing: parsed.typing ?? {},
-    };
-  } catch {
-    return null;
-  }
 }
 
 function peerKey(peer: ConversationPeer) {
@@ -198,7 +181,7 @@ const MessagesCtx = createContext<MessageContext | null>(null);
 
 export function MessagesProvider({ children }: { children: ReactNode }) {
   const { createNotification } = useNotifications();
-  const [store, setStore] = useState<StoreShape>(() => readLocalStore() ?? emptyStore());
+  const [store, setStore] = useState<StoreShape>(() => emptyStore());
   const storeRef = useRef(store);
   storeRef.current = store;
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -206,13 +189,6 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
   const persist = useCallback((next: StoreShape) => {
     setStore(next);
     storeRef.current = next;
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Storage may be unavailable in a private or restricted browser context.
-      }
-    }
     try {
       channelRef.current?.postMessage({ type: "sync", store: next });
     } catch {
@@ -289,11 +265,6 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
       };
       setStore(next);
       storeRef.current = next;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Browser cache is best effort.
-      }
     } catch {
       // The local cache remains available when the configured service is offline.
     }
@@ -301,13 +272,6 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== STORAGE_KEY) return;
-      const next = readLocalStore();
-      if (next) setStore(next);
-    };
-    window.addEventListener("storage", onStorage);
-
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel(CHANNEL);
       channel.onmessage = (event) => {
@@ -324,7 +288,6 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
         ? window.setInterval(() => void loadRemoteStore(), 15000)
         : undefined;
     return () => {
-      window.removeEventListener("storage", onStorage);
       if (refreshTimer) window.clearInterval(refreshTimer);
       channelRef.current?.close();
       channelRef.current = null;

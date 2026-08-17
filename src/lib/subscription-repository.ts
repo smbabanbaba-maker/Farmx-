@@ -1,3 +1,4 @@
+import { getSubscriptionSummary, setSubscriptionAutoRenew } from "./subscription.functions";
 import type {
   SubscriptionPlan,
   UserSubscription,
@@ -167,74 +168,30 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   },
 ];
 
-const STORAGE_SUB = "farmx_user_subscription_v1";
-
 export class SubscriptionRepository {
-  async getUserSubscription(userId: string): Promise<UserSubscription> {
-    if (typeof window === "undefined") {
-      return {
-        userId,
-        tier: "FREE",
-        status: "FREE",
-        startDate: new Date().toISOString(),
-        renewalDate: new Date().toISOString(),
-        remainingDays: 0,
-        autoRenew: false,
-      };
-    }
-    try {
-      const stored = localStorage.getItem(`${STORAGE_SUB}_${userId}`);
-      if (stored) return JSON.parse(stored) as UserSubscription;
-    } catch {
-      /* fallback */
-    }
-    return {
-      userId,
-      tier: "FREE",
-      status: "FREE",
-      startDate: new Date().toISOString(),
-      renewalDate: new Date().toISOString(),
-      remainingDays: 0,
-      autoRenew: false,
-    };
+  async getUserSubscription(_userId: string): Promise<UserSubscription> {
+    return getSubscriptionSummary();
   }
 
   async updateUserSubscription(
-    userId: string,
-    tier: SubscriptionTier,
-    status: SubscriptionStatus,
-    reference?: string,
+    _userId: string,
+    _tier: SubscriptionTier,
+    _status: SubscriptionStatus,
+    _reference?: string,
   ): Promise<UserSubscription> {
-    const startDate = new Date().toISOString();
-    const renewalDate = new Date(Date.now() + 30 * 86400000).toISOString();
-    const sub: UserSubscription = {
-      userId,
-      tier,
-      status,
-      startDate,
-      renewalDate,
-      remainingDays: 30,
-      autoRenew: true,
-      reference,
-    };
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`${STORAGE_SUB}_${userId}`, JSON.stringify(sub));
-    }
-    return sub;
+    return getSubscriptionSummary();
   }
 
-  async toggleAutoRenew(userId: string): Promise<boolean> {
-    const sub = await this.getUserSubscription(userId);
-    sub.autoRenew = !sub.autoRenew;
-    if (typeof window !== "undefined") {
-      localStorage.setItem(`${STORAGE_SUB}_${userId}`, JSON.stringify(sub));
-    }
-    return sub.autoRenew;
+  async toggleAutoRenew(_userId: string): Promise<boolean> {
+    const current = await getSubscriptionSummary();
+    const next = !current.autoRenew;
+    const updated = await setSubscriptionAutoRenew({ data: { enabled: next } });
+    return updated.autoRenew;
   }
 }
 
 let instance: SubscriptionRepository | null = null;
 export async function getSubscriptionRepository(): Promise<SubscriptionRepository> {
-  if (!instance) instance = new SubscriptionRepository();
+  instance ??= new SubscriptionRepository();
   return instance;
 }

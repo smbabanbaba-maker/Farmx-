@@ -171,10 +171,9 @@ function hasProductionConfig() {
 }
 
 export const getCommunityRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
-  mode: (hasProductionConfig() ? "production" : "preview") as CommunityRuntimeMode,
+  mode: "production" as CommunityRuntimeMode,
 }));
 export const getCommunityViewer = createServerFn({ method: "GET" }).handler(async () => {
-  if (!hasProductionConfig()) return { userId: "preview-user" };
   const actor = await requireUser();
   return { userId: actor.userId };
 });

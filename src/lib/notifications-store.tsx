@@ -69,8 +69,6 @@ export type NotificationInput = Omit<
   eventId?: string;
 };
 
-const KEY = "farmx-notifications-v2";
-const LEGACY_KEY = "farmx-notifications-v1";
 const CHANNEL = "farmx-notifications-sync-v2";
 const MAX = 100;
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
@@ -152,29 +150,6 @@ function normalizeItem(raw: Partial<AppNotification>): AppNotification | null {
   };
 }
 
-function readLocalState(): State | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(KEY) ?? window.localStorage.getItem(LEGACY_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<State>;
-    const items = Array.isArray(parsed.items)
-      ? parsed.items
-          .map((item) => normalizeItem(item as Partial<AppNotification>))
-          .filter((item): item is AppNotification => Boolean(item))
-      : [];
-    return {
-      items,
-      channels: { ...DEFAULT_CHANNELS, ...(parsed.channels ?? {}) },
-      pushEnabled: Boolean(parsed.pushEnabled),
-      loaded: true,
-      error: null,
-    };
-  } catch {
-    return null;
-  }
-}
-
 function eventKey(input: NotificationInput) {
   return (
     input.eventId ??
@@ -211,7 +186,7 @@ interface NotificationsContext {
 const NotificationsContext = createContext<NotificationsContext | null>(null);
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<State>(() => readLocalState() ?? emptyState);
+  const [state, setState] = useState<State>(() => emptyState);
   const stateRef = useRef(state);
   stateRef.current = state;
   const channelRef = useRef<BroadcastChannel | null>(null);
@@ -220,13 +195,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const persist = useCallback((next: State) => {
     setState(next);
     stateRef.current = next;
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {
-        // Private/restricted storage should not break notifications.
-      }
-    }
     try {
       channelRef.current?.postMessage({ type: "sync", state: next });
     } catch {
@@ -249,8 +217,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refresh = useCallback(async () => {
-    const local = readLocalState();
-    if (local) setState(local);
     if (typeof window === "undefined") {
       setState((current) => ({ ...current, loaded: true, error: null }));
       return;
@@ -292,7 +258,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       setState((current) => ({
         ...current,
         loaded: true,
-        error: local ? null : "Unable to load notifications.",
+        error: "Unable to load notifications.",
       }));
     }
   }, []);
@@ -302,13 +268,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     if (typeof window === "undefined") return;
     if (!("Notification" in window)) setPermission("unsupported");
     else setPermission(Notification.permission);
-
-    const onStorage = (event: StorageEvent) => {
-      if (event.key !== KEY && event.key !== LEGACY_KEY) return;
-      const next = readLocalState();
-      if (next) setState(next);
-    };
-    window.addEventListener("storage", onStorage);
 
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel(CHANNEL);
@@ -322,7 +281,6 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         ? window.setInterval(() => void refresh(), 15000)
         : undefined;
     return () => {
-      window.removeEventListener("storage", onStorage);
       if (refreshTimer) window.clearInterval(refreshTimer);
       channelRef.current?.close();
       channelRef.current = null;
