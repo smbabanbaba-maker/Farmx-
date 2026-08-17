@@ -10,10 +10,6 @@ import { useProfileData } from "@/lib/use-profile";
 import { getCurrentSession } from "@/lib/auth";
 import { createSeoHead, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { getMarketRepository, type MarketListing } from "@/lib/market-repository";
-import { getJobRepository } from "@/lib/job-repository";
-import { getCommunityRepository } from "@/lib/community-repository";
-import type { JobPost } from "@/lib/job.types";
-import type { CommunityPost } from "@/lib/community.types";
 import {
   ShoppingBag,
   Wallet,
@@ -25,7 +21,6 @@ import {
   Sun,
   MapPin,
   Star,
-  Building2,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -48,6 +43,15 @@ export const Route = createFileRoute("/")({
       ],
       jsonLd: [organizationJsonLd(), websiteJsonLd()],
     }),
+  loader: async () => {
+    try {
+      const repository = await getMarketRepository();
+      const page = await repository.getListings({ pageSize: 8, sort: "newest" });
+      return { initialProducts: page.listings };
+    } catch {
+      return { initialProducts: [] as MarketListing[] };
+    }
+  },
   component: Dashboard,
 });
 
@@ -92,40 +96,31 @@ function Dashboard() {
 
   const visibleShortcuts = quickAccessExpanded ? dashIcons : dashIcons.slice(0, 4);
 
-  const [localProducts, setLocalProducts] = useState<MarketListing[]>([]);
-  const [localJobs, setLocalJobs] = useState<JobPost[]>([]);
-  const [recentPosts, setRecentPosts] = useState<CommunityPost[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const { initialProducts } = Route.useLoaderData();
+  const [localProducts, setLocalProducts] = useState<MarketListing[]>(initialProducts);
 
   useEffect(() => {
     let active = true;
-    const loadHomeData = async () => {
+    const loadHomeProducts = async () => {
       try {
-        const [marketRepo, jobRepo, communityRepo] = await Promise.all([
-          getMarketRepository(),
-          getJobRepository(),
-          getCommunityRepository(),
-        ]);
-
-        const [marketPage, jobsList, postsPage] = await Promise.all([
-          marketRepo.getListings({ pageSize: 30, filters: { state: location } }),
-          jobRepo.getJobs({ state: location }),
-          communityRepo.getFeed({ limit: 3, tab: "latest" }),
-        ]);
-
-        if (!active) return;
-
-        setLocalProducts(marketPage.listings);
-        setLocalJobs(jobsList.slice(0, 3));
-        setRecentPosts(postsPage.posts);
+        const marketRepo = await getMarketRepository();
+        const localPage = await marketRepo.getListings({
+          pageSize: 8,
+          filters: { state: location },
+          sort: "newest",
+        });
+        const page =
+          localPage.listings.length > 0
+            ? localPage
+            : await marketRepo.getListings({ pageSize: 8, sort: "newest" });
+        if (active) setLocalProducts(page.listings);
       } catch (err) {
-        console.error("Error loading homepage data:", err);
-      } finally {
-        if (active) setLoadingData(false);
+        console.error("Error loading homepage Market listings:", err);
+        if (active) setLocalProducts([]);
       }
     };
 
-    loadHomeData();
+    void loadHomeProducts();
     return () => {
       active = false;
     };
@@ -297,7 +292,7 @@ function Dashboard() {
             </Link>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {localProducts.map((product) => (
+            {localProducts.map((product, index) => (
               <Link
                 key={product.id}
                 to="/product/$id"
@@ -314,6 +309,7 @@ function Dashboard() {
                     <ListingImage
                       src={product.images[0]}
                       alt={product.title}
+                      priority={index < 2}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -345,110 +341,6 @@ function Dashboard() {
           >
             {t("home.marketplace.productsSeeAll")} <ChevronRight className="h-4 w-4" />
           </Link>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">{t("home.jobs.title", { location })}</h2>
-            <Link
-              to="/jobs"
-              search={{ q: "", category: undefined, tab: "explore" }}
-              className="text-xs text-brand font-semibold"
-            >
-              {t("seeAll")}
-            </Link>
-          </div>
-          <div className="space-y-2">
-            {localJobs.length > 0 ? (
-              localJobs.map((job) => (
-                <div key={job.id} className="p-3 rounded-xl bg-card border border-border">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-semibold flex items-center gap-1.5">
-                        {job.title}
-                        {job.featured && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand text-brand-foreground font-bold">
-                            {t("home.jobs.promo")}
-                          </span>
-                        )}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
-                        <span className="flex items-center gap-0.5">
-                          <Building2 className="h-2.5 w-2.5" />
-                          {job.company}
-                        </span>
-                        <span className="flex items-center gap-0.5">
-                          <MapPin className="h-2.5 w-2.5" />
-                          {job.state}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-bold text-brand">
-                      {job.salaryAmount
-                        ? `₦${(job.salaryAmount / 1000).toFixed(0)}k/mo`
-                        : job.salaryMin
-                          ? `₦${(job.salaryMin / 1000).toFixed(0)}k+`
-                          : t("negotiable")}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
-                {t("home.jobs.noneFound", { location })}
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">{t("news")}</h2>
-          </div>
-          <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
-            {t("home.empty")}
-          </p>
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bold">{t("community")}</h2>
-            <Link to="/community" className="text-xs text-brand font-semibold">
-              {t("home.community.seeAll")}
-            </Link>
-          </div>
-          <div className="space-y-3">
-            {recentPosts.length > 0 ? (
-              recentPosts.map((post) => (
-                <div key={post.id} className="p-3 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="h-8 w-8 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-xs overflow-hidden">
-                      {post.author.photo ? (
-                        <img
-                          src={post.author.photo}
-                          alt=""
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        post.author.name[0]
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold">{post.author.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        @{post.author.username} • {new Date(post.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-xs leading-relaxed line-clamp-2">{post.content}</p>
-                </div>
-              ))
-            ) : (
-              <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
-                {t("home.community.noneFound")}
-              </p>
-            )}
-          </div>
         </section>
       </div>
     </AppShell>

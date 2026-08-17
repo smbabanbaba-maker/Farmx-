@@ -560,6 +560,23 @@ function PostProduct() {
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
             Fill in the details below from top to bottom. You can review everything before posting.
           </p>
+          <div className="mt-4 grid gap-2 rounded-2xl bg-brand/[0.04] p-3 text-[11px] leading-relaxed text-muted-foreground sm:grid-cols-3">
+            <div>
+              <span className="font-black text-brand">1. Describe it</span>
+              <br />
+              Use a clear title, category, price, and honest condition.
+            </div>
+            <div>
+              <span className="font-black text-brand">2. Add proof</span>
+              <br />
+              Upload bright photos that show the product from useful angles.
+            </div>
+            <div>
+              <span className="font-black text-brand">3. Publish</span>
+              <br />
+              Confirm your phone and location, then post to the public Market.
+            </div>
+          </div>
         </section>
 
         <div className="space-y-8">

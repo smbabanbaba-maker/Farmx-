@@ -17,11 +17,13 @@ export function ListingImage({
   alt,
   className,
   placeholder = "",
+  priority = false,
 }: {
   src?: string;
   alt: string;
   className?: string;
   placeholder?: string;
+  priority?: boolean;
 }) {
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -62,7 +64,9 @@ export function ListingImage({
         src={resolvedUrl}
         alt={alt}
         className={className}
-        loading="lazy"
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        decoding="async"
         onError={() => setFailed(true)}
       />
     );
