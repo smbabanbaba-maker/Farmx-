@@ -174,7 +174,7 @@ export const getCommunityRuntimeMode = createServerFn({ method: "GET" }).handler
   mode: "production" as CommunityRuntimeMode,
 }));
 export const getCommunityViewer = createServerFn({ method: "GET" }).handler(async () => {
-  const actor = await requireUser();
+  const actor = await optionalUser();
   return { userId: actor.userId };
 });
 
@@ -290,6 +290,14 @@ function privateResponse() {
 async function requireUser() {
   const actor = await requireAuthenticatedUser();
   return { userId: actor.userId, email: actor.email };
+}
+async function optionalUser() {
+  try {
+    const actor = await requireAuthenticatedUser();
+    return { userId: actor.userId, email: actor.email };
+  } catch {
+    return { userId: "", email: undefined };
+  }
 }
 
 function authorFromItem(item: CommunityItem): CommunityAuthor {
@@ -454,21 +462,27 @@ async function hydratePost(
   viewerId: string,
 ): Promise<CommunityPost> {
   const [like, save, following, liveListingResult] = await Promise.all([
-    client.send(
-      new GetCommand({
-        TableName: config.communityTable,
-        Key: { pk: `POST#${item.postId}`, sk: `LIKE#${viewerId}` },
-        ProjectionExpression: "pk",
-      }),
-    ),
-    client.send(
-      new GetCommand({
-        TableName: config.communityTable,
-        Key: { pk: `POST#${item.postId}`, sk: `SAVE#${viewerId}` },
-        ProjectionExpression: "pk",
-      }),
-    ),
-    authorFollowed(client, config, viewerId, String(item.authorId)),
+    viewerId
+      ? client.send(
+          new GetCommand({
+            TableName: config.communityTable,
+            Key: { pk: `POST#${item.postId}`, sk: `LIKE#${viewerId}` },
+            ProjectionExpression: "pk",
+          }),
+        )
+      : Promise.resolve({ Item: undefined }),
+    viewerId
+      ? client.send(
+          new GetCommand({
+            TableName: config.communityTable,
+            Key: { pk: `POST#${item.postId}`, sk: `SAVE#${viewerId}` },
+            ProjectionExpression: "pk",
+          }),
+        )
+      : Promise.resolve({ Item: undefined }),
+    viewerId
+      ? authorFollowed(client, config, viewerId, String(item.authorId))
+      : Promise.resolve(false),
     item.listingId
       ? client
           .send(
@@ -518,7 +532,7 @@ export const getCommunityFeed = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     privateResponse();
     const config = getConfig();
-    const viewer = await requireUser();
+    const viewer = await optionalUser();
     const client = documentClient(config.region);
     const feedKey = data.topic ? `COMMUNITY_FEED#${data.topic}` : "COMMUNITY_FEED#ALL";
     const result = await client.send(
@@ -570,7 +584,7 @@ export const getCommunityPost = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     privateResponse();
     const config = getConfig();
-    const viewer = await requireUser();
+    const viewer = await optionalUser();
     const item = await getPostItem(documentClient(config.region), config, data.postId);
     if (!item || item.deletedAt) return null;
     return hydratePost(documentClient(config.region), config, item, viewer.userId);

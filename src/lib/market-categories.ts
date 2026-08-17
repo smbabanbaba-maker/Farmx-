@@ -229,16 +229,6 @@ export const UNIVERSAL_CATEGORIES: MainCategory[] = [
     ],
   },
   {
-    id: "jobs",
-    name: "Jobs",
-    icon: "💼",
-    commonFields: JOB_COMMON,
-    subcategories: [
-      { id: "agri-jobs", name: "Agriculture Jobs" },
-      { id: "other-jobs", name: "Other Jobs" },
-    ],
-  },
-  {
     id: "services",
     name: "Services",
     icon: "🛠️",

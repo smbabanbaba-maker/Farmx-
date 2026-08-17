@@ -97,7 +97,16 @@ export async function uploadFileToS3(folder: string, file: File): Promise<{ obje
   return { objectKey };
 }
 
+const viewUrlCache = new Map<string, { url: string; expiresAt: number }>();
+
 export async function getS3ViewUrl(objectKey: string): Promise<string> {
+  const now = Date.now();
+  const cached = viewUrlCache.get(objectKey);
+  if (cached && cached.expiresAt > now) {
+    return cached.url;
+  }
   const { downloadUrl } = await getS3SignedDownloadUrl({ data: { objectKey } });
+  // Cache for 4 minutes (signed URLs expire in 5 minutes)
+  viewUrlCache.set(objectKey, { url: downloadUrl, expiresAt: now + 4 * 60 * 1000 });
   return downloadUrl;
 }
