@@ -16,7 +16,8 @@ async function describeS3Failure(response: Response) {
 }
 
 export async function uploadFileToS3(folder: string, file: File): Promise<{ objectKey: string }> {
-  const contentType = file.type || "application/octet-stream";
+  // Normalize content type to avoid charset additions by browser that break signatures
+  const contentType = (file.type || "application/octet-stream").split(";")[0].toLowerCase().trim();
   if (!["image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"].includes(contentType)) {
     throw new Error("Unsupported image or video format.");
   }

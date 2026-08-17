@@ -111,12 +111,13 @@ function EditProfile() {
         update("photoKey", previewDataUrl);
         setNotice("Preview photo added. Save your Profile to keep it in development preview.");
       } else {
+        const mimeType = "image/webp";
         const { objectKey, uploadUrl } = await createProfilePhotoUpload({
-          data: { contentType: "image/webp" },
+          data: { contentType: mimeType },
         });
         const response = await fetch(uploadUrl, {
           method: "PUT",
-          headers: { "content-type": "image/webp" },
+          headers: { "content-type": mimeType },
           body: compressed,
         });
         if (!response.ok) throw new Error("Photo upload was not accepted by secure storage.");
