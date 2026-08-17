@@ -98,29 +98,6 @@ function normalizePhone(value: string) {
   return value.replace(/[^\d+]/g, "").replace(/^00/, "+");
 }
 
-function verifyImageUrl(url: string) {
-  return new Promise<void>((resolve, reject) => {
-    if (!url) {
-      reject(new Error("The stored image URL is empty."));
-      return;
-    }
-    const image = new Image();
-    const timeout = window.setTimeout(() => {
-      image.src = "";
-      reject(new Error("The image took too long to load."));
-    }, 15000);
-    image.onload = () => {
-      window.clearTimeout(timeout);
-      resolve();
-    };
-    image.onerror = () => {
-      window.clearTimeout(timeout);
-      reject(new Error("The stored image could not be loaded."));
-    };
-    image.src = url;
-  });
-}
-
 function PostProduct() {
   const navigate = useNavigate();
   const { t } = useI18n();
@@ -291,9 +268,9 @@ function PostProduct() {
         setPhotoById(photoId, (photo) => ({ ...photo, url: previewUrl, file: optimized }));
       }
       const { objectKey } = await repository.uploadPhoto(optimized);
-      const finalUrl =
-        repository.mode === "production" ? await getS3ViewUrl(objectKey) : previewUrl;
-      if (repository.mode === "production") await verifyImageUrl(finalUrl);
+      // The successful S3 PUT is the upload confirmation. Keep the local blob preview
+      // immediately instead of blocking the user on a second signed GET request.
+      const finalUrl = previewUrl;
       setPhotoById(photoId, (photo) => ({
         ...photo,
         url: finalUrl,
@@ -322,7 +299,6 @@ function PostProduct() {
     setPhotoById(photo.id, (current) => ({ ...current, uploading: true, error: undefined }));
     try {
       const url = await getS3ViewUrl(photo.objectKey);
-      await verifyImageUrl(url);
       setPhotoById(photo.id, (current) => ({
         ...current,
         url,

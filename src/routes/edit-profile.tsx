@@ -9,6 +9,7 @@ import {
   type FarmXProfile,
 } from "@/lib/profile.functions";
 import { useProfileData } from "@/lib/use-profile";
+import { putFileToSignedUrl } from "@/lib/s3-client";
 import { getProfileRepository } from "@/lib/profile-repository";
 import {
   ArrowLeft,
@@ -115,14 +116,7 @@ function EditProfile() {
         const { objectKey, uploadUrl } = await createProfilePhotoUpload({
           data: { contentType: mimeType },
         });
-        const response = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "content-type": mimeType },
-          body: compressed,
-        });
-        if (!response.ok) throw new Error("Photo upload was not accepted by secure storage.");
-        const { downloadUrl } = await getMyProfilePhotoUrl({ data: { objectKey } });
-        await verifyProfilePhotoUrl(downloadUrl);
+        await putFileToSignedUrl(uploadUrl, compressed, mimeType);
         if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
         setPhotoPreview(URL.createObjectURL(compressed));
         update("photoKey", objectKey);
@@ -622,15 +616,6 @@ async function blobToDataUrl(blob: Blob): Promise<string> {
     reader.onload = () => resolve(String(reader.result));
     reader.onerror = () => reject(new Error("Unable to prepare preview image."));
     reader.readAsDataURL(blob);
-  });
-}
-
-async function verifyProfilePhotoUrl(url: string) {
-  await new Promise<void>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve();
-    image.onerror = () => reject(new Error("The uploaded profile photo could not be verified."));
-    image.src = url;
   });
 }
 
