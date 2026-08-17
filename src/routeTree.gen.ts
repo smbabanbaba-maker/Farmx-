@@ -27,6 +27,9 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PostRouteImport } from './routes/post'
+import { Route as PostCommunityRouteImport } from './routes/post-community'
+import { Route as PostJobRouteImport } from './routes/post-job'
 import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -147,6 +150,21 @@ const OrdersRoute = OrdersRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostRoute = PostRouteImport.update({
+  id: '/post',
+  path: '/post',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostCommunityRoute = PostCommunityRouteImport.update({
+  id: '/post-community',
+  path: '/post-community',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostJobRoute = PostJobRouteImport.update({
+  id: '/post-job',
+  path: '/post-job',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostProductRoute = PostProductRouteImport.update({
@@ -324,6 +342,9 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
+  '/post': typeof PostRoute
+  '/post-community': typeof PostCommunityRoute
+  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -375,6 +396,9 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
+  '/post': typeof PostRoute
+  '/post-community': typeof PostCommunityRoute
+  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -427,6 +451,9 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
+  '/post': typeof PostRoute
+  '/post-community': typeof PostCommunityRoute
+  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -480,6 +507,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/plans'
+    | '/post'
+    | '/post-community'
+    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -531,6 +561,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/plans'
+    | '/post'
+    | '/post-community'
+    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -582,6 +615,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/orders'
     | '/plans'
+    | '/post'
+    | '/post-community'
+    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -634,6 +670,9 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OrdersRoute: typeof OrdersRoute
   PlansRoute: typeof PlansRoute
+  PostRoute: typeof PostRoute
+  PostCommunityRoute: typeof PostCommunityRoute
+  PostJobRoute: typeof PostJobRoute
   PostProductRoute: typeof PostProductRoute
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
@@ -785,6 +824,27 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post': {
+      id: '/post'
+      path: '/post'
+      fullPath: '/post'
+      preLoaderRoute: typeof PostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post-community': {
+      id: '/post-community'
+      path: '/post-community'
+      fullPath: '/post-community'
+      preLoaderRoute: typeof PostCommunityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post-job': {
+      id: '/post-job'
+      path: '/post-job'
+      fullPath: '/post-job'
+      preLoaderRoute: typeof PostJobRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post-product': {
@@ -1097,6 +1157,9 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OrdersRoute: OrdersRoute,
   PlansRoute: PlansRoute,
+  PostRoute: PostRoute,
+  PostCommunityRoute: PostCommunityRoute,
+  PostJobRoute: PostJobRoute,
   PostProductRoute: PostProductRoute,
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,

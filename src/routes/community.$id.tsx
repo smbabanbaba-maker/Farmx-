@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useCommunity } from "@/lib/community-store";
 import { CommunityComposer } from "@/components/CommunityComposer";
+import { ListingImage } from "@/components/ListingImage";
 import { getCommunityRepository } from "@/lib/community-repository";
 import {
   COMMUNITY_REPORT_REASONS,
@@ -271,7 +272,7 @@ function CommunityPostPage() {
               <div className="p-4 sm:p-5">
                 <div className="flex items-start gap-3">
                   <Link to="/u/$username" params={{ username: post.author.username }}>
-                    <Avatar post={post} />
+                    <Avatar author={post.author} />
                   </Link>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
@@ -591,8 +592,13 @@ function CommentItem({
       className={`rounded-2xl border p-3 ${comment.accepted ? "border-brand/35 bg-brand/[0.04]" : "border-border"}`}
     >
       <div className="flex gap-2.5">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand/10 text-xs font-black text-brand">
-          {comment.author.name.slice(0, 1).toUpperCase()}
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand/10 text-xs font-black text-brand">
+          <ListingImage
+            src={comment.author.photo}
+            alt={comment.author.name}
+            placeholder={comment.author.name.slice(0, 1).toUpperCase()}
+            className="h-full w-full object-cover"
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
@@ -659,12 +665,15 @@ function CommentItem({
     </div>
   );
 }
-function Avatar({ post }: { post: CommunityPost }) {
-  return post.author.photo?.startsWith("http") ? (
-    <img src={post.author.photo} alt="" className="h-10 w-10 rounded-full object-cover" />
-  ) : (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-sm font-black text-brand">
-      {post.author.name.slice(0, 1).toUpperCase()}
+function Avatar({ author }: { author: CommunityPost["author"] }) {
+  return (
+    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand/10 text-sm font-black text-brand">
+      <ListingImage
+        src={author.photo}
+        alt={author.name}
+        placeholder={author.name.slice(0, 1).toUpperCase()}
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 }

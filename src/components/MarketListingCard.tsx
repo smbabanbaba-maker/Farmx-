@@ -102,8 +102,16 @@ export function MarketListingCard({
             <span className="shrink-0 text-[9px] text-muted-foreground">{listing.unit}</span>
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-            <span className="flex min-w-0 items-center gap-1 truncate">
-              <span className="truncate">{listing.seller.name}</span>
+            <span className="flex min-w-0 items-center gap-1.5 truncate">
+              <div className="h-4 w-4 shrink-0 overflow-hidden rounded-full bg-brand/10">
+                <ListingImage
+                  src={listing.seller.photo}
+                  alt=""
+                  placeholder={listing.seller.name.slice(0, 1).toUpperCase()}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <span className="truncate font-bold text-foreground/80">{listing.seller.name}</span>
               {verified && (
                 <BadgeCheck className="h-3 w-3 shrink-0 text-brand" aria-label="Verified seller" />
               )}

@@ -46,7 +46,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     { to: "/", icon: Home, label: t("home"), badge: 0 },
     { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
     { to: "/messages", icon: MessageSquare, label: t("chats"), badge: totalUnread },
-    { to: "/post-product", icon: Plus, label: t("post"), badge: 0 },
+    { to: "/post", icon: Plus, label: t("post"), badge: 0 },
     { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
     { to: "/community", icon: Users, label: t("community"), badge: 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
@@ -125,7 +125,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           {tabs.map((tab) => {
             const active = tab.to === "/" ? pathname === "/" : pathname.startsWith(tab.to);
             const Icon = tab.icon;
-            if (tab.to === "/post-product") {
+            if (tab.to === "/post") {
               return (
                 <Link
                   key={tab.to}

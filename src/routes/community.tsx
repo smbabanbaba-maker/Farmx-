@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useCommunity } from "@/lib/community-store";
 import { CommunityComposer } from "@/components/CommunityComposer";
+import { ListingImage } from "@/components/ListingImage";
 import { COMMUNITY_TOPICS, type CommunityPost, type CommunityTopic } from "@/lib/community.types";
 import {
   Bookmark,
@@ -398,7 +399,7 @@ function CommunityPostCard({
             params={{ id: post.listing.id }}
             className="mt-4 flex items-center gap-3 rounded-2xl border border-brand/20 bg-brand/[0.035] p-3 transition hover:border-brand/45"
           >
-            <ListingImage image={post.listing.image} />
+            <CommunityListingImage image={post.listing.image} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-black">{post.listing.title}</p>
               <p className="mt-1 truncate text-[10px] text-muted-foreground">
@@ -469,32 +470,21 @@ function CommunityPostCard({
 }
 
 function Avatar({ author }: { author: CommunityPost["author"] }) {
-  return author.photo?.startsWith("http") ? (
-    <img
-      src={author.photo}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      className="h-10 w-10 rounded-full border border-border object-cover"
-    />
-  ) : (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-sm font-black text-brand">
-      {author.name.slice(0, 1).toUpperCase()}
+  return (
+    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-brand/10 text-sm font-black text-brand">
+      <ListingImage
+        src={author.photo}
+        alt={author.name}
+        placeholder={author.name.slice(0, 1).toUpperCase()}
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 }
-function ListingImage({ image }: { image?: string }) {
-  return image?.startsWith("http") ? (
-    <img
-      src={image}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      className="h-12 w-16 rounded-xl object-cover"
-    />
-  ) : (
-    <div className="flex h-12 w-16 items-center justify-center rounded-xl bg-brand/10 text-brand">
-      <Sparkles className="h-5 w-5" />
+function CommunityListingImage({ image }: { image?: string }) {
+  return (
+    <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-xl bg-brand/10 text-brand">
+      <ListingImage src={image} alt="" className="h-full w-full object-cover" />
     </div>
   );
 }
@@ -517,11 +507,10 @@ function MediaGallery({ media }: { media: CommunityPost["media"] }) {
             <Play className="pointer-events-none absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 text-white opacity-70" />
           </div>
         ) : (
-          <img
+          <ListingImage
             key={item.id}
             src={item.url}
             alt={item.alt ?? "Community post media"}
-            loading="lazy"
             className="aspect-square h-full w-full object-cover"
           />
         ),
