@@ -1,0 +1,81 @@
+name: Build FarmX APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    name: Build FarmX Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout FarmX
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Create temporary web directory
+        run: |
+          mkdir -p dist
+          cat > dist/index.html <<'EOF'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>FarmX</title>
+            </head>
+            <body></body>
+          </html>
+          EOF
+
+      - name: Install Capacitor
+        run: |
+          npm init -y
+          npm install @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+
+      - name: Initialize Capacitor
+        run: |
+          npx cap init FarmX com.sylution.farmx --web-dir dist
+
+      - name: Configure FarmX
+        run: |
+          cat > capacitor.config.ts <<'EOF'
+          import type { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.sylution.farmx',
+            appName: 'FarmX',
+            webDir: 'dist',
+            server: {
+              url: 'https://farmx-rvrb.vercel.app',
+              cleartext: false
+            }
+          };
+
+          export default config;
+          EOF
+
+      - name: Add Android
+        run: npx cap add android
+
+      - name: Build Debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload FarmX APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FarmX-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
