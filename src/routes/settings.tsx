@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   useCallback,
   useEffect,
@@ -41,7 +41,12 @@ import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
 import { useProfileData } from "@/lib/use-profile";
 import { settingsText } from "@/lib/settings-copy";
-import { usePrefs } from "@/lib/prefs";
+import {
+  DEFAULT_FARMX_SETTINGS,
+  getMySettings,
+  saveMySettings,
+  type FarmXSettings,
+} from "@/lib/profile.functions";
 import { useAuth } from "@/lib/use-auth";
 import { getMyProfilePhotoUrl } from "@/lib/profile.functions";
 import { getSubscriptionSummary } from "@/lib/subscription.functions";
@@ -261,9 +266,11 @@ const SETTING_GROUPS: SettingGroup[] = [
 function SettingsPage() {
   const { t, lang } = useI18n();
   const { profile, stats, status: profileStatus, refresh } = useProfileData();
-  const { toggles, setToggle } = usePrefs();
   const { signOut } = useAuth();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [settings, setSettings] = useState<FarmXSettings>(DEFAULT_FARMX_SETTINGS);
+  const [settingsBusy, setSettingsBusy] = useState(false);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -281,6 +288,13 @@ function SettingsPage() {
 
   useEffect(() => {
     void loadSubscription();
+    void getMySettings()
+      .then(({ settings: saved }) => {
+        if (saved) setSettings({ ...DEFAULT_FARMX_SETTINGS, ...saved });
+      })
+      .catch(() => {
+        setMessage("Notification preferences could not be loaded yet.");
+      });
   }, [loadSubscription]);
 
   useEffect(() => {
@@ -325,6 +339,8 @@ function SettingsPage() {
     setMessage("You have been logged out securely.");
     window.setTimeout(() => window.location.assign("/login"), 250);
   };
+
+  if (pathname.startsWith("/settings/")) return <Outlet />;
 
   return (
     <AppShell title={t("settings")}>
@@ -412,12 +428,32 @@ function SettingsPage() {
             </div>
             <button
               type="button"
-              onClick={() => setToggle("notifications", !toggles.notifications)}
-              aria-pressed={!!toggles.notifications}
-              className={`relative h-6 w-11 rounded-full transition ${toggles.notifications ? "bg-brand" : "bg-muted-foreground/30"}`}
+              disabled={settingsBusy}
+              onClick={async () => {
+                const enabled = !Object.values(settings.notifications).every(Boolean);
+                const next = {
+                  ...settings,
+                  notifications: Object.fromEntries(
+                    Object.keys(settings.notifications).map((key) => [key, enabled]),
+                  ),
+                } as FarmXSettings;
+                setSettings(next);
+                setSettingsBusy(true);
+                try {
+                  await saveMySettings({ data: next });
+                  setMessage(enabled ? "Notifications enabled." : "Notifications paused.");
+                } catch {
+                  setSettings(settings);
+                  setMessage("Notification preferences could not be saved. Please try again.");
+                } finally {
+                  setSettingsBusy(false);
+                }
+              }}
+              aria-pressed={Object.values(settings.notifications).every(Boolean)}
+              className={`relative h-6 w-11 rounded-full transition ${Object.values(settings.notifications).every(Boolean) ? "bg-brand" : "bg-muted-foreground/30"}`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${toggles.notifications ? "left-5.5" : "left-0.5"}`}
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${Object.values(settings.notifications).every(Boolean) ? "left-5.5" : "left-0.5"}`}
               />
             </button>
           </div>
