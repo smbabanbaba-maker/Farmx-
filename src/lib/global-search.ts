@@ -101,17 +101,20 @@ export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSear
     input.tab === "jobs"
       ? { posts: [], hasMore: false }
       : await community.getFeed({ tab: "latest", search: input.query, limit: pageSize });
+  const isProduction = getMarketRuntimeMode() === "production";
   const jobRepo = await getJobRepository();
-  const previewJobs = await jobRepo.getJobs({
-    search: input.query,
-    state: input.filters?.state,
-  });
+  const jobsList = isProduction
+    ? []
+    : await jobRepo.getJobs({
+        search: input.query,
+        state: input.filters?.state,
+      });
   const counts: Record<GlobalSearchTab, number> = {
-    all: marketPage.total + communityPage.posts.length + previewJobs.length,
+    all: marketPage.total + communityPage.posts.length + jobsList.length,
     listings: marketPage.total,
     services: services.length,
     businesses: businesses.length,
-    jobs: previewJobs.length,
+    jobs: jobsList.length,
     community: communityPage.posts.length,
   };
   const availableTabs: GlobalSearchTab[] = ["all"];
@@ -128,7 +131,7 @@ export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSear
           : marketPage.listings,
     services: input.tab === "services" || input.tab === "all" ? services : [],
     businesses: input.tab === "businesses" || input.tab === "all" ? businesses : [],
-    jobs: input.tab === "jobs" || input.tab === "all" ? previewJobs : [],
+    jobs: input.tab === "jobs" || input.tab === "all" ? jobsList : [],
     community: input.tab === "community" || input.tab === "all" ? communityPage.posts : [],
     counts,
     availableTabs,

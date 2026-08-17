@@ -1,6 +1,14 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import {
+  DeleteCommand,
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
 import { createServerFn } from "@tanstack/react-start";
+import { requireAuthenticatedUser } from "@/lib/auth-server";
 import { z } from "zod";
 import type {
   ListingAvailability,
@@ -214,7 +222,11 @@ function toMarketListing(item: Record<string, unknown>): MarketListing {
     tags:
       stringArray(metadata.tags).length > 0 ? stringArray(metadata.tags) : [category, subcategory],
     metadata: {
-      ...metadata,
+      ...Object.fromEntries(
+        Object.entries(metadata).filter(
+          ([key]) => !["contactPhone", "contactName", "promoId", "videoLink"].includes(key),
+        ),
+      ),
       sourceCategoryId: categoryId,
       sourceSubcategoryId: subcategoryId,
     },
@@ -349,3 +361,151 @@ export const getPublicMarketListing = createServerFn({ method: "GET" })
   });
 
 export { toMarketListing };
+
+const listingIdSchema = z.object({ listingId: z.string().trim().min(1).max(128) });
+const sellerNameSchema = z.object({ sellerName: z.string().trim().min(1).max(128) });
+
+export const saveListing = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => listingIdSchema.parse(input))
+  .handler(async ({ data }) => {
+    const region = process.env.AWS_REGION;
+    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    if (!region || !profileTable) throw new Error("Profile table not configured.");
+    const actor = await requireAuthenticatedUser();
+    const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
+    const now = new Date().toISOString();
+
+    await client.send(
+      new PutCommand({
+        TableName: profileTable,
+        Item: {
+          pk: `USER#${actor.userId}`,
+          sk: `SAVED_LISTING#${data.listingId}`,
+          entityType: "SAVED_LISTING",
+          listingId: data.listingId,
+          createdAt: now,
+        },
+      }),
+    );
+    return { saved: true };
+  });
+
+export const unsaveListing = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => listingIdSchema.parse(input))
+  .handler(async ({ data }) => {
+    const region = process.env.AWS_REGION;
+    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    if (!region || !profileTable) throw new Error("Profile table not configured.");
+    const actor = await requireAuthenticatedUser();
+    const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
+
+    await client.send(
+      new DeleteCommand({
+        TableName: profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: `SAVED_LISTING#${data.listingId}` },
+      }),
+    );
+    return { unsaved: true };
+  });
+
+export const followSeller = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => sellerNameSchema.parse(input))
+  .handler(async ({ data }) => {
+    const region = process.env.AWS_REGION;
+    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    if (!region || !profileTable) throw new Error("Profile table not configured.");
+    const actor = await requireAuthenticatedUser();
+    const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
+    const now = new Date().toISOString();
+
+    await client.send(
+      new PutCommand({
+        TableName: profileTable,
+        Item: {
+          pk: `USER#${actor.userId}`,
+          sk: `FOLLOWING_SELLER#${data.sellerName}`,
+          entityType: "FOLLOWING_SELLER",
+          sellerName: data.sellerName,
+          createdAt: now,
+        },
+      }),
+    );
+    return { followed: true };
+  });
+
+export const unfollowSeller = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => sellerNameSchema.parse(input))
+  .handler(async ({ data }) => {
+    const region = process.env.AWS_REGION;
+    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    if (!region || !profileTable) throw new Error("Profile table not configured.");
+    const actor = await requireAuthenticatedUser();
+    const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
+
+    await client.send(
+      new DeleteCommand({
+        TableName: profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: `FOLLOWING_SELLER#${data.sellerName}` },
+      }),
+    );
+    return { unfollowed: true };
+  });
+
+export const recordListingView = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => listingIdSchema.parse(input))
+  .handler(async ({ data }) => {
+    const config = getMarketConfig();
+    const client = DynamoDBDocumentClient.from(
+      new DynamoDBClient(getAwsClientOptions(config.region)),
+    );
+
+    await client.send(
+      new UpdateCommand({
+        TableName: config.tableName,
+        Key: { pk: `LISTING#${data.listingId}`, sk: `LISTING#${data.listingId}` },
+        UpdateExpression: "SET viewCount = if_not_exists(viewCount, :zero) + :inc",
+        ExpressionAttributeValues: { ":zero": 0, ":inc": 1 },
+      }),
+    );
+    return { recorded: true };
+  });
+
+export const getSavedListings = createServerFn({ method: "GET" }).handler(async () => {
+  const region = process.env.AWS_REGION;
+  const profileTable = process.env.FARMX_PROFILE_TABLE;
+  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  if (!region || !profileTable || !listingsTable) throw new Error("Tables not configured.");
+
+  const actor = await requireAuthenticatedUser();
+  const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
+
+  const savedResult = await client.send(
+    new QueryCommand({
+      TableName: profileTable,
+      KeyConditionExpression: "pk = :user AND begins_with(sk, :saved)",
+      ExpressionAttributeValues: { ":user": `USER#${actor.userId}`, ":saved": "SAVED_LISTING#" },
+    }),
+  );
+
+  const savedItems = savedResult.Items ?? [];
+  if (savedItems.length === 0) return [];
+
+  const listingIds = savedItems.map((item) => String(item.listingId));
+  const listingPromises = listingIds.map((id) =>
+    client.send(
+      new GetCommand({
+        TableName: listingsTable,
+        Key: { pk: `LISTING#${id}`, sk: `LISTING#${id}` },
+      }),
+    ),
+  );
+
+  const results = await Promise.all(listingPromises);
+  return results
+    .map((res) => res.Item as Record<string, unknown> | undefined)
+    .filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && (item as Record<string, unknown>).status === "ACTIVE",
+    )
+    .map(toMarketListing);
+});

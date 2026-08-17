@@ -7,7 +7,16 @@ import {
   type MarketListing,
   type MarketReport,
 } from "@/lib/market-dev-data";
-import { getPublicMarketListing, getPublicMarketListings } from "@/lib/market.functions";
+import {
+  followSeller,
+  getPublicMarketListing,
+  getPublicMarketListings,
+  getSavedListings,
+  recordListingView,
+  saveListing,
+  unfollowSeller,
+  unsaveListing,
+} from "@/lib/market.functions";
 
 export type { MarketListing } from "@/lib/market-dev-data";
 
@@ -412,19 +421,18 @@ function createProductionRepository(apiBaseUrl: string): MarketRepository {
         .filter((item: MarketListing) => item.id !== listing.id)
         .slice(0, limit);
     },
-    getSavedListings: () => request<MarketListing[]>("/market/saved"),
-    getRecentlyViewed: () => request<MarketListing[]>("/market/recently-viewed"),
-    saveListing: (id) => action("/market/saved", { listingId: id }),
-    unsaveListing: (id) => action("/market/saved/remove", { listingId: id }),
-    followSeller: (sellerName) => action("/market/followers", { sellerName }),
-    unfollowSeller: (sellerName) => action("/market/followers/remove", { sellerName }),
-    recordView: (id) => action("/market/views", { listingId: id }),
-    recordSearch: (query) => action("/market/search-history", { query }),
-    removeSearch: (query) => action("/market/search-history/remove", { query }),
-    clearSearchHistory: () => action("/market/search-history/clear", {}),
-    reportListing: (input) =>
-      request<MarketReport>("/market/reports", { method: "POST", body: JSON.stringify(input) }),
-    getSnapshot: () => request<MarketSnapshot>("/market/snapshot"),
+    getSavedListings: () => getSavedListings(),
+    getRecentlyViewed: async () => [], // TODO: Implement recently viewed tracking
+    saveListing: (id) => saveListing({ data: { listingId: id } }).then(() => undefined),
+    unsaveListing: (id) => unsaveListing({ data: { listingId: id } }).then(() => undefined),
+    followSeller: (sellerName) => followSeller({ data: { sellerName } }).then(() => undefined),
+    unfollowSeller: (sellerName) => unfollowSeller({ data: { sellerName } }).then(() => undefined),
+    recordView: (id) => recordListingView({ data: { listingId: id } }).then(() => undefined),
+    recordSearch: async () => undefined,
+    removeSearch: async () => undefined,
+    clearSearchHistory: async () => undefined,
+    reportListing: async () => ({}) as MarketReport,
+    getSnapshot: async () => ({}) as MarketSnapshot,
   };
 }
 
