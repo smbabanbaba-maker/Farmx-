@@ -766,7 +766,7 @@ export const createProfilePhotoUpload = createServerFn({ method: "POST" })
         Key: objectKey,
         ContentType: data.contentType,
       }),
-      { expiresIn: 300, signableHeaders: new Set(["content-type"]) },
+      { expiresIn: 300 },
     );
 
     return { objectKey, uploadUrl, expiresIn: 300 };
@@ -788,7 +788,7 @@ export const createBusinessMediaUpload = createServerFn({ method: "POST" })
         Key: objectKey,
         ContentType: data.contentType,
       }),
-      { expiresIn: 300, signableHeaders: new Set(["content-type"]) },
+      { expiresIn: 300 },
     );
     return { objectKey, uploadUrl, expiresIn: 300 };
   });

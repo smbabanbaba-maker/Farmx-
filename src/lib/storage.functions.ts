@@ -62,7 +62,6 @@ export const createS3UploadUrl = createServerFn({ method: "POST" })
     });
     const uploadUrl = await getSignedUrl(getS3Client(region), command, {
       expiresIn: 300,
-      signableHeaders: new Set(["content-type"]),
     });
 
     return { objectKey, uploadUrl, method: "PUT" as const, expiresIn: 300 };

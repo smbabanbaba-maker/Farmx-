@@ -11,8 +11,8 @@ async function describeS3Failure(response: Response) {
     return "S3 denied the upload. Check the FarmX media bucket permissions.";
   }
   return message
-    ? `S3 upload failed (${response.status}): ${message}`
-    : `S3 upload failed (${response.status}).`;
+    ? `S3 upload failed (${response.status}): ${message} (${code})`
+    : `S3 upload failed (${response.status}). ${body.slice(0, 200)}`;
 }
 
 export async function uploadFileToS3(folder: string, file: File): Promise<{ objectKey: string }> {

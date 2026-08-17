@@ -31,13 +31,15 @@ Resources:
           - ObjectOwnership: BucketOwnerEnforced
       CorsConfiguration:
         CorsRules:
-          - AllowedHeaders: ["content-type"]
-            AllowedMethods: [GET, PUT]
+          - AllowedHeaders: ["*"]
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
             AllowedOrigins:
               - !Ref ApplicationOrigin
               - https://farmx-rvrb.vercel.app
-            ExposedHeaders: [ETag]
-            MaxAge: 300
+              - https://farmx-rvrb-sayyeed.vercel.app
+              - https://farmx-rvrb-git-main-sayyeed.vercel.app
+            ExposedHeaders: [ETag, x-amz-request-id, x-amz-id-2]
+            MaxAge: 3600
       LifecycleConfiguration:
         Rules:
           - Id: AbortIncompleteMultipartUploads
