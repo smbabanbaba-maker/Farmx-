@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { deleteMyConversation, getMyMessages, syncMyMessages } from "@/lib/messages.functions";
 
 export type MessageKind = "text" | "product" | "image" | "delivery" | "coupon" | "system";
 export type DeliveryState = "sending" | "sent" | "delivered" | "seen" | "read" | "failed";
@@ -113,6 +114,7 @@ type StoreShape = {
 const STORAGE_KEY = "farmx-messages-v3";
 const CHANNEL = "farmx-messages-sync-v3";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
+const USE_SERVER_MESSAGE_STORE = !API_BASE && import.meta.env.PROD;
 
 /* These rules only flag incoming content that has actually arrived. They never create a reply or a fake conversation. */
 const FRAUD_RULES: { re: RegExp; reason: string }[] = [
@@ -223,62 +225,79 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversations: next.conversations, reports: next.reports }),
       }).catch(() => {
-        // Keep the local copy when the production API is temporarily unavailable.
+        // Keep the local cache when the external service is temporarily unavailable.
+      });
+    } else if (USE_SERVER_MESSAGE_STORE) {
+      void syncMyMessages({
+        data: { conversations: next.conversations, reports: next.reports },
+      }).catch(() => {
+        // The local cache remains usable while a server write is retried on the next mutation.
       });
     }
   }, []);
 
   const loadRemoteStore = useCallback(async () => {
-    if (!API_BASE || typeof window === "undefined") return;
+    if ((!API_BASE && !USE_SERVER_MESSAGE_STORE) || typeof window === "undefined") return;
     try {
-      const response = await fetch(`${API_BASE}/v1/messages/conversations`, {
-        credentials: "include",
-      });
-      if (!response.ok) return;
-      const remote = (await response.json()) as Partial<StoreShape>;
-      if (Array.isArray(remote.conversations)) {
-        const previous = storeRef.current.conversations;
-        for (const conversation of remote.conversations) {
-          const before = previous.find((item) => item.id === conversation.id);
-          const knownIds = new Set((before?.messages ?? []).map((message) => message.id));
-          for (const message of conversation.messages ?? []) {
-            if (message.from === "them" && !knownIds.has(message.id) && !conversation.muted) {
-              createNotification({
-                type: "messages",
-                eventId: `message:${conversation.id}:${message.id}`,
-                title: "New message",
-                body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
-                actor: {
-                  id: conversation.peer.id,
-                  name: conversation.peer.name,
-                  avatar: conversation.peer.avatar,
-                  username: conversation.peer.username,
-                },
-                conversationId: conversation.id,
-                listing: conversation.product
-                  ? {
-                      id: conversation.product.id,
-                      title: conversation.product.name,
-                      price: conversation.product.price,
-                      image: conversation.product.image,
-                      location: conversation.product.location,
-                    }
-                  : undefined,
-                targetUrl: `/messages/${conversation.id}`,
-              });
-            }
+      let remote: Partial<StoreShape>;
+      if (API_BASE) {
+        const response = await fetch(`${API_BASE}/v1/messages/conversations`, {
+          credentials: "include",
+        });
+        if (!response.ok) return;
+        remote = (await response.json()) as Partial<StoreShape>;
+      } else {
+        remote = await getMyMessages();
+      }
+      if (!Array.isArray(remote.conversations)) return;
+      const previous = storeRef.current.conversations;
+      for (const conversation of remote.conversations) {
+        const before = previous.find((item) => item.id === conversation.id);
+        const knownIds = new Set((before?.messages ?? []).map((message) => message.id));
+        for (const message of conversation.messages ?? []) {
+          if (message.from === "them" && !knownIds.has(message.id) && !conversation.muted) {
+            createNotification({
+              type: "messages",
+              eventId: `message:${conversation.id}:${message.id}`,
+              title: "New message",
+              body: `${conversation.peer.name} sent you a message${conversation.product ? ` about ${conversation.product.name}` : ""}.`,
+              actor: {
+                id: conversation.peer.id,
+                name: conversation.peer.name,
+                avatar: conversation.peer.avatar,
+                username: conversation.peer.username,
+              },
+              conversationId: conversation.id,
+              listing: conversation.product
+                ? {
+                    id: conversation.product.id,
+                    title: conversation.product.name,
+                    price: conversation.product.price,
+                    image: conversation.product.image,
+                    location: conversation.product.location,
+                  }
+                : undefined,
+              targetUrl: `/messages/${conversation.id}`,
+            });
           }
         }
-        persist({
-          conversations: remote.conversations,
-          reports: remote.reports ?? [],
-          typing: remote.typing ?? {},
-        });
+      }
+      const next = {
+        conversations: remote.conversations,
+        reports: remote.reports ?? [],
+        typing: remote.typing ?? {},
+      };
+      setStore(next);
+      storeRef.current = next;
+      try {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Browser cache is best effort.
       }
     } catch {
-      // The preview/local store remains available when the configured service is offline.
+      // The local cache remains available when the configured service is offline.
     }
-  }, [createNotification, persist]);
+  }, [createNotification]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -300,9 +319,10 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
     }
 
     void loadRemoteStore();
-    const refreshTimer = API_BASE
-      ? window.setInterval(() => void loadRemoteStore(), 15000)
-      : undefined;
+    const refreshTimer =
+      API_BASE || USE_SERVER_MESSAGE_STORE
+        ? window.setInterval(() => void loadRemoteStore(), 15000)
+        : undefined;
     return () => {
       window.removeEventListener("storage", onStorage);
       if (refreshTimer) window.clearInterval(refreshTimer);
@@ -511,11 +531,14 @@ export function MessagesProvider({ children }: { children: ReactNode }) {
             conversation.id === id ? { ...conversation, muted } : conversation,
           ),
         }),
-      deleteConversation: (id) =>
+      deleteConversation: (id) => {
         persist({
           ...store,
           conversations: store.conversations.filter((conversation) => conversation.id !== id),
-        }),
+        });
+        if (USE_SERVER_MESSAGE_STORE)
+          void deleteMyConversation({ data: { conversationId: id } }).catch(() => undefined);
+      },
       searchMessages: (query) => {
         const term = query.trim().toLowerCase();
         if (!term) return [];

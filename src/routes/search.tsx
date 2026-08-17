@@ -17,7 +17,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { FarmXSearchBar } from "@/components/FarmXSearchBar";
 import { MarketListingCard } from "@/components/MarketListingCard";
-import { LOCATIONS } from "@/lib/mock-data";
+import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { getMarketRepository, type MarketFilters, type MarketSort } from "@/lib/market-repository";
 import {
   getSearchResultCount,
@@ -338,9 +338,11 @@ function FilterPanel({
             onChange={(value) => onChange("state", value || undefined)}
           >
             <option value="">All states</option>
-            {LOCATIONS.map((location) => (
-              <option key={location}>{location}</option>
-            ))}
+            {Object.keys(NIGERIA_STATES_LGAS)
+              .sort()
+              .map((location) => (
+                <option key={location}>{location}</option>
+              ))}
           </FilterSelect>
           <label className="text-[10px] font-bold text-muted-foreground">
             City or area
@@ -593,11 +595,17 @@ function SearchResults({
                     <p className="mt-1 text-xs text-muted-foreground">
                       {job.company} · {job.location}
                     </p>
-                    <p className="mt-3 text-xs font-black text-brand">{job.salary}</p>
+                    <p className="mt-3 text-xs font-black text-brand">
+                      {job.salaryAmount
+                        ? `₦${job.salaryAmount.toLocaleString()}`
+                        : job.salaryMin && job.salaryMax
+                          ? `₦${job.salaryMin.toLocaleString()} - ₦${job.salaryMax.toLocaleString()}`
+                          : "Negotiable"}
+                    </p>
                   </div>
                 </div>
                 <span className="mt-3 inline-block rounded-full bg-muted px-2 py-1 text-[9px] font-bold">
-                  {job.type}
+                  {job.jobType}
                 </span>
               </Link>
             ))}

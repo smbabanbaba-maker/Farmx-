@@ -3,9 +3,10 @@ import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 import { getAwsClientOptions } from "@/lib/aws-config";
+import { requireAuthenticatedUser } from "@/lib/auth-server";
 
 const keySchema = z.object({
-  objectKey: z.string().regex(/^(listings|products|community)\/[a-z0-9][a-z0-9._/-]*$/i),
+  objectKey: z.string().regex(/^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i),
   contentType: z.enum([
     "image/jpeg",
     "image/png",
@@ -17,7 +18,7 @@ const keySchema = z.object({
 });
 
 const viewKeySchema = z.object({
-  objectKey: z.string().regex(/^(listings|products|community)\/[a-z0-9][a-z0-9._/-]*$/i),
+  objectKey: z.string().regex(/^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i),
 });
 
 function getStorageConfig() {
@@ -40,6 +41,7 @@ function getS3Client(region: string) {
 export const getS3SignedUploadUrl = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => keySchema.parse(input))
   .handler(async ({ data }) => {
+    await requireAuthenticatedUser();
     const { region, bucket } = getStorageConfig();
     const command = new PutObjectCommand({
       Bucket: bucket,

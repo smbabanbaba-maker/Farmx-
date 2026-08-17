@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useMemo, type ReactNode } from "react";
 import { AppShell } from "@/components/AppShell";
 import { PayModal } from "@/components/PayModal";
-import { PRICING } from "@/lib/mock-data";
+import { PRICING } from "@/lib/pricing";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useLocation } from "@/lib/location";
 import type { PaymentPurpose } from "@/lib/paystack";

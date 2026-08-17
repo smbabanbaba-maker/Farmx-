@@ -8,6 +8,8 @@ import {
   type MarketReport,
 } from "@/lib/market-dev-data";
 
+export type { MarketListing } from "@/lib/market-dev-data";
+
 export type MarketSort =
   | "relevant"
   | "newest"

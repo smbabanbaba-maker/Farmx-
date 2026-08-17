@@ -8,7 +8,12 @@ import { useRealWeather } from "@/lib/weather";
 import { useProfileData } from "@/lib/use-profile";
 import { getCurrentSession } from "@/lib/auth";
 import { createSeoHead, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
-import { news, posts, products, jobs } from "@/lib/mock-data";
+import { getMarketRepository, type MarketListing } from "@/lib/market-repository";
+import { getJobRepository } from "@/lib/job-repository";
+import { getCommunityRepository } from "@/lib/community-repository";
+import type { JobPost } from "@/lib/job.types";
+import type { CommunityPost } from "@/lib/community.types";
+import { news } from "@/lib/mock-data";
 import {
   ShoppingBag,
   Wallet,
@@ -87,16 +92,43 @@ function Dashboard() {
 
   const visibleShortcuts = quickAccessExpanded ? dashIcons : dashIcons.slice(0, 4);
 
-  const localProducts = useMemo(() => {
-    const local = products.filter((product) => product.location === location);
-    const rest = products.filter((product) => product.location !== location);
-    return [...local, ...rest].slice(0, 30);
-  }, [location]);
+  const [localProducts, setLocalProducts] = useState<MarketListing[]>([]);
+  const [localJobs, setLocalJobs] = useState<JobPost[]>([]);
+  const [recentPosts, setRecentPosts] = useState<CommunityPost[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const localJobs = useMemo(() => {
-    const local = jobs.filter((job) => job.location === location);
-    const rest = jobs.filter((job) => job.location !== location);
-    return [...local, ...rest].slice(0, 3);
+  useEffect(() => {
+    let active = true;
+    const loadHomeData = async () => {
+      try {
+        const [marketRepo, jobRepo, communityRepo] = await Promise.all([
+          getMarketRepository(),
+          getJobRepository(),
+          getCommunityRepository(),
+        ]);
+
+        const [marketPage, jobsList, postsPage] = await Promise.all([
+          marketRepo.getListings({ pageSize: 30, filters: { state: location } }),
+          jobRepo.getJobs({ state: location }),
+          communityRepo.getFeed({ limit: 3, tab: "latest" }),
+        ]);
+
+        if (!active) return;
+
+        setLocalProducts(marketPage.listings);
+        setLocalJobs(jobsList.slice(0, 3));
+        setRecentPosts(postsPage.posts);
+      } catch (err) {
+        console.error("Error loading homepage data:", err);
+      } finally {
+        if (active) setLoadingData(false);
+      }
+    };
+
+    loadHomeData();
+    return () => {
+      active = false;
+    };
   }, [location]);
 
   useEffect(() => {
@@ -272,28 +304,38 @@ function Dashboard() {
                 params={{ id: product.id }}
                 className="rounded-xl bg-card border border-border overflow-hidden relative hover:border-brand transition-colors"
               >
-                {product.promoted && (
+                {product.sponsored && (
                   <span className="absolute top-1.5 left-1.5 z-10 text-[9px] px-1.5 py-0.5 rounded-full bg-brand text-brand-foreground font-bold">
                     {t("home.marketplace.promo")}
                   </span>
                 )}
-                <div className="aspect-square bg-brand/5 flex items-center justify-center text-4xl">
-                  {product.image}
+                <div className="aspect-square bg-brand/5 flex items-center justify-center overflow-hidden">
+                  {product.images?.[0] ? (
+                    <img
+                      src={product.images[0]}
+                      alt={product.title}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ) : (
+                    <ShoppingBag className="h-8 w-8 text-brand/20" />
+                  )}
                 </div>
                 <div className="p-2">
-                  <p className="font-semibold text-xs truncate">{product.name}</p>
+                  <p className="font-semibold text-xs truncate">{product.title}</p>
                   <div className="flex items-center justify-between mt-1">
                     <span className="text-xs font-bold text-brand">
-                      ₦{product.price.toLocaleString()}
+                      {product.price ? `₦${product.price.toLocaleString()}` : t("priceOnRequest")}
                     </span>
                     <span className="flex items-center gap-0.5 text-[10px]">
                       <Star className="h-2.5 w-2.5 fill-yellow-500 text-yellow-500" />
-                      {product.rating}
+                      {product.seller.rating || "5.0"}
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-0.5">
                     <MapPin className="h-2.5 w-2.5" />
-                    {product.location}
+                    {product.state}
                   </p>
                 </div>
               </Link>
@@ -319,33 +361,45 @@ function Dashboard() {
             </Link>
           </div>
           <div className="space-y-2">
-            {localJobs.map((job) => (
-              <div key={job.id} className="p-3 rounded-xl bg-card border border-border">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm font-semibold flex items-center gap-1.5">
-                      {job.title}
-                      {job.promoted && (
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand text-brand-foreground font-bold">
-                          {t("home.jobs.promo")}
+            {localJobs.length > 0 ? (
+              localJobs.map((job) => (
+                <div key={job.id} className="p-3 rounded-xl bg-card border border-border">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-semibold flex items-center gap-1.5">
+                        {job.title}
+                        {job.featured && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand text-brand-foreground font-bold">
+                            {t("home.jobs.promo")}
+                          </span>
+                        )}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-0.5">
+                          <Building2 className="h-2.5 w-2.5" />
+                          {job.company}
                         </span>
-                      )}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
-                      <span className="flex items-center gap-0.5">
-                        <Building2 className="h-2.5 w-2.5" />
-                        {job.company}
-                      </span>
-                      <span className="flex items-center gap-0.5">
-                        <MapPin className="h-2.5 w-2.5" />
-                        {job.location}
-                      </span>
+                        <span className="flex items-center gap-0.5">
+                          <MapPin className="h-2.5 w-2.5" />
+                          {job.state}
+                        </span>
+                      </div>
                     </div>
+                    <span className="text-xs font-bold text-brand">
+                      {job.salaryAmount
+                        ? `₦${(job.salaryAmount / 1000).toFixed(0)}k/mo`
+                        : job.salaryMin
+                          ? `₦${(job.salaryMin / 1000).toFixed(0)}k+`
+                          : t("negotiable")}
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-brand">{job.salary}</span>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
+                {t("home.jobs.noneFound", { location })}
+              </p>
+            )}
           </div>
         </section>
 
@@ -373,23 +427,37 @@ function Dashboard() {
               {t("home.community.seeAll")}
             </Link>
           </div>
-          <div className="space-y-2">
-            {posts.slice(0, 2).map((post) => (
-              <div key={post.id} className="p-3 rounded-xl bg-card border border-border">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-brand/20 flex items-center justify-center text-xs font-bold text-brand">
-                    {post.author.charAt(0)}
+          <div className="space-y-3">
+            {recentPosts.length > 0 ? (
+              recentPosts.map((post) => (
+                <div key={post.id} className="p-3 rounded-xl bg-card border border-border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-8 w-8 rounded-full bg-brand/10 flex items-center justify-center text-brand font-bold text-xs overflow-hidden">
+                      {post.author.photo ? (
+                        <img
+                          src={post.author.photo}
+                          alt=""
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        post.author.name[0]
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold">{post.author.name}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        @{post.author.username} • {new Date(post.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold">{post.author}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {post.handle} · {post.time}
-                    </p>
-                  </div>
+                  <p className="text-xs leading-relaxed line-clamp-2">{post.content}</p>
                 </div>
-                <p className="mt-2 text-sm">{post.content}</p>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="py-4 text-center text-xs text-muted-foreground bg-muted/30 rounded-xl border border-dashed border-border">
+                {t("home.community.noneFound")}
+              </p>
+            )}
           </div>
         </section>
       </div>

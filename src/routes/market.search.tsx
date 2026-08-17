@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { MarketListingCard } from "@/components/MarketListingCard";
-import { LOCATIONS } from "@/lib/mock-data";
+import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import {
   getMarketRepository,
   type MarketFilters,
@@ -224,9 +224,13 @@ function MarketSearch() {
                   className="mt-1 w-full rounded-xl border border-border bg-background p-2 text-xs font-semibold"
                 >
                   <option value="">All states</option>
-                  {LOCATIONS.map((location) => (
-                    <option key={location}>{location}</option>
-                  ))}
+                  {Object.keys(NIGERIA_STATES_LGAS)
+                    .sort()
+                    .map((location) => (
+                      <option key={location} value={location}>
+                        {location}
+                      </option>
+                    ))}
                 </select>
               </label>
               <label className="text-[10px] font-bold text-muted-foreground">

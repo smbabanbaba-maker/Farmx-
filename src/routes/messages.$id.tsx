@@ -8,7 +8,8 @@ import {
   type Message,
   type ProductRef,
 } from "@/lib/messages-store";
-import { products as allProducts } from "@/lib/mock-data";
+import { getMarketRepository, type MarketListing } from "@/lib/market-repository";
+import { getS3ViewUrl, uploadFileToS3 } from "@/lib/s3-client";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -151,8 +152,10 @@ function ChatDetail() {
     }
     setImageSending(true);
     try {
+      const { objectKey } = await uploadFileToS3("messages", file);
       const image: MediaAttachment = {
-        url: await fileToDataUrl(file),
+        url: await getS3ViewUrl(objectKey),
+        objectKey,
         name: file.name,
         uploading: false,
       };
@@ -887,6 +890,28 @@ function Receipt({ status }: { status?: Message["status"] }) {
 
 function ProductPicker({ onPick }: { onPick: (product: ProductRef) => void }) {
   const [open, setOpen] = useState(false);
+  const [listings, setListings] = useState<MarketListing[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setLoading(true);
+    void getMarketRepository().then(async (repo) => {
+      try {
+        const page = await repo.getListings({ pageSize: 20 });
+        if (active) setListings(page.listings);
+      } catch (err) {
+        console.error("Error loading picker listings:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
   return (
     <div className="relative">
       <button
@@ -901,31 +926,48 @@ function ProductPicker({ onPick }: { onPick: (product: ProductRef) => void }) {
           <div className="mb-1 px-2 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground">
             Choose a listing
           </div>
-          {allProducts.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                onPick({
-                  id: item.id,
-                  name: item.name,
-                  price: item.price,
-                  image: item.image,
-                  seller: item.seller,
-                });
-                setOpen(false);
-              }}
-              className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-accent"
-            >
-              <span className="text-xl">{item.image}</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-bold">{item.name}</span>
-                <span className="block text-[10px] font-black text-brand">
-                  ₦{item.price.toLocaleString()}
+          {loading && (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-brand" />
+            </div>
+          )}
+          {!loading &&
+            listings.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => {
+                  onPick({
+                    id: item.id,
+                    name: item.title,
+                    price: item.price ?? 0,
+                    image: item.images?.[0] || "📦",
+                    seller: item.seller.name,
+                  });
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left hover:bg-accent"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-lg bg-brand/5 flex items-center justify-center overflow-hidden">
+                  {item.images?.[0] ? (
+                    <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <ShoppingBag className="h-5 w-5 text-brand/20" />
+                  )}
+                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-bold">{item.title}</span>
+                  <span className="block text-[10px] font-black text-brand">
+                    ₦{(item.price ?? 0).toLocaleString()}
+                  </span>
                 </span>
-              </span>
-            </button>
-          ))}
+              </button>
+            ))}
+          {!loading && listings.length === 0 && (
+            <div className="py-4 text-center text-[10px] text-muted-foreground">
+              No listings found
+            </div>
+          )}
         </div>
       )}
     </div>

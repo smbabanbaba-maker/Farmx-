@@ -265,8 +265,7 @@ export const getWalletSummary = createServerFn({ method: "GET" }).handler(async 
   const item = profile.Item as Record<string, unknown> | undefined;
   return {
     cashBalance: typeof item?.cashBalance === "number" ? item.cashBalance : 0,
-    promotionalCredits:
-      typeof item?.promotionalCredits === "number" ? item.promotionalCredits : 5000,
+    promotionalCredits: typeof item?.promotionalCredits === "number" ? item.promotionalCredits : 0,
     pendingAmount: typeof item?.pendingAmount === "number" ? item.pendingAmount : 0,
     currency: "NGN",
   } satisfies WalletSummary;

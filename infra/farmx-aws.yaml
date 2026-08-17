@@ -316,6 +316,7 @@ Resources:
               - dynamodb:Query
               - dynamodb:UpdateItem
               - dynamodb:DeleteItem
+              - dynamodb:TransactWriteItems
             Resource:
               - !GetAtt ProfileTable.Arn
               - !Sub "${ProfileTable.Arn}/index/*"
@@ -327,6 +328,7 @@ Resources:
               - dynamodb:Query
               - dynamodb:UpdateItem
               - dynamodb:DeleteItem
+              - dynamodb:TransactWriteItems
             Resource:
               - !GetAtt LearnTable.Arn
               - !Sub "${LearnTable.Arn}/index/*"
@@ -336,7 +338,10 @@ Resources:
               - s3:GetObject
               - s3:PutObject
               - s3:DeleteObject
-            Resource: !Sub "${MediaBucket.Arn}/profiles/*"
+            Resource:
+              - !Sub "${MediaBucket.Arn}/profiles/*"
+              - !Sub "${MediaBucket.Arn}/business/*"
+              - !Sub "${MediaBucket.Arn}/messages/*"
           - Sid: CommunityMediaObjectAccess
             Effect: Allow
             Action:

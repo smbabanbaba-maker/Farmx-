@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useI18n } from "@/lib/i18n";
-import { partners, products, jobs, PRICING } from "@/lib/mock-data";
+import { getMarketRepository, type MarketListing } from "@/lib/market-repository";
+import { getJobRepository } from "@/lib/job-repository";
+import type { JobPost } from "@/lib/job.types";
+import { PRICING } from "@/lib/pricing";
 import {
   type LucideIcon,
   BadgeCheck,
@@ -18,7 +21,7 @@ import {
   Crown,
   ExternalLink,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PayModal } from "@/components/PayModal";
 import { useCompany, TIER_META } from "@/lib/company-store";
 
@@ -38,21 +41,45 @@ interface CompanyKYC {
 
 function CompanyPage() {
   const { t } = useI18n();
+  const { state: cState, isBadgeActive, saveCompany } = useCompany();
   const [kycOpen, setKycOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
-  const [company, setCompany] = useState<CompanyKYC | null>({
-    name: "GreenFields Ltd",
-    ceo: "Musa Bello",
-    email: "info@greenfields.com",
-    phone: "+234 803 000 0000",
-    address: "12 Farm Road",
-    state: "Kano",
-    country: "Nigeria",
-    gps: "12.0022, 8.5920",
-    partners: ["Aisha M.", "Ibrahim K."],
-  });
-  const [bluetekActive, setBluetekActive] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [localProducts, setLocalProducts] = useState<MarketListing[]>([]);
+  const [localJobs, setLocalJobs] = useState<JobPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const company = cState.company;
+  const bluetekActive = isBadgeActive();
+  const activeTier = bluetekActive && cState.tier !== "none" ? cState.tier : null;
+  const tierMeta = activeTier ? TIER_META[activeTier] : null;
+
+  useEffect(() => {
+    let active = true;
+    const loadData = async () => {
+      try {
+        const [marketRepo, jobRepo] = await Promise.all([
+          getMarketRepository(),
+          getJobRepository(),
+        ]);
+        const [marketPage, jobsList] = await Promise.all([
+          marketRepo.getListings({ pageSize: 3 }),
+          jobRepo.getJobs(),
+        ]);
+        if (!active) return;
+        setLocalProducts(marketPage.listings);
+        setLocalJobs(jobsList.slice(0, 2));
+      } catch (err) {
+        console.error("Error loading company data:", err);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadData();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const uniqueLink = company
     ? `www.${company.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.com.farmx`
@@ -64,10 +91,6 @@ function CompanyPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
-
-  const { state: cState, isBadgeActive } = useCompany();
-  const activeTier = isBadgeActive() && cState.tier !== "none" ? cState.tier : null;
-  const tierMeta = activeTier ? TIER_META[activeTier] : null;
 
   return (
     <AppShell title={t("company")}>
@@ -192,23 +215,21 @@ function CompanyPage() {
               </button>
             )}
           </div>
-          {bluetekActive && (
-            <button
-              onClick={() => setBluetekActive(false)}
-              className="mt-3 text-[11px] text-muted-foreground underline"
-            >
-              Cancel subscription
-            </button>
-          )}
         </div>
 
         <section>
           <h3 className="font-bold mb-2">Products</h3>
           <div className="grid grid-cols-3 gap-2">
-            {products.slice(0, 3).map((p) => (
+            {localProducts.map((p) => (
               <div key={p.id} className="rounded-lg bg-card border border-border p-2 text-center">
-                <div className="text-3xl">{p.image}</div>
-                <p className="text-[11px] font-medium mt-1 truncate">{p.name}</p>
+                <div className="aspect-square bg-brand/5 flex items-center justify-center overflow-hidden rounded-md mb-1">
+                  {p.images?.[0] ? (
+                    <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="h-4 w-4 bg-brand/20 rounded" />
+                  )}
+                </div>
+                <p className="text-[11px] font-medium truncate">{p.title}</p>
               </div>
             ))}
           </div>
@@ -217,7 +238,7 @@ function CompanyPage() {
         <section>
           <h3 className="font-bold mb-2">Open Jobs</h3>
           <div className="space-y-2">
-            {jobs.slice(0, 2).map((j) => (
+            {localJobs.map((j) => (
               <div
                 key={j.id}
                 className="p-3 rounded-xl bg-card border border-border flex justify-between"
@@ -225,10 +246,12 @@ function CompanyPage() {
                 <div>
                   <p className="text-sm font-semibold">{j.title}</p>
                   <p className="text-xs text-muted-foreground">
-                    {j.location} · {j.type}
+                    {j.state} · {j.jobType}
                   </p>
                 </div>
-                <span className="text-xs font-bold text-brand self-center">{j.salary}</span>
+                <span className="text-xs font-bold text-brand self-center">
+                  {j.salaryAmount ? `₦${(j.salaryAmount / 1000).toFixed(0)}k` : t("negotiable")}
+                </span>
               </div>
             ))}
           </div>
@@ -237,7 +260,22 @@ function CompanyPage() {
         <section>
           <h3 className="font-bold mb-2">Partners</h3>
           <div className="space-y-2">
-            {partners.map((p) => (
+            {[
+              {
+                id: "1",
+                name: "FarmX Logistics Hub",
+                type: "Transport Partner",
+                verified: true,
+                logo: "🚚",
+              },
+              {
+                id: "2",
+                name: "AgroInputs Nigeria Ltd",
+                type: "Seed Supplier",
+                verified: true,
+                logo: "🌱",
+              },
+            ].map((p) => (
               <div
                 key={p.id}
                 className="p-3 rounded-xl bg-card border border-border flex items-center gap-3"
@@ -260,8 +298,23 @@ function CompanyPage() {
         open={kycOpen}
         onClose={() => setKycOpen(false)}
         initial={company}
-        onSave={(c) => {
-          setCompany(c);
+        onSave={async (c) => {
+          await saveCompany({
+            name: c.name,
+            slug: c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            logo: "🌾",
+            cacNumber: c.email ? "CAC-" + c.email.slice(0, 6) : "CAC-FARMX",
+            bio: `Official FarmX profile for ${c.name}.`,
+            address: c.address,
+            email: c.email,
+            ceo: c.ceo,
+            phone: c.phone,
+            productType: "Agricultural Produce",
+            country: c.country,
+            state: c.state,
+            gps: c.gps,
+            partners: c.partners,
+          });
           setKycOpen(false);
         }}
       />
@@ -272,7 +325,7 @@ function CompanyPage() {
         title="Bluetek Verified Badge (monthly)"
         amountNaira={PRICING.bluetekMonthly}
         purpose={{ kind: "bluetek_subscription", companyId: "company_1" }}
-        onPaid={() => setBluetekActive(true)}
+        onPaid={() => window.location.reload()}
       />
     </AppShell>
   );

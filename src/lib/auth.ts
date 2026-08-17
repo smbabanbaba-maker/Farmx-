@@ -162,6 +162,36 @@ export function signOut() {
   }
 }
 
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  assertSixDigitPassword(currentPassword);
+  assertSixDigitPassword(newPassword);
+  const user = userPool.getCurrentUser();
+  if (!user) throw new Error("Your FarmX session has expired. Please sign in again.");
+  const session = await getCurrentSession();
+  if (!session) throw new Error("Your FarmX session has expired. Please sign in again.");
+  return new Promise((resolve, reject) => {
+    user.changePassword(currentPassword.trim(), newPassword.trim(), (error) => {
+      if (error) reject(error instanceof Error ? error : new Error(String(error)));
+      else resolve();
+    });
+  });
+}
+
+export async function deleteCognitoAccount(): Promise<void> {
+  const user = userPool.getCurrentUser();
+  if (!user) throw new Error("Your FarmX session has expired. Please sign in again.");
+  const session = await getCurrentSession();
+  if (!session) throw new Error("Your FarmX session has expired. Please sign in again.");
+  await new Promise<void>((resolve, reject) => {
+    user.deleteUser((error) => {
+      if (error) reject(error instanceof Error ? error : new Error(String(error)));
+      else resolve();
+    });
+  });
+  clearSessionCache();
+  if (typeof window !== "undefined") localStorage.removeItem("farmx-session-active");
+}
+
 export async function signIn(email: string, password: string): Promise<unknown> {
   assertSixDigitPassword(password);
   const authenticationData = {

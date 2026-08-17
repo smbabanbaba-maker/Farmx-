@@ -4,6 +4,7 @@ import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
+  BatchWriteCommand,
   DeleteCommand,
   GetCommand,
   PutCommand,
@@ -35,10 +36,10 @@ const profileSchema = z.object({
     ),
   role: z.enum(roles),
   bio: z.string().trim().max(280),
-  state: z.string().trim().min(2).max(80),
+  state: z.string().trim().max(80),
   location: z.string().trim().max(120),
-  phone: z.string().trim().min(7).max(20),
-  email: z.string().email().max(120),
+  phone: z.string().trim().max(20),
+  email: z.string().email().max(120).or(z.literal("")),
   agriculturalInterests: z.array(z.string().trim().min(2).max(40)).max(10),
   skills: z.array(z.string().trim().min(2).max(40)).max(10),
   preferredLanguage: profileLanguageSchema.optional(),
@@ -54,10 +55,67 @@ const profileSchema = z.object({
     showActivity: z.boolean(),
     showBusinessInfo: z.boolean(),
   }),
+  settings: z
+    .object({
+      notifications: z.record(z.string(), z.boolean()).optional(),
+      communication: z
+        .object({
+          allowMessages: z.boolean(),
+          allowCalls: z.boolean(),
+          readReceipts: z.boolean(),
+          typingIndicators: z.boolean(),
+          messageNotifications: z.boolean(),
+          buyerCommunication: z.boolean(),
+          sellerCommunication: z.boolean(),
+        })
+        .optional(),
+      buying: z
+        .object({
+          categories: z.array(z.string().trim().min(1).max(80)).max(20),
+          locations: z.array(z.string().trim().min(1).max(80)).max(20),
+          deliveryPreference: z.enum(["pickup", "delivery", "both"]),
+          alertsEnabled: z.boolean(),
+        })
+        .optional(),
+      country: z.string().trim().max(80).optional(),
+      currency: z.enum(["NGN"]).optional(),
+      dateFormat: z.enum(["DD/MM/YYYY", "MM/DD/YYYY"]).optional(),
+      timeFormat: z.enum(["12h", "24h"]).optional(),
+      marketplaceRadiusKm: z.number().min(0).max(500).optional(),
+    })
+    .optional(),
+  business: z
+    .object({
+      name: z.string().trim().max(120),
+      description: z.string().trim().max(1000),
+      category: z.string().trim().max(120),
+      businessType: z.string().trim().max(120),
+      phone: z.string().trim().max(24),
+      email: z.string().email().max(120).or(z.literal("")),
+      address: z.string().trim().max(240),
+      state: z.string().trim().max(80),
+      lga: z.string().trim().max(120),
+      website: z.string().trim().url().max(240).or(z.literal("")),
+      socialLinks: z.array(z.string().trim().url().max(240)).max(8),
+      yearsInBusiness: z.number().int().min(0).max(200),
+      services: z.array(z.string().trim().min(1).max(80)).max(30),
+      logoKey: z.string().max(300).optional(),
+      coverKey: z.string().max(300).optional(),
+    })
+    .optional(),
 });
 
 const photoInputSchema = z.object({
   contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+const businessMediaInputSchema = z.object({
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+  kind: z.enum(["logo", "cover"]),
+});
+const businessMediaKeySchema = z.object({
+  objectKey: z
+    .string()
+    .regex(/^business\/[a-z0-9-]+\/(logo|cover)\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/i),
 });
 
 const usernameInputSchema = z.object({
@@ -92,6 +150,90 @@ export type ProfileStats = {
   following: number | null;
   rating: number | null;
   reviews: number | null;
+};
+
+const settingsInputSchema = z.object({
+  notifications: z.record(z.string(), z.boolean()),
+  communication: z.object({
+    allowMessages: z.boolean(),
+    allowCalls: z.boolean(),
+    readReceipts: z.boolean(),
+    typingIndicators: z.boolean(),
+    messageNotifications: z.boolean(),
+    buyerCommunication: z.boolean(),
+    sellerCommunication: z.boolean(),
+  }),
+  buying: z.object({
+    categories: z.array(z.string().trim().min(1).max(80)).max(20),
+    locations: z.array(z.string().trim().min(1).max(80)).max(20),
+    deliveryPreference: z.enum(["pickup", "delivery", "both"]),
+    alertsEnabled: z.boolean(),
+  }),
+  country: z.string().trim().max(80),
+  currency: z.enum(["NGN"]),
+  dateFormat: z.enum(["DD/MM/YYYY", "MM/DD/YYYY"]),
+  timeFormat: z.enum(["12h", "24h"]),
+  marketplaceRadiusKm: z.number().min(0).max(500),
+  blockedUsers: z.array(z.string().trim().min(1).max(160)).max(500),
+});
+
+const businessInputSchema = z.object({
+  name: z.string().trim().max(120),
+  description: z.string().trim().max(1000),
+  category: z.string().trim().max(120),
+  businessType: z.string().trim().max(120),
+  phone: z.string().trim().max(24),
+  email: z.string().email().max(120).or(z.literal("")),
+  address: z.string().trim().max(240),
+  state: z.string().trim().max(80),
+  lga: z.string().trim().max(120),
+  website: z.string().trim().url().max(240).or(z.literal("")),
+  socialLinks: z.array(z.string().trim().url().max(240)).max(8),
+  yearsInBusiness: z.number().int().min(0).max(200),
+  services: z.array(z.string().trim().min(1).max(80)).max(30),
+  logoKey: z.string().max(300).optional(),
+  coverKey: z.string().max(300).optional(),
+});
+
+export type FarmXSettings = z.infer<typeof settingsInputSchema>;
+export type FarmXBusinessProfile = z.infer<typeof businessInputSchema>;
+
+export const DEFAULT_FARMX_SETTINGS: FarmXSettings = {
+  notifications: {
+    securityAlerts: true,
+    loginAlerts: true,
+    verificationUpdates: true,
+    buyerInquiries: true,
+    listingActivity: true,
+    savedSearchAlerts: true,
+    socialActivity: true,
+    newMessages: true,
+    paymentUpdates: true,
+    subscriptionUpdates: true,
+    boostUpdates: true,
+    jobAlerts: true,
+  },
+  communication: {
+    allowMessages: true,
+    allowCalls: true,
+    readReceipts: true,
+    typingIndicators: true,
+    messageNotifications: true,
+    buyerCommunication: true,
+    sellerCommunication: true,
+  },
+  buying: {
+    categories: [],
+    locations: [],
+    deliveryPreference: "both",
+    alertsEnabled: true,
+  },
+  country: "Nigeria",
+  currency: "NGN",
+  dateFormat: "DD/MM/YYYY",
+  timeFormat: "12h",
+  marketplaceRadiusKm: 50,
+  blockedUsers: [],
 };
 
 function hasProfileProductionConfig() {
@@ -494,6 +636,8 @@ export const saveMyProfile = createServerFn({ method: "POST" })
       gsi1sk: string;
     } = {
       ...data,
+      settings: data.settings ?? previous?.settings,
+      business: data.business ?? previous?.business,
       userId: actor.userId,
       createdAt: previous?.createdAt ?? now,
       updatedAt: now,
@@ -541,6 +685,70 @@ export const saveMyLanguagePreference = createServerFn({ method: "POST" })
     return { preferredLanguage: data.preferredLanguage };
   });
 
+export const getMySettings = createServerFn({ method: "GET" }).handler(async () => {
+  privateResponse();
+  const config = getConfig();
+  const actor = await requireAuthenticatedUser();
+  const result = await createDocumentClient(config.region).send(
+    new GetCommand({
+      TableName: config.profileTable,
+      Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+    }),
+  );
+  return { settings: (result.Item?.settings ?? null) as FarmXSettings | null };
+});
+
+export const saveMySettings = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => settingsInputSchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    await createDocumentClient(config.region).send(
+      new UpdateCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET #settings = :settings, updatedAt = :updatedAt",
+        ExpressionAttributeNames: { "#settings": "settings" },
+        ExpressionAttributeValues: { ":settings": data, ":updatedAt": new Date().toISOString() },
+        ConditionExpression: "attribute_exists(pk)",
+      }),
+    );
+    return { settings: data };
+  });
+
+export const getMyBusinessProfile = createServerFn({ method: "GET" }).handler(async () => {
+  privateResponse();
+  const config = getConfig();
+  const actor = await requireAuthenticatedUser();
+  const result = await createDocumentClient(config.region).send(
+    new GetCommand({
+      TableName: config.profileTable,
+      Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+    }),
+  );
+  return { business: (result.Item?.business ?? null) as FarmXBusinessProfile | null };
+});
+
+export const saveMyBusinessProfile = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => businessInputSchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    await createDocumentClient(config.region).send(
+      new UpdateCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET #business = :business, updatedAt = :updatedAt",
+        ExpressionAttributeNames: { "#business": "business" },
+        ExpressionAttributeValues: { ":business": data, ":updatedAt": new Date().toISOString() },
+        ConditionExpression: "attribute_exists(pk)",
+      }),
+    );
+    return { business: data };
+  });
+
 export const createProfilePhotoUpload = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => photoInputSchema.parse(input))
   .handler(async ({ data }) => {
@@ -564,6 +772,130 @@ export const createProfilePhotoUpload = createServerFn({ method: "POST" })
 
     return { objectKey, uploadUrl, expiresIn: 300 };
   });
+
+export const createBusinessMediaUpload = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => businessMediaInputSchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    const extension =
+      data.contentType === "image/png" ? "png" : data.contentType === "image/webp" ? "webp" : "jpg";
+    const objectKey = `business/${actor.userId}/${data.kind}/${crypto.randomUUID()}.${extension}`;
+    const uploadUrl = await getSignedUrl(
+      new S3Client(getAwsClientOptions(config.region)),
+      new PutObjectCommand({
+        Bucket: config.bucket,
+        Key: objectKey,
+        ContentType: data.contentType,
+        ServerSideEncryption: "AES256",
+      }),
+      { expiresIn: 300, signableHeaders: new Set(["content-type"]) },
+    );
+    return { objectKey, uploadUrl, expiresIn: 300 };
+  });
+
+export const getMyBusinessMediaUrl = createServerFn({ method: "GET" })
+  .inputValidator((input: unknown) => businessMediaKeySchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    if (!data.objectKey.startsWith(`business/${actor.userId}/`)) {
+      throw new Error("You cannot access this business image.");
+    }
+    const downloadUrl = await getSignedUrl(
+      new S3Client(getAwsClientOptions(config.region)),
+      new GetObjectCommand({ Bucket: config.bucket, Key: data.objectKey }),
+      { expiresIn: 300 },
+    );
+    return { downloadUrl, expiresIn: 300 };
+  });
+
+export const removeMyBusinessMedia = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => z.object({ kind: z.enum(["logo", "cover"]) }).parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    const client = createDocumentClient(config.region);
+    const result = await client.send(
+      new GetCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+      }),
+    );
+    const profile = result.Item as (FarmXProfile & { pk: string; sk: string }) | undefined;
+    const key = data.kind === "logo" ? profile?.business?.logoKey : profile?.business?.coverKey;
+    if (!key) return { removed: false };
+    const nextBusiness = {
+      ...(profile?.business ?? {}),
+      [data.kind === "logo" ? "logoKey" : "coverKey"]: undefined,
+    };
+    await client.send(
+      new UpdateCommand({
+        TableName: config.profileTable,
+        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+        UpdateExpression: "SET #business = :business, updatedAt = :updatedAt",
+        ExpressionAttributeNames: { "#business": "business" },
+        ExpressionAttributeValues: {
+          ":business": nextBusiness,
+          ":updatedAt": new Date().toISOString(),
+        },
+        ConditionExpression: "attribute_exists(pk)",
+      }),
+    );
+    await new S3Client(getAwsClientOptions(config.region)).send(
+      new DeleteObjectCommand({ Bucket: config.bucket, Key: key }),
+    );
+    return { removed: true };
+  });
+
+export const deleteMyAccountData = createServerFn({ method: "POST" }).handler(async () => {
+  privateResponse();
+  const config = getConfig();
+  const actor = await requireAuthenticatedUser();
+  const client = createDocumentClient(config.region);
+  const [profileItems, listingItems] = await Promise.all([
+    client.send(
+      new QueryCommand({
+        TableName: config.profileTable,
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: { ":pk": `USER#${actor.userId}` },
+      }),
+    ),
+    client.send(
+      new QueryCommand({
+        TableName: config.listingsTable,
+        IndexName: "GSI2",
+        KeyConditionExpression: "gsi2pk = :owner",
+        ExpressionAttributeValues: { ":owner": `SELLER#${actor.userId}` },
+      }),
+    ),
+  ]);
+  const keys = [...(profileItems.Items ?? []), ...(listingItems.Items ?? [])]
+    .map((item) => ({ pk: item.pk, sk: item.sk }))
+    .filter(
+      (key): key is { pk: string; sk: string } =>
+        typeof key.pk === "string" && typeof key.sk === "string",
+    );
+  for (let index = 0; index < keys.length; index += 25) {
+    const chunk = keys.slice(index, index + 25);
+    await client.send(
+      new BatchWriteCommand({
+        RequestItems: {
+          [config.profileTable]: chunk
+            .filter((key) => key.pk.startsWith("USER#"))
+            .map((Key) => ({ DeleteRequest: { Key } })),
+          [config.listingsTable]: chunk
+            .filter((key) => key.pk.startsWith("LISTING#"))
+            .map((Key) => ({ DeleteRequest: { Key } })),
+        },
+      }),
+    );
+  }
+  return { deleted: true, userId: actor.userId };
+});
 
 export const removeMyProfilePhoto = createServerFn({ method: "POST" }).handler(async () => {
   privateResponse();

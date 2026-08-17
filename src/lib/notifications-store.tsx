@@ -12,6 +12,11 @@ import {
   getCommunityNotifications,
   markCommunityNotificationRead,
 } from "@/lib/community.functions";
+import {
+  getMyNotifications,
+  markMyNotificationRead,
+  syncMyNotifications,
+} from "@/lib/notifications.functions";
 
 export type NotificationCategory =
   | "messages"
@@ -69,6 +74,7 @@ const LEGACY_KEY = "farmx-notifications-v1";
 const CHANNEL = "farmx-notifications-sync-v2";
 const MAX = 100;
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
+const USE_SERVER_NOTIFICATION_STORE = !API_BASE && import.meta.env.PROD;
 
 export const NOTIF_CHANNELS: { key: NotificationCategory; label: string; group: string }[] = [
   { key: "messages", label: "Messages", group: "Communication" },
@@ -233,8 +239,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: next.items, channels: next.channels }),
       }).catch(() => {
-        // Keep the local state when the production service is unavailable.
+        // Keep the local state when the external service is unavailable.
       });
+    } else if (USE_SERVER_NOTIFICATION_STORE) {
+      void syncMyNotifications({
+        data: { items: next.items, channels: next.channels },
+      }).catch(() => undefined);
     }
   }, []);
 
@@ -253,6 +263,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         });
         if (!response.ok) throw new Error("Notification request failed");
         remote = (await response.json()) as {
+          items?: Partial<AppNotification>[];
+          channels?: Record<string, boolean>;
+        };
+      } else if (USE_SERVER_NOTIFICATION_STORE) {
+        remote = (await getMyNotifications()) as {
           items?: Partial<AppNotification>[];
           channels?: Record<string, boolean>;
         };
@@ -302,7 +317,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       };
       channelRef.current = channel;
     }
-    const refreshTimer = API_BASE ? window.setInterval(() => void refresh(), 15000) : undefined;
+    const refreshTimer =
+      API_BASE || USE_SERVER_NOTIFICATION_STORE
+        ? window.setInterval(() => void refresh(), 15000)
+        : undefined;
     return () => {
       window.removeEventListener("storage", onStorage);
       if (refreshTimer) window.clearInterval(refreshTimer);
@@ -391,6 +409,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             entry.id === id ? { ...entry, read: true, readAt: now } : entry,
           ),
         });
+        if (item && USE_SERVER_NOTIFICATION_STORE)
+          void markMyNotificationRead({
+            data: { notificationId: item.eventId ?? item.id },
+          }).catch(() => undefined);
         if (item && (item.category === "community" || item.category === "followers"))
           void markCommunityNotificationRead({
             data: { notificationId: item.eventId ?? item.id },
@@ -411,11 +433,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           ),
         });
         void Promise.all(
-          unreadServerItems.map((item) =>
-            markCommunityNotificationRead({
-              data: { notificationId: item.eventId ?? item.id },
-            }).catch(() => undefined),
-          ),
+          unreadServerItems.map((item) => {
+            const notificationId = item.eventId ?? item.id;
+            const requests: Promise<unknown>[] = [];
+            if (USE_SERVER_NOTIFICATION_STORE)
+              requests.push(markMyNotificationRead({ data: { notificationId } }));
+            if (item.category === "community" || item.category === "followers")
+              requests.push(markCommunityNotificationRead({ data: { notificationId } }));
+            return Promise.all(requests).catch(() => undefined);
+          }),
         );
       },
       archive: (id) => {

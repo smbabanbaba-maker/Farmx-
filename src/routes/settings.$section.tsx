@@ -36,10 +36,23 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { LANGUAGES, useI18n, type Lang } from "@/lib/i18n";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
-import { usePrefs } from "@/lib/prefs";
+import {
+  DEFAULT_FARMX_SETTINGS,
+  createBusinessMediaUpload,
+  deleteMyAccountData,
+  getMyBusinessMediaUrl,
+  getMyBusinessProfile,
+  getMySettings,
+  removeMyBusinessMedia,
+  saveMyBusinessProfile,
+  saveMySettings,
+  type FarmXBusinessProfile,
+  type FarmXSettings,
+} from "@/lib/profile.functions";
 import { useProfileData } from "@/lib/use-profile";
 import { settingsText } from "@/lib/settings-copy";
 import { useAuth } from "@/lib/use-auth";
+import { changePassword, deleteCognitoAccount } from "@/lib/auth";
 import {
   createProfilePhotoUpload,
   getMyProfilePhotoUrl,
@@ -94,6 +107,17 @@ type Transaction = {
   createdAt: string;
   activatedUntil?: string;
 };
+
+function mergeSettings(saved: Partial<FarmXSettings>): FarmXSettings {
+  return {
+    ...DEFAULT_FARMX_SETTINGS,
+    ...saved,
+    notifications: { ...DEFAULT_FARMX_SETTINGS.notifications, ...saved.notifications },
+    communication: { ...DEFAULT_FARMX_SETTINGS.communication, ...saved.communication },
+    buying: { ...DEFAULT_FARMX_SETTINGS.buying, ...saved.buying },
+    blockedUsers: saved.blockedUsers ?? DEFAULT_FARMX_SETTINGS.blockedUsers,
+  };
+}
 
 const TITLES: Record<string, { title: string; description: string }> = {
   "personal-info": {
@@ -621,35 +645,269 @@ function PersonalInfo({
   );
 }
 
+const EMPTY_BUSINESS: FarmXBusinessProfile = {
+  name: "",
+  description: "",
+  category: "",
+  businessType: "",
+  phone: "",
+  email: "",
+  address: "",
+  state: "",
+  lga: "",
+  website: "",
+  socialLinks: [],
+  yearsInBusiness: 0,
+  services: [],
+};
+
 function BusinessPage({ profile }: { profile: FarmXProfile }) {
+  const [form, setForm] = useState<FarmXBusinessProfile>(EMPTY_BUSINESS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [mediaBusy, setMediaBusy] = useState<"logo" | "cover" | null>(null);
+  const [mediaUrls, setMediaUrls] = useState<{ logo: string | null; cover: string | null }>({
+    logo: null,
+    cover: null,
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    let active = true;
+    void getMyBusinessProfile()
+      .then(({ business }) => {
+        if (!active) return;
+        setForm({ ...EMPTY_BUSINESS, ...(business ?? {}) });
+        if (business?.logoKey) {
+          void getMyBusinessMediaUrl({ data: { objectKey: business.logoKey } }).then(
+            ({ downloadUrl }) => {
+              if (active) setMediaUrls((current) => ({ ...current, logo: downloadUrl }));
+            },
+          );
+        }
+        if (business?.coverKey) {
+          void getMyBusinessMediaUrl({ data: { objectKey: business.coverKey } }).then(
+            ({ downloadUrl }) => {
+              if (active) setMediaUrls((current) => ({ ...current, cover: downloadUrl }));
+            },
+          );
+        }
+      })
+      .catch((reason) => {
+        if (active)
+          setError(
+            reason instanceof Error ? reason.message : "Business profile could not be loaded.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const update = <K extends keyof FarmXBusinessProfile>(key: K, value: FarmXBusinessProfile[K]) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setSaved(false);
+  };
+  const uploadMedia = async (kind: "logo" | "cover", file: File) => {
+    if (!(["image/jpeg", "image/png", "image/webp"] as string[]).includes(file.type)) {
+      setError("Use a JPG, PNG or WebP business image.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Business images must be 5MB or smaller.");
+      return;
+    }
+    setMediaBusy(kind);
+    setError(null);
+    try {
+      const { objectKey, uploadUrl } = await createBusinessMediaUpload({
+        data: { kind, contentType: file.type as "image/jpeg" | "image/png" | "image/webp" },
+      });
+      const response = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!response.ok) throw new Error("The business image upload failed.");
+      update(kind === "logo" ? "logoKey" : "coverKey", objectKey);
+      setMediaUrls((current) => ({ ...current, [kind]: URL.createObjectURL(file) }));
+    } catch (reason) {
+      setError(
+        reason instanceof Error ? reason.message : "The business image could not be uploaded.",
+      );
+    } finally {
+      setMediaBusy(null);
+    }
+  };
+  const save = async () => {
+    if (!form.name.trim()) {
+      setError("Enter a business name before saving.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await saveMyBusinessProfile({ data: form });
+      setSaved(true);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Business profile could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  if (loading) return <Skeleton />;
   return (
     <div className="space-y-4">
-      <Card title="Business profile" icon={BuildingIcon}>
-        <InfoRow
-          label="Business status"
-          value={
-            profile.role === "agricultural_business" ? "Business account" : "Individual account"
-          }
-        />
-        <InfoRow
-          label="Business verification"
-          value={profile.verification === "approved" ? "Verified" : "Not verified"}
-        />
-        <InfoRow label="Public location" value={`${profile.location}, ${profile.state}`} />
+      {error && <Notice tone="error">{error}</Notice>}
+      {saved && <Notice tone="success">Business profile saved securely.</Notice>}
+      <Card title="Business identity" icon={BuildingIcon}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field
+            label="Business name"
+            value={form.name}
+            onChange={(value) => update("name", value)}
+          />
+          <Field
+            label="Category"
+            value={form.category}
+            onChange={(value) => update("category", value)}
+          />
+          <Field
+            label="Business type"
+            value={form.businessType}
+            onChange={(value) => update("businessType", value)}
+          />
+          <Field
+            label="Years in business"
+            type="number"
+            value={String(form.yearsInBusiness)}
+            onChange={(value) => update("yearsInBusiness", Math.max(0, Number(value) || 0))}
+          />
+          <Field
+            label="Business phone"
+            value={form.phone}
+            onChange={(value) => update("phone", value)}
+          />
+          <Field
+            label="Business email"
+            type="email"
+            value={form.email}
+            onChange={(value) => update("email", value)}
+          />
+          <Field
+            label="Website"
+            type="url"
+            value={form.website}
+            onChange={(value) => update("website", value)}
+          />
+          <Field
+            label="Address"
+            value={form.address}
+            onChange={(value) => update("address", value)}
+          />
+          <SelectField
+            label="State"
+            value={form.state}
+            options={Object.keys(NIGERIA_STATES_LGAS)}
+            onChange={(value) => update("state", value)}
+          />
+          <Field label="LGA" value={form.lga} onChange={(value) => update("lga", value)} />
+          <Field
+            label="Description"
+            value={form.description}
+            onChange={(value) => update("description", value)}
+            multiline
+          />
+          <Field
+            label="Services (comma separated)"
+            value={form.services.join(", ")}
+            onChange={(value) =>
+              update(
+                "services",
+                value
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter(Boolean)
+                  .slice(0, 30),
+              )
+            }
+          />
+        </div>
       </Card>
-      <Card title="Complete your public business profile" icon={BuildingIcon}>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Business-specific registration, operating hours, service areas and business images are
-          managed in the FarmX Company workspace. Open it to review and save the real fields
-          attached to this account.
-        </p>
-        <Link
-          to="/company"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-black text-brand-foreground"
-        >
-          Open Company workspace <ExternalLink className="h-4 w-4" />
-        </Link>
+      <Card title="Business images" icon={ImagePlus}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {(["logo", "cover"] as const).map((kind) => (
+            <div key={kind} className="rounded-2xl border border-border p-3">
+              <p className="text-xs font-black capitalize">Business {kind}</p>
+              <div
+                className={`mt-2 overflow-hidden rounded-xl bg-muted ${kind === "cover" ? "aspect-[2/1]" : "aspect-square max-w-40"}`}
+              >
+                {mediaUrls[kind] ? (
+                  <img
+                    src={mediaUrls[kind] ?? ""}
+                    alt={`Business ${kind}`}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
+                    No image
+                  </div>
+                )}
+              </div>
+              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-3 py-2 text-xs font-black text-brand-foreground">
+                <ImagePlus className="h-4 w-4" />{" "}
+                {mediaBusy === kind ? "Uploading…" : `Upload ${kind}`}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  disabled={mediaBusy !== null}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void uploadMedia(kind, file);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {form[kind === "logo" ? "logoKey" : "coverKey"] && (
+                <button
+                  type="button"
+                  className="ml-2 rounded-xl border border-border px-3 py-2 text-xs font-bold"
+                  onClick={async () => {
+                    try {
+                      await removeMyBusinessMedia({ data: { kind } });
+                      update(kind === "logo" ? "logoKey" : "coverKey", undefined);
+                      setMediaUrls((current) => ({ ...current, [kind]: null }));
+                    } catch (reason) {
+                      setError(
+                        reason instanceof Error
+                          ? reason.message
+                          : "The image could not be removed.",
+                      );
+                    }
+                  }}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </Card>
+      <button
+        type="button"
+        onClick={() => void save()}
+        disabled={saving || mediaBusy !== null}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-4 py-3 text-xs font-black text-brand-foreground disabled:opacity-60"
+      >
+        <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save business profile"}
+      </button>
+      <p className="text-[11px] leading-5 text-muted-foreground">
+        Business verification is reviewed server-side. Saving information does not create a false
+        verified badge.
+      </p>
     </div>
   );
 }
@@ -689,48 +947,131 @@ function SecurityPage({
   onNotice: (tone: "success" | "error", text: string) => void;
 }) {
   const { signOut } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const updatePassword = async () => {
+    if (!/^\d{6}$/.test(currentPassword) || !/^\d{6}$/.test(newPassword)) {
+      onNotice("error", "Use exactly 6 digits for your current and new password.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      onNotice("error", "The new passwords do not match.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      onNotice("success", "Your password was changed securely through AWS Cognito.");
+    } catch (reason) {
+      onNotice(
+        "error",
+        reason instanceof Error ? reason.message : "Password could not be changed.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const deleteAccount = async () => {
+    if (window.prompt("Type DELETE to permanently remove your FarmX account") !== "DELETE") return;
+    setDeleting(true);
+    try {
+      await deleteMyAccountData();
+      await deleteCognitoAccount();
+      signOut();
+      window.location.assign("/login");
+    } catch (reason) {
+      setDeleting(false);
+      onNotice(
+        "error",
+        reason instanceof Error ? reason.message : "Account deletion could not be completed.",
+      );
+    }
+  };
   return (
     <div className="space-y-4">
       <Card title="Verification status" icon={ShieldCheck}>
         <InfoRow label="Email" value={profile.email ? "Account email available" : "Not set"} />
-        <InfoRow
-          label="Phone"
-          value={
-            profile.phone
-              ? "Number saved; verification depends on Cognito configuration"
-              : "Not set"
-          }
-        />
+        <InfoRow label="Phone" value={profile.phone ? "Number saved" : "Action required"} />
         <InfoRow label="Identity / seller" value={profile.verification.replaceAll("_", " ")} />
       </Card>
-      <Card title="Password" icon={LockKeyhole}>
-        <p className="text-sm leading-6 text-muted-foreground">
-          FarmX sign-in uses the current Cognito password policy. To recover access, use the
-          verified email flow on the sign-in page.
+      <Card title="Change password" icon={LockKeyhole}>
+        <p className="mb-3 text-sm leading-6 text-muted-foreground">
+          FarmX passwords use exactly 6 digits. Password changes are sent directly to AWS Cognito.
         </p>
+        <div className="space-y-3">
+          <Field
+            label="Current 6-digit password"
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            value={currentPassword}
+            onChange={setCurrentPassword}
+          />
+          <Field
+            label="New 6-digit password"
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            value={newPassword}
+            onChange={setNewPassword}
+          />
+          <Field
+            label="Confirm new password"
+            type="password"
+            inputMode="numeric"
+            maxLength={6}
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+          />
+        </div>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void updatePassword()}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-3 py-2.5 text-xs font-black text-brand-foreground disabled:opacity-60"
+        >
+          <LockKeyhole className="h-4 w-4" /> {busy ? "Changing…" : "Change password"}
+        </button>
         <Link
           to="/login"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-black"
+          className="ml-2 inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-black"
         >
-          Open sign-in and recovery <ChevronRight className="h-4 w-4" />
+          Forgot password <ChevronRight className="h-4 w-4" />
         </Link>
       </Card>
-      <Card title="Danger zone" icon={Trash2}>
+      <Card title="Session" icon={LogOut}>
         <p className="text-sm leading-6 text-muted-foreground">
-          Account deletion is permanent and must be confirmed through FarmX support while the
-          deletion workflow is being completed server-side. Do not delete local data and call it
-          account deletion.
+          Sign out clears the Cognito session and local authenticated state.
         </p>
         <button
           type="button"
           onClick={() => {
             signOut();
-            onNotice("success", "You have been logged out securely.");
-            window.setTimeout(() => window.location.assign("/login"), 250);
+            window.location.assign("/login");
           }}
-          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-brand/30 px-3 py-2.5 text-xs font-black text-brand"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2.5 text-xs font-black"
         >
           <LogOut className="h-4 w-4" /> Log out
+        </button>
+      </Card>
+      <Card title="Danger zone" icon={Trash2}>
+        <p className="text-sm leading-6 text-muted-foreground">
+          Deletion permanently removes your FarmX profile and owned listings from the configured
+          data store, then deletes the Cognito account. This cannot be undone.
+        </p>
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => void deleteAccount()}
+          className="mt-4 inline-flex items-center gap-2 rounded-xl border border-red-500/30 px-3 py-2.5 text-xs font-black text-red-600 disabled:opacity-60"
+        >
+          <Trash2 className="h-4 w-4" /> {deleting ? "Deleting…" : "Delete account"}
         </button>
       </Card>
     </div>
@@ -883,20 +1224,21 @@ function PrivacyPage({
 function NotificationsPage() {
   return (
     <PreferencePage
+      kind="notifications"
       title="Notification channels"
       items={[
-        "Security alerts",
-        "Login alerts",
-        "Verification updates",
-        "New buyer inquiries",
-        "Listing activity",
-        "Saved-search alerts",
-        "Followers and community activity",
-        "New messages",
-        "Payment success and failure",
-        "Subscription renewal and expiry",
-        "Boost updates",
-        "Matching jobs",
+        ["Security alerts", "securityAlerts"],
+        ["Login alerts", "loginAlerts"],
+        ["Verification updates", "verificationUpdates"],
+        ["New buyer inquiries", "buyerInquiries"],
+        ["Listing activity", "listingActivity"],
+        ["Saved-search alerts", "savedSearchAlerts"],
+        ["Followers and community activity", "socialActivity"],
+        ["New messages", "newMessages"],
+        ["Payment success and failure", "paymentUpdates"],
+        ["Subscription renewal and expiry", "subscriptionUpdates"],
+        ["Boost updates", "boostUpdates"],
+        ["Matching jobs", "jobAlerts"],
       ]}
     />
   );
@@ -904,41 +1246,102 @@ function NotificationsPage() {
 function CommunicationPage() {
   return (
     <PreferencePage
+      kind="communication"
       title="Communication controls"
       items={[
-        "Allow messages",
-        "Allow in-app calls",
-        "Read receipts",
-        "Typing indicator",
-        "Message notifications",
-        "Buyer communication",
-        "Seller communication",
+        ["Allow messages", "allowMessages"],
+        ["Allow in-app calls", "allowCalls"],
+        ["Read receipts", "readReceipts"],
+        ["Typing indicator", "typingIndicators"],
+        ["Message notifications", "messageNotifications"],
+        ["Buyer communication", "buyerCommunication"],
+        ["Seller communication", "sellerCommunication"],
       ]}
     />
   );
 }
-function PreferencePage({ title, items }: { title: string; items: string[] }) {
-  const { toggles, setToggle } = usePrefs();
+function PreferencePage({
+  kind,
+  title,
+  items,
+}: {
+  kind: "notifications" | "communication";
+  title: string;
+  items: [string, string][];
+}) {
+  const [settings, setSettings] = useState<FarmXSettings>(DEFAULT_FARMX_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void getMySettings()
+      .then(({ settings: saved }) => {
+        if (!active) return;
+        setSettings(saved ? mergeSettings(saved) : DEFAULT_FARMX_SETTINGS);
+      })
+      .catch((reason) => {
+        if (active)
+          setError(reason instanceof Error ? reason.message : "Preferences could not be loaded.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  const update = async (key: string, value: boolean) => {
+    const previous = settings;
+    const next = {
+      ...settings,
+      [kind]: { ...settings[kind], [key]: value },
+    } as FarmXSettings;
+    setSettings(next);
+    setSavingKey(key);
+    setError(null);
+    try {
+      await saveMySettings({ data: next });
+    } catch (reason) {
+      setSettings(previous);
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Preference could not be saved. Please try again.",
+      );
+    } finally {
+      setSavingKey(null);
+    }
+  };
   return (
     <Card title={title} icon={Bell}>
-      <div className="space-y-1">
-        {items.map((item) => {
-          const key = `settings.${item.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
-          const value = toggles[key] ?? toggles.notifications ?? false;
-          return (
-            <Toggle
-              key={item}
-              label={item}
-              value={value}
-              onChange={(next) => setToggle(key, next)}
-            />
-          );
-        })}
-      </div>
-      <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
-        These controls are stored in the current FarmX preferences store. Critical security
-        notifications cannot be disabled.
-      </p>
+      {loading ? (
+        <Skeleton />
+      ) : (
+        <>
+          {error && <Notice tone="error">{error}</Notice>}
+          <div className="space-y-1">
+            {items.map(([label, key]) => {
+              const value = Boolean((settings[kind] as Record<string, boolean>)[key]);
+              return (
+                <Toggle
+                  key={key}
+                  label={label}
+                  value={value}
+                  disabled={
+                    savingKey === key || (kind === "notifications" && key === "securityAlerts")
+                  }
+                  onChange={(next) => void update(key, next)}
+                />
+              );
+            })}
+          </div>
+          <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
+            Preferences are saved to your authenticated FarmX profile. Critical security alerts
+            remain enabled.
+          </p>
+        </>
+      )}
     </Card>
   );
 }
@@ -1397,24 +1800,76 @@ function VerificationRow({ label, value }: { label: string; value: string }) {
   );
 }
 function BlockedPage() {
-  const { hiddenSellers } = usePrefs();
+  const [blockedUsers, setBlockedUsers] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getMySettings()
+      .then((res) => {
+        if (!active) return;
+        setBlockedUsers(res.settings?.blockedUsers ?? []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const unblock = async (username: string) => {
+    try {
+      const current = await getMySettings();
+      const base = current.settings ?? DEFAULT_FARMX_SETTINGS;
+      const updated = (base.blockedUsers ?? []).filter((u: string) => u !== username);
+      await saveMySettings({
+        data: {
+          notifications: base.notifications,
+          communication: base.communication,
+          buying: base.buying,
+          country: base.country,
+          currency: base.currency,
+          dateFormat: base.dateFormat,
+          timeFormat: base.timeFormat,
+          marketplaceRadiusKm: base.marketplaceRadiusKm,
+          blockedUsers: updated,
+        },
+      });
+      setBlockedUsers(updated);
+    } catch (err) {
+      console.error("Failed to unblock user:", err);
+    }
+  };
+
   return (
     <Card title="Blocked users" icon={Users}>
       <p className="mb-3 text-xs leading-5 text-muted-foreground">
-        Blocked seller controls currently stored on this device are shown below. Account-wide
-        blocking will appear here after its server endpoint is enabled.
+        Users you have blocked from messaging or interacting with your listings are shown below.
       </p>
-      {hiddenSellers.length ? (
-        hiddenSellers.map((seller) => (
-          <div key={seller} className="flex items-center gap-3 border-b border-border py-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-xs font-black text-brand">
-              {seller.slice(0, 1).toUpperCase()}
-            </span>
-            <span className="flex-1 text-sm font-bold">{seller}</span>
+      {loading ? (
+        <Skeleton />
+      ) : blockedUsers.length ? (
+        blockedUsers.map((user: string) => (
+          <div key={user} className="flex items-center justify-between border-b border-border py-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand/10 text-xs font-black text-brand">
+                {user.slice(0, 1).toUpperCase()}
+              </span>
+              <span className="text-sm font-bold">{user}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void unblock(user)}
+              className="text-xs font-bold text-destructive hover:underline"
+            >
+              Unblock
+            </button>
           </div>
         ))
       ) : (
-        <EmptyState text="No blocked users are recorded on this device." />
+        <EmptyState text="No blocked users are recorded in your account." />
       )}
     </Card>
   );
@@ -1690,6 +2145,8 @@ function Field({
   type = "text",
   hint,
   multiline = false,
+  inputMode,
+  maxLength,
 }: {
   label: string;
   value: string;
@@ -1697,6 +2154,8 @@ function Field({
   type?: string;
   hint?: string;
   multiline?: boolean;
+  inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search";
+  maxLength?: number;
 }) {
   return (
     <label className="block">
@@ -1712,6 +2171,8 @@ function Field({
         <input
           type={type}
           value={value}
+          inputMode={inputMode}
+          maxLength={maxLength}
           onChange={(event) => onChange(event.target.value)}
           className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-brand"
         />
@@ -1752,19 +2213,22 @@ function Toggle({
   label,
   value,
   onChange,
+  disabled = false,
 }: {
   label: string;
   value: boolean;
   onChange: (value: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
       <span className="flex-1 text-sm font-bold">{label}</span>
       <button
         type="button"
+        disabled={disabled}
         onClick={() => onChange(!value)}
         aria-pressed={value}
-        className={`relative h-6 w-11 rounded-full transition ${value ? "bg-brand" : "bg-muted-foreground/30"}`}
+        className={`relative h-6 w-11 rounded-full transition ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${value ? "bg-brand" : "bg-muted-foreground/30"}`}
       >
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${value ? "left-5.5" : "left-0.5"}`}

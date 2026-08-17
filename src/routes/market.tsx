@@ -5,7 +5,7 @@ import { ListingRail, MarketListingCard } from "@/components/MarketListingCard";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import type { MarketCategory } from "@/lib/market-dev-data";
 import { useCompany } from "@/lib/company-store";
-import { LOCATIONS } from "@/lib/mock-data";
+import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useI18n } from "@/lib/i18n";
 import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 import {
@@ -226,11 +226,13 @@ function Market() {
                 className="rounded-lg border border-border bg-background px-2 py-1.5 text-[10px] font-bold outline-none"
               >
                 <option value="">All locations</option>
-                {LOCATIONS.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {Object.keys(NIGERIA_STATES_LGAS)
+                  .sort()
+                  .map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
               </select>
             </div>
             <Link

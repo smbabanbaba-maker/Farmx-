@@ -8,7 +8,8 @@ import {
 } from "@/lib/market-repository";
 import type { MarketListing } from "@/lib/market-dev-data";
 import type { CommunityPost } from "@/lib/community.types";
-import { jobs } from "@/lib/mock-data";
+import type { JobPost } from "@/lib/job.types";
+import { getJobRepository } from "@/lib/job-repository";
 
 export type GlobalSearchTab = "all" | "listings" | "services" | "businesses" | "jobs" | "community";
 
@@ -32,7 +33,7 @@ export type BusinessSearchResult = {
   photo: string;
 };
 
-export type JobSearchResult = (typeof jobs)[number];
+export type JobSearchResult = JobPost;
 
 export type GlobalSearchResult = {
   query: string;
@@ -79,15 +80,6 @@ function businessResults(listings: MarketListing[]) {
   return [...byUsername.values()];
 }
 
-function jobMatches(job: JobSearchResult, query: string, filters?: MarketFilters) {
-  const tokens = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  const searchable =
-    `${job.title} ${job.company} ${job.location} ${job.salary} ${job.type}`.toLowerCase();
-  if (tokens.some((token) => !searchable.includes(token))) return false;
-  if (filters?.state && job.location !== filters.state) return false;
-  return true;
-}
-
 export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSearchResult> {
   const market: MarketRepository = await getMarketRepository();
   const community: CommunityRepository = await getCommunityRepository();
@@ -109,10 +101,11 @@ export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSear
     input.tab === "jobs"
       ? { posts: [], hasMore: false }
       : await community.getFeed({ tab: "latest", search: input.query, limit: pageSize });
-  const previewJobs =
-    getMarketRuntimeMode() === "preview"
-      ? jobs.filter((job) => jobMatches(job, input.query, input.filters))
-      : [];
+  const jobRepo = await getJobRepository();
+  const previewJobs = await jobRepo.getJobs({
+    search: input.query,
+    state: input.filters?.state,
+  });
   const counts: Record<GlobalSearchTab, number> = {
     all: marketPage.total + communityPage.posts.length + previewJobs.length,
     listings: marketPage.total,

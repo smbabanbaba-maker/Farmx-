@@ -8,6 +8,7 @@ import {
   PutCommand,
   QueryCommand,
   ScanCommand,
+  TransactWriteCommand,
   UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { z } from "zod";
@@ -264,18 +265,68 @@ export const updateLearnProgress = createServerFn({ method: "POST" })
       ? Math.min(100, Math.round((enrollment.completedLessonIds.length / totalLessons) * 100))
       : 0;
     enrollment.status = enrollment.progressPercent === 100 ? "completed" : "active";
-    await client.send(
-      new UpdateCommand({
-        TableName: config.learnTable,
-        Key: { pk: item.pk, sk: item.sk },
-        UpdateExpression: "SET enrollment = :enrollment, updatedAt = :updatedAt",
-        ExpressionAttributeValues: {
-          ":enrollment": enrollment,
-          ":updatedAt": new Date().toISOString(),
-        },
-        ConditionExpression: "attribute_exists(pk)",
-      }),
-    );
+    const now = new Date().toISOString();
+    const certificateEligible = course?.certificateEligibility === true;
+    const shouldIssueCertificate =
+      enrollment.progressPercent === 100 && certificateEligible && !enrollment.certificateIssued;
+    if (shouldIssueCertificate) {
+      const certificateId = `cert-${actor.userId}-${enrollment.courseId}`;
+      const certificate: CourseCertificate = {
+        id: certificateId,
+        userId: actor.userId,
+        userName: enrollment.registrationDetails.fullName,
+        courseId: enrollment.courseId,
+        courseTitle: course?.title ?? enrollment.courseId,
+        issuedAt: now,
+        verificationCode: `FX-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      };
+      enrollment.certificateIssued = true;
+      enrollment.certificateId = certificateId;
+      await client.send(
+        new TransactWriteCommand({
+          TransactItems: [
+            {
+              Update: {
+                TableName: config.learnTable,
+                Key: { pk: item.pk, sk: item.sk },
+                UpdateExpression: "SET enrollment = :enrollment, updatedAt = :updatedAt",
+                ExpressionAttributeValues: {
+                  ":enrollment": enrollment,
+                  ":updatedAt": now,
+                },
+                ConditionExpression: "attribute_exists(pk)",
+              },
+            },
+            {
+              Put: {
+                TableName: config.learnTable,
+                Item: {
+                  pk: `USER#${actor.userId}`,
+                  sk: `CERTIFICATE#${enrollment.courseId}`,
+                  entityType: "CERTIFICATE",
+                  certificate,
+                  createdAt: now,
+                },
+                ConditionExpression: "attribute_not_exists(pk)",
+              },
+            },
+          ],
+        }),
+      );
+    } else {
+      await client.send(
+        new UpdateCommand({
+          TableName: config.learnTable,
+          Key: { pk: item.pk, sk: item.sk },
+          UpdateExpression: "SET enrollment = :enrollment, updatedAt = :updatedAt",
+          ExpressionAttributeValues: {
+            ":enrollment": enrollment,
+            ":updatedAt": now,
+          },
+          ConditionExpression: "attribute_exists(pk)",
+        }),
+      );
+    }
     return enrollment;
   });
 
@@ -337,7 +388,22 @@ export const updateLearnCourse = createServerFn({ method: "POST" })
     const config = getConfig();
     const actor = await requireLearnAdmin();
     const now = new Date().toISOString();
-    await createDocumentClient(config.region).send(
+    const client = createDocumentClient(config.region);
+    const existing = await client.send(
+      new GetCommand({
+        TableName: config.learnTable,
+        Key: { pk: `COURSE#${data.courseId}`, sk: `COURSE#${data.courseId}` },
+      }),
+    );
+    const currentCourse = existing.Item?.course as Course | undefined;
+    if (!currentCourse) throw new Error("Course not found.");
+    const mergedCourse = {
+      ...currentCourse,
+      ...data.updates,
+      id: currentCourse.id,
+      updatedAt: now,
+    } as Course;
+    await client.send(
       new UpdateCommand({
         TableName: config.learnTable,
         Key: { pk: `COURSE#${data.courseId}`, sk: `COURSE#${data.courseId}` },
@@ -345,8 +411,8 @@ export const updateLearnCourse = createServerFn({ method: "POST" })
           "SET course = :course, #status = :status, updatedAt = :updatedAt, updatedBy = :updatedBy",
         ExpressionAttributeNames: { "#status": "status" },
         ExpressionAttributeValues: {
-          ":course": data.updates,
-          ":status": typeof data.updates.status === "string" ? data.updates.status : "draft",
+          ":course": mergedCourse,
+          ":status": mergedCourse.status,
           ":updatedAt": now,
           ":updatedBy": actor.userId,
         },

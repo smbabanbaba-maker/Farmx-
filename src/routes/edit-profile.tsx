@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { LOCATIONS } from "@/lib/mock-data";
+import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import {
   createProfilePhotoUpload,
   removeMyProfilePhoto,
@@ -364,11 +364,13 @@ function EditProfile() {
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-brand"
             >
               <option value="">Select your state</option>
-              {LOCATIONS.map((location) => (
-                <option key={location} value={location}>
-                  {location}
-                </option>
-              ))}
+              {Object.keys(NIGERIA_STATES_LGAS)
+                .sort()
+                .map((location) => (
+                  <option key={location} value={location}>
+                    {location}
+                  </option>
+                ))}
             </select>
           </label>
           <Field
