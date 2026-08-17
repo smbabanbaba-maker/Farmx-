@@ -344,8 +344,8 @@ export const getPublicMarketListing = createServerFn({ method: "GET" })
       }),
     );
     const item = result.Item as Record<string, unknown> | undefined;
-    if (!item || item.status !== "ACTIVE") return null;
-    return toMarketListing(item);
+    if (!item || !["ACTIVE", "published"].includes(String(item.status))) return null;
+    return toMarketListing({ ...item, status: "ACTIVE" });
   });
 
 export { toMarketListing };

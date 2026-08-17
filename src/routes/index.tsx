@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { ListingImage } from "@/components/ListingImage";
 import { FarmXSearchBar } from "@/components/FarmXSearchBar";
 import { useI18n } from "@/lib/i18n";
 import { useLocation } from "@/lib/location";
@@ -311,12 +312,10 @@ function Dashboard() {
                 )}
                 <div className="aspect-square bg-brand/5 flex items-center justify-center overflow-hidden">
                   {product.images?.[0] ? (
-                    <img
+                    <ListingImage
                       src={product.images[0]}
                       alt={product.title}
                       className="h-full w-full object-cover"
-                      loading="lazy"
-                      decoding="async"
                     />
                   ) : (
                     <ShoppingBag className="h-8 w-8 text-brand/20" />

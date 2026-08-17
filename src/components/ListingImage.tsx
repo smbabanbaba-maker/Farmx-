@@ -3,7 +3,9 @@ import { Image as ImageIcon, Loader2 } from "lucide-react";
 import { getS3ViewUrl } from "@/lib/s3-client";
 
 function isFarmXObjectKey(value: string) {
-  return /^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i.test(value);
+  return /^(listings|products|community|messages|profiles|business)\/[a-z0-9][a-z0-9._/-]*$/i.test(
+    value,
+  );
 }
 
 function isRenderableUrl(value: string) {

@@ -316,7 +316,7 @@ function ProductPage() {
             <ListingImage
               src={currentImage}
               alt={listing.title}
-              placeholder={currentImage}
+              placeholder={listing.imagePlaceholder}
               className="h-full w-full object-cover"
             />
             <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
@@ -354,7 +354,7 @@ function ProductPage() {
                   <ListingImage
                     src={image}
                     alt={`${listing.title} photo ${index + 1}`}
-                    placeholder={image}
+                    placeholder={listing.imagePlaceholder}
                     className="h-full w-full object-cover"
                   />
                 </button>
@@ -446,6 +446,8 @@ function ProductPage() {
                     "contactPhone",
                     "promoId",
                     "videoLink",
+                    "sourceCategoryId",
+                    "sourceSubcategoryId",
                   ].includes(key)
                 )
                   return null;

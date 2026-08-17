@@ -6,7 +6,9 @@ import { getAwsClientOptions } from "@/lib/aws-config";
 import { requireAuthenticatedUser } from "@/lib/auth-server";
 
 const viewKeySchema = z.object({
-  objectKey: z.string().regex(/^(listings|products|community|messages)\/[a-z0-9][a-z0-9._/-]*$/i),
+  objectKey: z
+    .string()
+    .regex(/^(listings|products|community|messages|profiles|business)\/[a-z0-9][a-z0-9._/-]*$/i),
 });
 
 function getStorageConfig() {
