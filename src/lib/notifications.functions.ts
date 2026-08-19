@@ -65,7 +65,7 @@ function mapItem(item: Record<string, unknown>) {
     eventId: typeof item.eventId === "string" ? item.eventId : undefined,
     category: String(item.category ?? item.type ?? "system"),
     type: String(item.type ?? item.category ?? "system"),
-    title: String(item.title ?? "FarmX update"),
+    title: String(item.title ?? "Goall26 update"),
     body: String(item.body ?? ""),
     at: Number.isFinite(at) ? at : Date.now(),
     read: item.read === true,

@@ -33,10 +33,10 @@ import {
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "My Profile — FarmX" },
+      { title: "My Profile — Goall26" },
       {
         name: "description",
-        content: "Manage your FarmX profile, advertisements, inquiries, services and settings.",
+        content: "Manage your Goall26 profile, advertisements, inquiries, services and settings.",
       },
     ],
   }),
@@ -89,8 +89,8 @@ const sections = [
   {
     id: "balance",
     group: "Payments",
-    label: "FarmX balance",
-    description: "Payments for FarmX services only",
+    label: "Goall26 balance",
+    description: "Payments for Goall26 services only",
     icon: WalletCards,
   },
   {
@@ -104,7 +104,7 @@ const sections = [
     id: "reviews",
     group: "Performance",
     label: "Ratings & reviews",
-    description: "Feedback from verified FarmX interactions",
+    description: "Feedback from verified Goall26 interactions",
     icon: Star,
   },
   {
@@ -146,7 +146,7 @@ const sections = [
     id: "support",
     group: "Account",
     label: "Help & support",
-    description: "FAQ, support tickets and FarmX assistance",
+    description: "FAQ, support tickets and Goall26 assistance",
     icon: CircleHelp,
   },
 ] as const;
@@ -175,7 +175,7 @@ function ProfilePage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand/10 text-brand">
             <ShieldCheck className="h-8 w-8" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Sign in to FarmX</h1>
+          <h1 className="text-xl font-bold text-foreground">Sign in to Goall26</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Join thousands of Nigerian farmers and buyers. Manage your ads, chats, and professional
             profile securely.
@@ -210,7 +210,7 @@ function ProfilePage() {
           <ShieldCheck className="mx-auto h-9 w-9 text-brand" />
           <h1 className="mt-3 text-lg font-bold">Unable to load Profile</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
-            Make sure the FarmX Profile service environment is configured correctly on the server.
+            Make sure the Goall26 Profile service environment is configured correctly on the server.
           </p>
           <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
             {error}
@@ -231,7 +231,7 @@ function ProfilePage() {
       <AppShell title="Profile">
         <section className="mx-auto max-w-lg rounded-2xl border border-dashed border-border bg-card p-6 text-center">
           <UserRound className="mx-auto h-10 w-10 text-brand" />
-          <h1 className="mt-3 text-lg font-bold">Complete your FarmX Profile</h1>
+          <h1 className="mt-3 text-lg font-bold">Complete your Goall26 Profile</h1>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">
             Add your verified identity, role, location and professional details to use Profile tools
             safely.
@@ -283,8 +283,8 @@ function ProfilePage() {
 
   const shareProfile = async () => {
     const shareData = {
-      title: `${profile.fullName} on FarmX`,
-      text: `View ${profile.fullName}'s FarmX profile`,
+      title: `${profile.fullName} on Goall26`,
+      text: `View ${profile.fullName}'s Goall26 profile`,
       url: profileUrl,
     };
     try {
@@ -402,7 +402,7 @@ function ProfilePage() {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   {activeTab === "About"
                     ? `${profile.fullName} is a ${roleLabel(profile.role)} based in ${profile.location || profile.state}, Nigeria.`
-                    : `Real FarmX data for this section is available in your Profile Centre.`}
+                    : `Real Goall26 data for this section is available in your Profile Centre.`}
                 </p>
                 {activeTab === "About" && (
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
@@ -440,7 +440,7 @@ function ProfilePage() {
             <div>
               <h2 className="text-sm font-bold">Profile centre</h2>
               <p className="text-[11px] text-muted-foreground">
-                Manage your FarmX activity and services
+                Manage your Goall26 activity and services
               </p>
             </div>
             <MoreHorizontal className="h-5 w-5 text-muted-foreground" />

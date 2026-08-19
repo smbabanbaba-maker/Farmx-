@@ -12,12 +12,12 @@ import { Heart, MapPin, MessageCircle } from "lucide-react";
 export const Route = createFileRoute("/saved")({
   head: () => ({
     meta: [
-      { title: "Saved Ads — FarmX" },
+      { title: "Saved Ads — Goall26" },
       {
         name: "description",
-        content: "Your favourite FarmX ads saved for later, with prices and seller locations.",
+        content: "Your favourite Goall26 ads saved for later, with prices and seller locations.",
       },
-      { property: "og:title", content: "FarmX Saved Ads" },
+      { property: "og:title", content: "Goall26 Saved Ads" },
       { property: "og:description", content: "Favourite ads saved for later." },
     ],
   }),

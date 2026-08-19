@@ -84,8 +84,8 @@ function PostSelector() {
             <div>
               <h4 className="font-black text-brand">Reach thousands of farmers</h4>
               <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                Whether you're selling produce, hiring talent, or sharing expertise, FarmX connects
-                you with the right audience across Nigeria.
+                Whether you're selling produce, hiring talent, or sharing expertise, Goall26
+                connects you with the right audience across Nigeria.
               </p>
             </div>
           </div>

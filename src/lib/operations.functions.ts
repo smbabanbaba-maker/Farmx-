@@ -40,7 +40,7 @@ function getConfig() {
   const inventoryTable = process.env.FARMX_INVENTORY_TABLE;
   const fleetTable = process.env.FARMX_FLEET_TABLE;
   if (!region || !inventoryTable || !fleetTable) {
-    throw new Error("FarmX Inventory and Fleet AWS tables are not configured on the server.");
+    throw new Error("Goall26 Inventory and Fleet AWS tables are not configured on the server.");
   }
   return { region, inventoryTable, fleetTable };
 }

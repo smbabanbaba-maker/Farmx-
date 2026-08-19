@@ -19,13 +19,13 @@ import { useMemo, useState } from "react";
 export const Route = createFileRoute("/messages")({
   head: () => ({
     meta: [
-      { title: "Chats — FarmX" },
+      { title: "Chats — Goall26" },
       {
         name: "description",
-        content: "Marketplace conversations between FarmX buyers and sellers.",
+        content: "Marketplace conversations between Goall26 buyers and sellers.",
       },
-      { property: "og:title", content: "FarmX Chats" },
-      { property: "og:description", content: "Communicate safely about FarmX listings." },
+      { property: "og:title", content: "Goall26 Chats" },
+      { property: "og:description", content: "Communicate safely about Goall26 listings." },
     ],
   }),
   component: MessagesInbox,
@@ -91,7 +91,7 @@ function MessagesInbox() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-              FarmX marketplace
+              Goall26 marketplace
             </p>
             <h1 className="mt-1 text-2xl font-black tracking-tight">Chats</h1>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -117,7 +117,7 @@ function MessagesInbox() {
               <p className="text-xs font-black">Safe marketplace conversations</p>
               <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                 Discuss the listing, verify the person, and inspect the item before any private
-                transaction. FarmX does not process buyer-to-seller payments here.
+                transaction. Goall26 does not process buyer-to-seller payments here.
               </p>
             </div>
           </div>
@@ -217,7 +217,7 @@ function ConversationRow({ conversation }: { conversation: Conversation }) {
           </div>
           <div className="mt-1 flex min-w-0 items-center gap-1.5">
             <span className="truncate text-[10px] font-semibold text-brand">
-              {conversation.product?.name ?? "FarmX conversation"}
+              {conversation.product?.name ?? "Goall26 conversation"}
             </span>
             {conversation.product && (
               <span className="shrink-0 text-[9px] text-muted-foreground">
@@ -266,7 +266,7 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
       <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
         {hasSearch
           ? "Try another name, listing title or message."
-          : "Start a conversation with a seller or buyer from a FarmX listing."}
+          : "Start a conversation with a seller or buyer from a Goall26 listing."}
       </p>
       {!hasSearch && (
         <Link
@@ -287,7 +287,7 @@ function unreadCount(conversation: Conversation) {
 function lastMessagePreview(message: Message | undefined) {
   if (!message) return "No messages yet";
   if (message.kind === "image") return "Image";
-  if (message.kind === "product") return `Listing: ${message.product?.name ?? "FarmX listing"}`;
+  if (message.kind === "product") return `Listing: ${message.product?.name ?? "Goall26 listing"}`;
   if (message.kind === "delivery")
     return `Delivery update: ${message.delivery?.status ?? "Updated"}`;
   if (message.kind === "coupon") return `Coupon: ${message.coupon?.code ?? "Shared"}`;

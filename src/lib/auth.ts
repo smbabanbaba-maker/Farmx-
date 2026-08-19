@@ -7,20 +7,22 @@ import {
   type CognitoUserSession,
 } from "amazon-cognito-identity-js";
 
-const getPoolData = () => {
-  let userPoolId = import.meta.env.VITE_COGNITO_USER_POOL_ID || "eu-west-1_HXI6OOXpg";
-  if (userPoolId.startsWith("u-west-1")) {
-    userPoolId = "e" + userPoolId;
-  }
-  return {
-    UserPoolId: userPoolId,
-    ClientId: import.meta.env.VITE_COGNITO_WEB_CLIENT_ID || "5160g8vs8f7c55fnvovjtgqnab",
-  };
-};
+const getPoolData = () => ({
+  UserPoolId: String(import.meta.env.VITE_COGNITO_USER_POOL_ID ?? "").trim(),
+  ClientId: String(import.meta.env.VITE_COGNITO_WEB_CLIENT_ID ?? "").trim(),
+});
 
 const poolData = getPoolData();
+const userPool = poolData.UserPoolId && poolData.ClientId ? new CognitoUserPool(poolData) : null;
 
-const userPool = new CognitoUserPool(poolData);
+function requireUserPool(): CognitoUserPool {
+  if (!userPool) {
+    throw new Error(
+      "Goall26 authentication is not configured. Set VITE_COGNITO_USER_POOL_ID and VITE_COGNITO_WEB_CLIENT_ID in the deployment environment.",
+    );
+  }
+  return userPool;
+}
 
 export const PASSWORD_LENGTH = 6;
 export const PASSWORD_PATTERN = /^[0-9]{6}$/;
@@ -47,7 +49,7 @@ export async function getCurrentSession(): Promise<CognitoUserSession | null> {
   if (sessionRequest) return sessionRequest;
 
   sessionRequest = new Promise<CognitoUserSession | null>((resolve) => {
-    const user = userPool.getCurrentUser();
+    const user = userPool?.getCurrentUser();
     if (!user) {
       resolve(null);
       return;
@@ -84,7 +86,7 @@ function getHostedUiConfig() {
     import.meta.env.VITE_COGNITO_REDIRECT_URI ||
     (typeof window !== "undefined" ? `${window.location.origin}/oauth/callback` : "");
   if (!domain || !redirectUri)
-    throw new Error("Google sign-in is not configured for this FarmX deployment.");
+    throw new Error("Google sign-in is not configured for this Goall26 deployment.");
   return {
     domain: String(domain)
       .replace(/^https?:\/\//, "")
@@ -153,7 +155,7 @@ export async function exchangeCognitoHostedUiCode(code: string): Promise<void> {
 
 export function signOut() {
   clearSessionCache();
-  const user = userPool.getCurrentUser();
+  const user = requireUserPool().getCurrentUser();
   if (user) {
     user.signOut();
   }
@@ -165,10 +167,10 @@ export function signOut() {
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   assertSixDigitPassword(currentPassword);
   assertSixDigitPassword(newPassword);
-  const user = userPool.getCurrentUser();
-  if (!user) throw new Error("Your FarmX session has expired. Please sign in again.");
+  const user = requireUserPool().getCurrentUser();
+  if (!user) throw new Error("Your Goall26 session has expired. Please sign in again.");
   const session = await getCurrentSession();
-  if (!session) throw new Error("Your FarmX session has expired. Please sign in again.");
+  if (!session) throw new Error("Your Goall26 session has expired. Please sign in again.");
   return new Promise((resolve, reject) => {
     user.changePassword(currentPassword.trim(), newPassword.trim(), (error) => {
       if (error) reject(error instanceof Error ? error : new Error(String(error)));
@@ -178,10 +180,10 @@ export async function changePassword(currentPassword: string, newPassword: strin
 }
 
 export async function deleteCognitoAccount(): Promise<void> {
-  const user = userPool.getCurrentUser();
-  if (!user) throw new Error("Your FarmX session has expired. Please sign in again.");
+  const user = requireUserPool().getCurrentUser();
+  if (!user) throw new Error("Your Goall26 session has expired. Please sign in again.");
   const session = await getCurrentSession();
-  if (!session) throw new Error("Your FarmX session has expired. Please sign in again.");
+  if (!session) throw new Error("Your Goall26 session has expired. Please sign in again.");
   await new Promise<void>((resolve, reject) => {
     user.deleteUser((error) => {
       if (error) reject(error instanceof Error ? error : new Error(String(error)));
@@ -201,9 +203,9 @@ export async function signIn(email: string, password: string): Promise<unknown> 
   const authenticationDetails = new AuthenticationDetails(authenticationData);
   const userData = {
     Username: email,
-    Pool: userPool,
+    Pool: requireUserPool(),
   };
-  const cognitoUser = new CognitoUser(userData);
+  const cognitoUser = new CognitoUser({ ...userData, Pool: requireUserPool() });
 
   return new Promise((resolve, reject) => {
     cognitoUser.authenticateUser(authenticationDetails, {
@@ -258,7 +260,7 @@ export async function signUp(
   );
 
   return new Promise((resolve, reject) => {
-    userPool.signUp(email, password, attributeList, [], (err, result) => {
+    requireUserPool().signUp(email, password, attributeList, [], (err, result) => {
       if (err) {
         console.error("Cognito signUp error:", err);
         // Ensure err is an Error object
@@ -273,8 +275,9 @@ export async function signUp(
 
 export async function requestPasswordReset(email: string): Promise<{ destination?: string }> {
   const normalizedEmail = email.trim().toLowerCase();
-  if (!normalizedEmail) throw new Error("Enter the email address for your FarmX account.");
-  const cognitoUser = new CognitoUser({ Username: normalizedEmail, Pool: userPool });
+  if (!normalizedEmail) throw new Error("Enter the email address for your Goall26 account.");
+  const pool = requireUserPool();
+  const cognitoUser = new CognitoUser({ Username: normalizedEmail, Pool: pool });
   return new Promise((resolve, reject) => {
     cognitoUser.forgotPassword({
       onSuccess: (data) => resolve({ destination: data.CodeDeliveryDetails?.Destination }),
@@ -292,7 +295,8 @@ export async function confirmPasswordReset(
   if (!/^\d{6}$/.test(code))
     throw new Error("The verification code must contain exactly 6 digits.");
   assertSixDigitPassword(newPassword);
-  const cognitoUser = new CognitoUser({ Username: normalizedEmail, Pool: userPool });
+  const pool = requireUserPool();
+  const cognitoUser = new CognitoUser({ Username: normalizedEmail, Pool: pool });
   return new Promise((resolve, reject) => {
     cognitoUser.confirmPassword(code, newPassword, {
       onSuccess: () => resolve(),
@@ -327,7 +331,7 @@ export function getFriendlyAuthError(
     message.includes("fetch") ||
     message.includes("failed to fetch")
   )
-    return "We couldn't connect to FarmX. Please check your internet connection and try again.";
+    return "We couldn't connect to Goall26. Please check your internet connection and try again.";
   return context === "signin"
     ? "Email or password is incorrect."
     : "We couldn't complete the password reset. Please try again.";
@@ -336,9 +340,9 @@ export function getFriendlyAuthError(
 export async function confirmSignUp(email: string, code: string): Promise<unknown> {
   const userData = {
     Username: email,
-    Pool: userPool,
+    Pool: requireUserPool(),
   };
-  const cognitoUser = new CognitoUser(userData);
+  const cognitoUser = new CognitoUser({ ...userData, Pool: requireUserPool() });
 
   return new Promise((resolve, reject) => {
     cognitoUser.confirmRegistration(code, true, (err, result) => {

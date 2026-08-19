@@ -6,12 +6,12 @@ import { Flag, ShieldCheck } from "lucide-react";
 export const Route = createFileRoute("/reports")({
   head: () => ({
     meta: [
-      { title: "My reports — FarmX" },
+      { title: "My reports — Goall26" },
       {
         name: "description",
-        content: "Track the status of sellers you reported to FarmX support.",
+        content: "Track the status of sellers you reported to Goall26 support.",
       },
-      { property: "og:title", content: "FarmX Reports" },
+      { property: "og:title", content: "Goall26 Reports" },
       { property: "og:description", content: "Follow up on seller reports and safety cases." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -29,7 +29,7 @@ function ReportsPage() {
         <div className="flex items-start gap-2 p-3 rounded-xl bg-brand/5 border border-brand/20">
           <ShieldCheck className="h-4 w-4 text-brand shrink-0 mt-0.5" />
           <p className="text-[11px] text-muted-foreground">
-            FarmX safety team reviews every report. Keep chats inside the app so we can see the
+            Goall26 safety team reviews every report. Keep chats inside the app so we can see the
             evidence.
           </p>
         </div>

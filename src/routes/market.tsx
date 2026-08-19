@@ -22,25 +22,25 @@ import {
 export const Route = createFileRoute("/market")({
   head: () =>
     createSeoHead({
-      title: "Agricultural marketplace in Nigeria | FarmX",
+      title: "Agricultural marketplace in Nigeria | Goall26",
       description:
-        "Browse public agricultural products, services and marketplace listings across Nigeria on FarmX.",
+        "Browse public agricultural products, services and marketplace listings across Nigeria on Goall26.",
       path: "/market",
       keywords: [
         "Nigeria agricultural marketplace",
         "farm products",
         "farm services",
-        "FarmX Market",
+        "Goall26 Market",
       ],
       noindex: !publicIndexingEnabled(),
       jsonLd: [
         {
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "FarmX Market",
-          description: "Public agricultural products and marketplace listings on FarmX.",
+          name: "Goall26 Market",
+          description: "Public agricultural products and marketplace listings on Goall26.",
         },
-        breadcrumbJsonLd([{ name: "FarmX Market", path: "/market" }]),
+        breadcrumbJsonLd([{ name: "Goall26 Market", path: "/market" }]),
       ],
     }),
   component: Market,
@@ -147,12 +147,12 @@ function Market() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand">
-                <Sparkles className="h-3.5 w-3.5" /> FarmX classified marketplace
+                <Sparkles className="h-3.5 w-3.5" /> Goall26 classified marketplace
               </p>
               <h1 className="mt-2 text-2xl font-black tracking-tight">Find what you need.</h1>
               <p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">
                 Discover vehicles, property, electronics, agriculture, services, and trusted
-                businesses. Contact sellers directly—FarmX does not process private product
+                businesses. Contact sellers directly—Goall26 does not process private product
                 payments.
               </p>
             </div>
@@ -174,7 +174,7 @@ function Market() {
               onFocus={() => setSearchFocused(true)}
               onBlur={() => window.setTimeout(() => setSearchFocused(false), 150)}
               placeholder="Search products, equipment, services, sellers…"
-              aria-label="Search FarmX Market"
+              aria-label="Search Goall26 Market"
               className="w-full rounded-2xl border border-border bg-background py-3 pl-10 pr-20 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
             />
             {query && (
@@ -304,7 +304,7 @@ function Market() {
           <>
             <ListingRail
               title="Featured listings"
-              subtitle="Paid FarmX visibility, clearly labelled."
+              subtitle="Paid Goall26 visibility, clearly labelled."
               listings={sections.featured}
               href="/market/search"
             />
@@ -328,7 +328,7 @@ function Market() {
             />
             <ListingRail
               title="Popular listings"
-              subtitle="Listings getting attention from FarmX buyers."
+              subtitle="Listings getting attention from Goall26 buyers."
               listings={sections.popular}
               href="/market/search"
             />
@@ -374,11 +374,11 @@ function Market() {
               <div className="flex gap-3">
                 <ShieldCheck className="h-5 w-5 shrink-0 text-brand" />
                 <div>
-                  <h2 className="text-sm font-black">FarmX safety reminder</h2>
+                  <h2 className="text-sm font-black">Goall26 safety reminder</h2>
                   <p className="mt-1 text-xs leading-5 text-muted-foreground">
                     Always verify products and sellers before making payment. Meet safely, inspect
                     agricultural goods, avoid suspicious payments, and report suspicious listings.
-                    FarmX does not hold or process private buyer-to-seller product payments.
+                    Goall26 does not hold or process private buyer-to-seller product payments.
                   </p>
                   <Link
                     to="/profile-center/$section"

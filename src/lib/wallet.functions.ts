@@ -46,16 +46,6 @@ const webhookSchema = z.object({
   }),
 });
 
-function hasProductionConfig() {
-  return Boolean(
-    process.env.AWS_REGION &&
-    process.env.FARMX_PROFILE_TABLE &&
-    process.env.FARMX_LISTINGS_TABLE &&
-    (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
-    (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
-  );
-}
-
 function getConfig() {
   const region = process.env.AWS_REGION;
   const profileTable = process.env.FARMX_PROFILE_TABLE;
@@ -138,64 +128,13 @@ export type WalletService = {
   requiresListing: boolean;
 };
 
-const previewServices: WalletService[] = [
-  {
-    id: "boost",
-    label: "Boost Listing",
-    description: "Increase visibility in relevant marketplace results.",
-    packages: [
-      { id: "boost-7", durationDays: 7, amount: 5000, currency: "NGN" },
-      { id: "boost-14", durationDays: 14, amount: 8500, currency: "NGN" },
-      { id: "boost-30", durationDays: 30, amount: 15000, currency: "NGN" },
-    ],
-    requiresListing: true,
-  },
-  {
-    id: "featured",
-    label: "Featured Listing",
-    description: "Give your listing premium visibility across Market surfaces.",
-    packages: [
-      { id: "featured-7", durationDays: 7, amount: 12000, currency: "NGN" },
-      { id: "featured-30", durationDays: 30, amount: 30000, currency: "NGN" },
-    ],
-    requiresListing: true,
-  },
-  {
-    id: "top_placement",
-    label: "Top Placement",
-    description: "Increase placement in relevant marketplace areas.",
-    note: "Top placement increases visibility. It does not guarantee sales.",
-    packages: [
-      { id: "top-7", durationDays: 7, amount: 18000, currency: "NGN" },
-      { id: "top-30", durationDays: 30, amount: 45000, currency: "NGN" },
-    ],
-    requiresListing: true,
-  },
-  {
-    id: "highlight",
-    label: "Highlight Listing",
-    description: "Make a listing stand out with a professional highlight treatment.",
-    packages: [
-      { id: "highlight-7", durationDays: 7, amount: 7000, currency: "NGN" },
-      { id: "highlight-30", durationDays: 30, amount: 18000, currency: "NGN" },
-    ],
-    requiresListing: true,
-  },
-  {
-    id: "business_promotion",
-    label: "Business Promotion",
-    description: "Promote your FarmX business and reach more customers.",
-    packages: [
-      { id: "business-14", durationDays: 14, amount: 25000, currency: "NGN" },
-      { id: "business-30", durationDays: 30, amount: 50000, currency: "NGN" },
-    ],
-    requiresListing: false,
-  },
-];
-
 function configuredServices(): WalletService[] {
   const raw = process.env.FARMX_SERVICE_PACKAGES_JSON;
-  if (!raw) return hasProductionConfig() ? [] : previewServices;
+  if (!raw) {
+    throw new Error(
+      "Goall26 services are not configured. Set FARMX_SERVICE_PACKAGES_JSON on the server before accepting payments.",
+    );
+  }
   try {
     const parsed = JSON.parse(raw) as unknown;
     return z
@@ -221,7 +160,7 @@ function configuredServices(): WalletService[] {
       .parse(parsed);
   } catch {
     throw new Error(
-      "FARMX_SERVICE_PACKAGES_JSON is invalid. Configure FarmX service packages before accepting payments.",
+      "FARMX_SERVICE_PACKAGES_JSON is invalid. Configure Goall26 service packages before accepting payments.",
     );
   }
 }
@@ -245,14 +184,6 @@ export type FarmXTransaction = {
 
 export const getWalletSummary = createServerFn({ method: "GET" }).handler(async () => {
   privateResponse();
-  if (!hasProductionConfig()) {
-    return {
-      cashBalance: 0,
-      promotionalCredits: 0,
-      pendingAmount: 0,
-      currency: "NGN",
-    } satisfies WalletSummary;
-  }
   const config = getConfig();
   const actor = await requireUser();
   const client = documentClient(config.region);
@@ -273,9 +204,6 @@ export const getWalletSummary = createServerFn({ method: "GET" }).handler(async 
 
 export const getTransactions = createServerFn({ method: "GET" }).handler(async () => {
   privateResponse();
-  if (!hasProductionConfig()) {
-    return [] satisfies FarmXTransaction[];
-  }
   const config = getConfig();
   const actor = await requireUser();
   const client = documentClient(config.region);
@@ -292,7 +220,7 @@ export const getTransactions = createServerFn({ method: "GET" }).handler(async (
     id: String(item.transactionId ?? item.sk),
     reference: String(item.reference ?? item.transactionId),
     serviceType: String(item.serviceType ?? "service"),
-    serviceLabel: String(item.serviceLabel ?? "FarmX Service"),
+    serviceLabel: String(item.serviceLabel ?? "Goall26 Service"),
     listingTitle: typeof item.listingTitle === "string" ? item.listingTitle : undefined,
     amount: Number(item.amount ?? 0),
     paymentMethod: String(item.paymentMethod ?? "card"),
@@ -310,22 +238,12 @@ export const initiateServicePayment = createServerFn({ method: "POST" })
     const service = services.find((item) => item.id === data.serviceType);
     const selectedPackage = service?.packages.find((item) => item.id === data.packageId);
     if (!service || !selectedPackage)
-      throw new Error("That FarmX service package is no longer available.");
+      throw new Error("That Goall26 service package is no longer available.");
     if (service.requiresListing && !data.listingId)
-      throw new Error("Select an eligible listing for this FarmX service.");
+      throw new Error("Select an eligible listing for this Goall26 service.");
     const reference = `TXN-${Math.random().toString(36).slice(2, 8).toUpperCase()}${Date.now().toString().slice(-6)}`;
     const now = new Date().toISOString();
     const serviceLabel = service.label;
-
-    if (!hasProductionConfig()) {
-      return {
-        reference,
-        checkoutUrl: `#checkout-${reference}`,
-        amount: selectedPackage.amount,
-        durationDays: selectedPackage.durationDays,
-        serviceLabel,
-      };
-    }
 
     const config = getConfig();
     const actor = await requireUser();
@@ -353,11 +271,11 @@ export const initiateServicePayment = createServerFn({ method: "POST" })
       const secret = await getPaystackSecret();
       if (!secret)
         throw new Error(
-          "FarmX payment provider is not configured. Add PAYSTACK_SECRET_KEY on the server before accepting payments.",
+          "Goall26 payment provider is not configured. Add PAYSTACK_SECRET_KEY on the server before accepting payments.",
         );
       if (!actor.email)
         throw new Error(
-          "Add a verified email address to your FarmX profile before starting payment.",
+          "Add a verified email address to your Goall26 profile before starting payment.",
         );
       const channels =
         data.paymentMethod === "card"
@@ -467,10 +385,6 @@ export const verifyServicePayment = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => verifyPaymentSchema.parse(input))
   .handler(async ({ data }) => {
     privateResponse();
-    if (!hasProductionConfig()) {
-      return { verified: true, reference: data.reference, status: "successful" };
-    }
-
     const config = getConfig();
     const actor = await requireUser();
     const client = documentClient(config.region);
@@ -500,7 +414,7 @@ export const verifyServicePayment = createServerFn({ method: "POST" })
       };
     if (txn.paymentMethod !== "promotional_credits") {
       const secret = await getPaystackSecret();
-      if (!secret) throw new Error("FarmX payment provider is not configured for verification.");
+      if (!secret) throw new Error("Goall26 payment provider is not configured for verification.");
       const providerResponse = await fetch(
         `https://api.paystack.co/transaction/verify/${encodeURIComponent(String(txn.providerReference ?? data.reference))}`,
         { headers: { Authorization: `Bearer ${secret}` } },
@@ -520,7 +434,7 @@ export const verifyServicePayment = createServerFn({ method: "POST" })
           providerPayload.message ?? "Payment has not been confirmed by the provider.",
         );
       if (providerPayload.data.amount !== expectedAmount)
-        throw new Error("The verified payment amount does not match this FarmX service.");
+        throw new Error("The verified payment amount does not match this Goall26 service.");
     }
 
     const now = new Date().toISOString();
@@ -561,8 +475,8 @@ export const verifyServicePayment = createServerFn({ method: "POST" })
     await writeWalletNotification(client, config.profileTable, actor.userId, {
       reference: data.reference,
       eventId: `wallet:${data.reference}:successful`,
-      title: "FarmX service activated",
-      body: `${String(txn.serviceLabel ?? "FarmX service")} is now active.`,
+      title: "Goall26 service activated",
+      body: `${String(txn.serviceLabel ?? "Goall26 service")} is now active.`,
     });
     return { verified: true, reference: data.reference, status: "successful", activatedUntil };
   });
@@ -571,9 +485,6 @@ export const handleServiceWebhook = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => webhookSchema.parse(input))
   .handler(async ({ data }) => {
     privateResponse();
-    if (!hasProductionConfig()) {
-      return { processed: true, reference: data.data.reference };
-    }
     const secret = await getPaystackSecret();
     const signature =
       getRequestHeader("x-paystack-signature") ?? getRequestHeader("x-farmx-signature");
@@ -672,12 +583,12 @@ export const handleServiceWebhook = createServerFn({ method: "POST" })
         eventId: `wallet:${data.data.reference}:${status}`,
         title:
           status === "successful"
-            ? "FarmX service payment successful"
-            : "FarmX service payment update",
+            ? "Goall26 service payment successful"
+            : "Goall26 service payment update",
         body:
           status === "successful"
-            ? `${String(txn.serviceLabel ?? "FarmX service")} has been activated.`
-            : `Payment status for ${String(txn.serviceLabel ?? "FarmX service")} is ${status}.`,
+            ? `${String(txn.serviceLabel ?? "Goall26 service")} has been activated.`
+            : `Payment status for ${String(txn.serviceLabel ?? "Goall26 service")} is ${status}.`,
       },
     );
     return { processed: true, reference: data.data.reference, status, activatedUntil };

@@ -87,7 +87,7 @@ function MarketSearch() {
           </Link>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand">
-              FarmX Market
+              Goall26 Market
             </p>
             <h1 className="text-xl font-black">Search listings</h1>
           </div>

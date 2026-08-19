@@ -15,13 +15,13 @@ import { useCallback, useEffect, useState } from "react";
 export const Route = createFileRoute("/subscribe")({
   head: () => ({
     meta: [
-      { title: "Subscription Plans — FarmX" },
+      { title: "Subscription Plans — Goall26" },
       {
         name: "description",
         content:
-          "Free listing quota then flexible FarmX plans from Basic to Enterprise Lux, payable in two monthly installments.",
+          "Free listing quota then flexible Goall26 plans from Basic to Enterprise Lux, payable in two monthly installments.",
       },
-      { property: "og:title", content: "FarmX Subscription Plans" },
+      { property: "og:title", content: "Goall26 Subscription Plans" },
       {
         property: "og:description",
         content: "Basic to Enterprise Lux plans, each split into two installments.",
@@ -77,7 +77,7 @@ function SubscribePage() {
   };
 
   const endSubscription = async () => {
-    if (!window.confirm("Cancel auto-renewal for this FarmX subscription?")) return;
+    if (!window.confirm("Cancel auto-renewal for this Goall26 subscription?")) return;
     setServerBusy(true);
     try {
       const updated = await cancelSubscription();

@@ -50,7 +50,7 @@ export function PublicShareActions({ title, text, path }: PublicShareActionsProp
         >
           <div className="flex items-center justify-between px-2 py-1.5">
             <div>
-              <p className="text-xs font-black">Share on FarmX</p>
+              <p className="text-xs font-black">Share on Goall26</p>
               <p className="text-[10px] text-muted-foreground">Use the public listing link.</p>
             </div>
             <button

@@ -82,7 +82,7 @@ export function createSeoHead(input: SeoHeadInput) {
     { property: "og:description", content: input.description },
     { property: "og:url", content: canonical },
     { property: "og:type", content: input.type ?? "website" },
-    { property: "og:site_name", content: "FarmX" },
+    { property: "og:site_name", content: "Goall26" },
     { property: "og:locale", content: "en_NG" },
     { property: "og:image", content: image },
     { property: "og:image:alt", content: input.title },
@@ -108,7 +108,7 @@ export function organizationJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "FarmX",
+    name: "Goall26",
     url: publicSiteUrl(),
     logo: absoluteUrl(BRAND_LOGO_PATH),
     sameAs: [],
@@ -119,7 +119,7 @@ export function websiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "FarmX",
+    name: "Goall26",
     url: publicSiteUrl(),
     potentialAction: {
       "@type": "SearchAction",
@@ -234,7 +234,7 @@ export function courseJsonLd(course: Course) {
     description: truncateDescription(course.fullDescription || course.shortDescription, 5000),
     provider: {
       "@type": "Organization",
-      name: "FarmX",
+      name: "Goall26",
       sameAs: publicSiteUrl(),
     },
     image: safePublicImageUrl(course.coverImage),
@@ -295,7 +295,7 @@ export function categoryCollectionJsonLd(category: MarketCategory, listings: Mar
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${category.name} on FarmX`,
+    name: `${category.name} on Goall26`,
     description: truncateDescription(category.description),
     url: absoluteUrl(`/market/category/${encodeURIComponent(category.id)}`),
     mainEntity: {

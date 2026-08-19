@@ -79,11 +79,11 @@ export const NOTIF_CHANNELS: { key: NotificationCategory; label: string; group: 
   { key: "listings", label: "Listings", group: "Marketplace" },
   { key: "listing_activity", label: "Listing activity", group: "Marketplace" },
   { key: "followers", label: "Followers", group: "Community" },
-  { key: "promotions", label: "Promotions", group: "FarmX services" },
+  { key: "promotions", label: "Promotions", group: "Goall26 services" },
   { key: "community", label: "Community", group: "Community" },
   { key: "account", label: "Account", group: "Account & security" },
   { key: "security", label: "Security", group: "Account & security" },
-  { key: "system", label: "FarmX updates", group: "FarmX" },
+  { key: "system", label: "Goall26 updates", group: "Goall26" },
   // Legacy categories remain supported for existing CommerceProvider events.
   { key: "order", label: "Order updates", group: "Legacy" },
   { key: "escrow", label: "Escrow status", group: "Legacy" },

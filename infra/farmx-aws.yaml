@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  FarmX marketplace foundation: private media storage, listings database,
+  Goall26 marketplace foundation: private media storage, listings database,
   customer identity, and a dedicated payment-secret placeholder.
 
 Parameters:
   ApplicationOrigin:
     Type: String
-    Description: The HTTPS origin that serves FarmX, for example https://app.example.com
+    Description: The HTTPS origin that serves Goall26, for example https://app.example.com
     AllowedPattern: "^https://.*$"
   Environment:
     Type: String
@@ -48,7 +48,7 @@ Resources:
               DaysAfterInitiation: 7
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -97,7 +97,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -134,7 +134,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -183,7 +183,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -220,7 +220,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -269,7 +269,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -318,7 +318,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -342,7 +342,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -366,7 +366,7 @@ Resources:
         SSEEnabled: true
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -379,8 +379,8 @@ Resources:
       MfaConfiguration: "OFF"
       VerificationMessageTemplate:
         DefaultEmailOption: CONFIRM_WITH_CODE
-        EmailSubject: "FarmX verification code"
-        EmailMessage: "Your FarmX verification code is {####}. Use this code to securely verify your account or reset your password. If you did not request this, you can safely ignore this email."
+        EmailSubject: "Goall26 verification code"
+        EmailMessage: "Your Goall26 verification code is {####}. Use this code to securely verify your account or reset your password. If you did not request this, you can safely ignore this email."
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
@@ -393,7 +393,7 @@ Resources:
           RequireSymbols: false
           RequireUppercase: false
       UserPoolTags:
-        Application: FarmX
+        Application: Goall26
         Environment: !Ref Environment
 
   FarmXUserPoolClient:
@@ -417,7 +417,7 @@ Resources:
       SecretString: '{"PAYSTACK_SECRET_KEY":"REPLACE_ME"}'
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -425,7 +425,7 @@ Resources:
     Type: AWS::IAM::ManagedPolicy
     Properties:
       ManagedPolicyName: !Sub "farmx-${Environment}-application-policy"
-      Description: Attach to the FarmX server runtime role only.
+      Description: Attach to the Goall26 server runtime role only.
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -557,7 +557,7 @@ Resources:
         - AB9D0263244DD0326EB67015705A667E79CFE998
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
@@ -565,7 +565,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "farmx-${Environment}-vercel-runtime"
-      Description: Short-lived Vercel OIDC runtime role for FarmX production server functions.
+      Description: Short-lived Vercel OIDC runtime role for Goall26 production server functions.
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -581,43 +581,43 @@ Resources:
         - !Ref FarmXApplicationPolicy
       Tags:
         - Key: Application
-          Value: FarmX
+          Value: Goall26
         - Key: Environment
           Value: !Ref Environment
 
 Outputs:
   MediaBucketName:
-    Description: Use as FARMX_MEDIA_BUCKET on the FarmX server.
+    Description: Use as FARMX_MEDIA_BUCKET on the Goall26 server.
     Value: !Ref MediaBucket
   ListingsTableName:
-    Description: Use as FARMX_LISTINGS_TABLE on the FarmX server.
+    Description: Use as FARMX_LISTINGS_TABLE on the Goall26 server.
     Value: !Ref ListingsTable
   ProfileTableName:
-    Description: Use as FARMX_PROFILE_TABLE on the FarmX server.
+    Description: Use as FARMX_PROFILE_TABLE on the Goall26 server.
     Value: !Ref ProfileTable
   CommunityTableName:
-    Description: Use as FARMX_COMMUNITY_TABLE on the FarmX server.
+    Description: Use as FARMX_COMMUNITY_TABLE on the Goall26 server.
     Value: !Ref CommunityTable
   JobsTableName:
-    Description: Use as FARMX_JOBS_TABLE on the FarmX server.
+    Description: Use as FARMX_JOBS_TABLE on the Goall26 server.
     Value: !Ref JobsTable
   InventoryTableName:
-    Description: Use as FARMX_INVENTORY_TABLE on the FarmX server.
+    Description: Use as FARMX_INVENTORY_TABLE on the Goall26 server.
     Value: !Ref InventoryTable
   FleetTableName:
-    Description: Use as FARMX_FLEET_TABLE on the FarmX server.
+    Description: Use as FARMX_FLEET_TABLE on the Goall26 server.
     Value: !Ref FleetTable
   JobApplicationsTableName:
-    Description: Use as FARMX_JOB_APPLICATIONS_TABLE on the FarmX server.
+    Description: Use as FARMX_JOB_APPLICATIONS_TABLE on the Goall26 server.
     Value: !Ref JobApplicationsTable
   LearnTableName:
-    Description: Use as FARMX_LEARN_TABLE on the FarmX server.
+    Description: Use as FARMX_LEARN_TABLE on the Goall26 server.
     Value: !Ref LearnTable
   VercelRuntimeRoleArn:
     Description: Use as AWS_ROLE_ARN in the Vercel production environment.
     Value: !GetAtt FarmXVercelRuntimeRole.Arn
   AwsRegion:
-    Description: Use as AWS_REGION on the FarmX server.
+    Description: Use as AWS_REGION on the Goall26 server.
     Value: !Ref AWS::Region
   CognitoUserPoolId:
     Description: Cognito user pool identifier for the web authentication integration.
@@ -626,7 +626,7 @@ Outputs:
     Description: Cognito SPA client identifier.
     Value: !Ref FarmXUserPoolClient
   ApplicationPolicyArn:
-    Description: Attach this policy to the FarmX server runtime IAM role.
+    Description: Attach this policy to the Goall26 server runtime IAM role.
     Value: !Ref FarmXApplicationPolicy
   PaystackSecretArn:
     Description: Secret ARN for the payment backend runtime role.

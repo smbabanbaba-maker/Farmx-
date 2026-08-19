@@ -92,7 +92,7 @@ function ResetPasswordPage() {
     const normalizedEmail = email.trim().toLowerCase();
     const code = otp.join("");
     if (!z.string().email().safeParse(normalizedEmail).success) {
-      setError("Enter the email address linked to your FarmX account.");
+      setError("Enter the email address linked to your Goall26 account.");
       return;
     }
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
@@ -150,7 +150,7 @@ function ResetPasswordPage() {
             </div>
             <h1 className="mt-4 text-xl font-black">Your password has been reset successfully.</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Use your new 6-digit password to continue to FarmX.
+              Use your new 6-digit password to continue to Goall26.
             </p>
             <button
               type="button"

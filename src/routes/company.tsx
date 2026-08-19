@@ -82,7 +82,7 @@ function CompanyPage() {
   const profile = data?.profile;
   const business = profile?.business;
   const listings = data?.activeListings ?? [];
-  const companyName = business?.name || profile?.fullName || "FarmX business";
+  const companyName = business?.name || profile?.fullName || "Goall26 business";
   const slug = profile?.username;
   const companyUrl = useMemo(() => (slug ? `${window.location.origin}/c/${slug}` : ""), [slug]);
 

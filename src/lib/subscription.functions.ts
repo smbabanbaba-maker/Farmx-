@@ -51,7 +51,7 @@ function getConfig() {
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
   if (!region || !profileTable) {
-    throw new Error("FarmX subscription storage is not configured on the server.");
+    throw new Error("Goall26 subscription storage is not configured on the server.");
   }
   return { region, profileTable, listingsTable };
 }
@@ -196,7 +196,7 @@ function makeSubscriptionItem(
 export const getSubscriptionSummary = createServerFn({ method: "GET" }).handler(async () => {
   noStore();
   if (!hasProductionConfig())
-    throw new Error("Subscription storage is not configured on the FarmX server.");
+    throw new Error("Subscription storage is not configured on the Goall26 server.");
   const config = getConfig();
   const actor = await requireUser();
   return getSubscriptionForUser(
@@ -213,7 +213,7 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
     noStore();
     if (!hasProductionConfig())
       throw new Error(
-        "Subscription payments are not configured. Add FarmX AWS and Paystack server settings before accepting payment.",
+        "Subscription payments are not configured. Add Goall26 AWS and Paystack server settings before accepting payment.",
       );
     const config = getConfig();
     const actor = await requireUser();
@@ -236,7 +236,7 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
       reference,
       paymentType: "subscription",
       serviceType: "subscription",
-      serviceLabel: `FarmX ${plan.name} subscription`,
+      serviceLabel: `Goall26 ${plan.name} subscription`,
       planTier: plan.tier,
       planName: plan.name,
       amount: plan.price,
@@ -273,7 +273,7 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
       await writeWalletNotification(client, config.profileTable, actor.userId, {
         reference,
         eventId: `subscription:${reference}:successful`,
-        title: "FarmX subscription activated",
+        title: "Goall26 subscription activated",
         body: `Your ${plan.name} plan is now active.`,
       });
       return { reference, status: "successful" as const, amount: plan.price, planName: plan.name };
@@ -282,11 +282,11 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
     const secret = await getPaystackSecret();
     if (!secret)
       throw new Error(
-        "FarmX payment provider is not configured. Add PAYSTACK_SECRET_KEY on the server before accepting subscriptions.",
+        "Goall26 payment provider is not configured. Add PAYSTACK_SECRET_KEY on the server before accepting subscriptions.",
       );
     if (!actor.email)
       throw new Error(
-        "Add a verified email address to your FarmX profile before starting payment.",
+        "Add a verified email address to your Goall26 profile before starting payment.",
       );
 
     await client.send(
@@ -383,7 +383,7 @@ export const verifySubscriptionPayment = createServerFn({ method: "POST" })
     if (transaction.status === "successful")
       return { verified: true, reference: data.reference, status: "successful" as const };
     const secret = await getPaystackSecret();
-    if (!secret) throw new Error("FarmX payment provider is not configured for verification.");
+    if (!secret) throw new Error("Goall26 payment provider is not configured for verification.");
     const providerResponse = await fetch(
       `https://api.paystack.co/transaction/verify/${encodeURIComponent(String(transaction.providerReference ?? data.reference))}`,
       { headers: { Authorization: `Bearer ${secret}` } },
@@ -396,7 +396,7 @@ export const verifySubscriptionPayment = createServerFn({ method: "POST" })
     if (!providerResponse.ok || !payload.status || payload.data?.status !== "success")
       throw new Error(payload.message ?? "Payment has not been confirmed by the provider.");
     if (payload.data.amount !== Math.round(Number(transaction.amount ?? 0) * 100))
-      throw new Error("The verified payment amount does not match this FarmX subscription.");
+      throw new Error("The verified payment amount does not match this Goall26 subscription.");
 
     const tier = String(transaction.planTier) as SubscriptionTier;
     const plan = getPlan(tier);
@@ -436,7 +436,7 @@ export const verifySubscriptionPayment = createServerFn({ method: "POST" })
     await writeWalletNotification(client, config.profileTable, actor.userId, {
       reference: data.reference,
       eventId: `subscription:${data.reference}:successful`,
-      title: "FarmX subscription activated",
+      title: "Goall26 subscription activated",
       body: `Your ${plan.name} plan is now active.`,
     });
     return { verified: true, reference: data.reference, status: "successful" as const };
@@ -549,7 +549,7 @@ async function updateSubscriptionFromWebhook(
     await writeWalletNotification(client, config.profileTable, userId, {
       reference,
       eventId: `subscription:${reference}:successful`,
-      title: "FarmX subscription activated",
+      title: "Goall26 subscription activated",
       body: `Your ${plan.name} plan is now active.`,
     });
   } else {
@@ -566,7 +566,7 @@ async function updateSubscriptionFromWebhook(
     await writeWalletNotification(client, config.profileTable, userId, {
       reference,
       eventId: `subscription:${reference}:${status}`,
-      title: "FarmX subscription payment update",
+      title: "Goall26 subscription payment update",
       body: `Your subscription payment status is ${status}.`,
     });
   }

@@ -82,7 +82,7 @@ export const ALL_CATEGORIES: MarketCategory[] = UNIVERSAL_CATEGORIES.map((catego
   id: category.id,
   name: category.name,
   icon: category.icon,
-  description: `${category.name} listings on FarmX.`,
+  description: `${category.name} listings on Goall26.`,
   subcategories: category.subcategories.map((subcategory) => subcategory.name),
 }));
 

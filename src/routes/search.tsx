@@ -128,15 +128,15 @@ function GlobalSearch() {
   ].filter(Boolean) as { label: string; key: keyof MarketFilters }[];
 
   return (
-    <AppShell title="Search FarmX">
+    <AppShell title="Search Goall26">
       <div className="space-y-5 pb-8">
         <header className="space-y-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.16em] text-brand">
-              FarmX search
+              Goall26 search
             </p>
             <h1 className="mt-1 text-2xl font-black tracking-tight">
-              Find almost anything on FarmX.
+              Find almost anything on Goall26.
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
               Search public listings, services, businesses, jobs, and Community posts.

@@ -33,23 +33,23 @@ export const Route = createFileRoute("/market/category/$category")({
     const listings = loaderData?.listings ?? [];
     if (!category || listings.length === 0) {
       return createSeoHead({
-        title: "Market category unavailable | FarmX",
-        description: "This FarmX marketplace category has no public listings available.",
+        title: "Market category unavailable | Goall26",
+        description: "This Goall26 marketplace category has no public listings available.",
         path: `/market/category/${encodeURIComponent(params.category)}`,
         noindex: true,
       });
     }
     return createSeoHead({
-      title: `${category.name} agricultural marketplace | FarmX`,
+      title: `${category.name} agricultural marketplace | Goall26`,
       description: truncateDescription(
-        `${category.description} Browse ${listings.length} public ${category.name} listings on FarmX.`,
+        `${category.description} Browse ${listings.length} public ${category.name} listings on Goall26.`,
       ),
       path: `/market/category/${encodeURIComponent(category.id)}`,
-      keywords: [category.name, ...category.subcategories, "FarmX marketplace"],
+      keywords: [category.name, ...category.subcategories, "Goall26 marketplace"],
       jsonLd: [
         categoryCollectionJsonLd(category, listings),
         breadcrumbJsonLd([
-          { name: "FarmX Market", path: "/market" },
+          { name: "Goall26 Market", path: "/market" },
           { name: "Categories", path: "/market/categories" },
           { name: category.name, path: `/market/category/${encodeURIComponent(category.id)}` },
         ]),
@@ -119,7 +119,7 @@ function MarketCategoryPage() {
             <span className="text-2xl">{category.icon}</span>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-brand">
-                FarmX category
+                Goall26 category
               </p>
               <h1 className="truncate text-xl font-black">{category.name}</h1>
             </div>

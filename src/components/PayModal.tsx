@@ -47,7 +47,7 @@ export function PayModal({
       const session = await getCurrentSession();
       const email = session?.getIdToken().payload.email;
       if (typeof email !== "string" || !email) {
-        throw new Error("Please sign in with a verified FarmX account before paying.");
+        throw new Error("Please sign in with a verified Goall26 account before paying.");
       }
       const res = await initPayment({ email, amountNaira, purpose });
       if (!res.authorization_url.startsWith("http")) {
@@ -90,7 +90,7 @@ export function PayModal({
               <WalletIcon className="h-4 w-4 text-brand" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-sm font-semibold">FarmX Wallet</p>
+              <p className="text-sm font-semibold">Goall26 Wallet</p>
               <p className="text-xs text-muted-foreground">
                 Balance: ₦{walletBalance.toLocaleString()}
               </p>

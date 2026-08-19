@@ -122,11 +122,11 @@ function PlansPage() {
   };
 
   return (
-    <AppShell title="FarmX Plans">
+    <AppShell title="Goall26 Plans">
       <div className="space-y-6 pb-20">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand to-foreground p-6 text-brand-foreground shadow-lg sm:p-8">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-            <Crown className="h-3.5 w-3.5 text-yellow-300" /> FarmX Membership
+            <Crown className="h-3.5 w-3.5 text-yellow-300" /> Goall26 Membership
           </span>
           <h1 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">
             Choose the plan that fits your farming or business needs.
@@ -343,7 +343,7 @@ function PlansPage() {
                       [
                         { id: "card", label: "Bank Card", icon: CreditCard },
                         { id: "bank_transfer", label: "Bank Transfer", icon: Building },
-                        { id: "wallet", label: "FarmX Wallet", icon: Zap },
+                        { id: "wallet", label: "Goall26 Wallet", icon: Zap },
                       ] as const
                     ).map((method) => (
                       <button
@@ -391,8 +391,8 @@ function PlansPage() {
                   </a>
                 )}
                 <p className="text-[10px] text-muted-foreground">
-                  After payment, return here and verify the transaction. FarmX will not activate the
-                  plan from the browser alone.
+                  After payment, return here and verify the transaction. Goall26 will not activate
+                  the plan from the browser alone.
                 </p>
                 <button
                   disabled={processing}
@@ -436,7 +436,7 @@ function PlansPage() {
                   onClick={() => setSelectedPlan(null)}
                   className="w-full min-h-12 rounded-2xl bg-brand text-xs font-black text-brand-foreground"
                 >
-                  Return to FarmX
+                  Return to Goall26
                 </button>
               </div>
             )}

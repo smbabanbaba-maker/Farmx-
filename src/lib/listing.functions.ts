@@ -79,7 +79,7 @@ export const publishListing = createServerFn({ method: "POST" })
     ]);
     const profile = (profileResult.Item ?? {}) as Record<string, unknown>;
     const sellerName = String(
-      profile.fullName ?? actor.name ?? actor.email?.split("@")[0] ?? "FarmX Member",
+      profile.fullName ?? actor.name ?? actor.email?.split("@")[0] ?? "Goall26 Member",
     );
     const sellerUsername = typeof profile.username === "string" ? profile.username : undefined;
     const sellerPhotoKey = typeof profile.photoKey === "string" ? profile.photoKey : undefined;
@@ -112,7 +112,7 @@ export const publishListing = createServerFn({ method: "POST" })
     );
     if (Number(listingCount.Count ?? 0) >= listingLimit) {
       throw new Error(
-        `Your current FarmX plan allows up to ${listingLimit} active listings. Upgrade your plan before publishing another listing.`,
+        `Your current Goall26 plan allows up to ${listingLimit} active listings. Upgrade your plan before publishing another listing.`,
       );
     }
 

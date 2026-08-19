@@ -59,19 +59,10 @@ const applicationStatusSchema = z.object({
 });
 const savedJobSchema = z.object({ jobId: z.string().trim().min(1).max(128) });
 
-function hasProductionConfig() {
-  return Boolean(
-    process.env.AWS_REGION &&
-    process.env.FARMX_JOBS_TABLE &&
-    process.env.FARMX_JOB_APPLICATIONS_TABLE &&
-    (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
-    (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
-  );
-}
-
-export const getJobRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
-  mode: hasProductionConfig() ? ("production" as const) : ("preview" as const),
-}));
+export const getJobRuntimeMode = createServerFn({ method: "GET" }).handler(async () => {
+  getConfig();
+  return { mode: "production" as const };
+});
 
 function getConfig() {
   const region = process.env.AWS_REGION;
@@ -212,7 +203,7 @@ export const createJob = createServerFn({ method: "POST" })
       profile.business && typeof profile.business === "object"
         ? (profile.business as Record<string, unknown>).name
         : undefined,
-      asString(profile.fullName, "FarmX Employer"),
+      asString(profile.fullName, "Goall26 Employer"),
     );
     const job: JobPost = {
       ...(source as JobPost),
@@ -226,7 +217,7 @@ export const createJob = createServerFn({ method: "POST" })
       location: asString(source.location, asString(profile.location)),
       state: asString(source.state, asString(profile.state)),
       employer: {
-        name: asString(profile.fullName, actor.email ?? "FarmX Employer"),
+        name: asString(profile.fullName, actor.email ?? "Goall26 Employer"),
         companyName,
         verified: profile.verification === "approved",
         rating: asNumber(profile.rating),
@@ -401,7 +392,7 @@ export const applyForJob = createServerFn({ method: "POST" })
       userId: actor.userId,
       applicantName: asString(
         profile.fullName,
-        data.applicantName ?? actor.email ?? "FarmX Member",
+        data.applicantName ?? actor.email ?? "Goall26 Member",
       ),
       applicantEmail: actor.email ?? data.applicantEmail ?? "",
       applicantPhone: asString(profile.phone, data.applicantPhone),

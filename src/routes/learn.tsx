@@ -44,18 +44,18 @@ export const Route = createFileRoute("/learn")({
   head: ({ matches }) =>
     matches[matches.length - 1]?.pathname === "/learn"
       ? createSeoHead({
-          title: "Agricultural learning courses in Nigeria | FarmX Learn",
+          title: "Agricultural learning courses in Nigeria | Goall26 Learn",
           description:
-            "Learn agriculture, poultry, livestock, irrigation, business and digital skills through public FarmX courses.",
+            "Learn agriculture, poultry, livestock, irrigation, business and digital skills through public Goall26 courses.",
           path: "/learn",
           keywords: [
             "agriculture courses Nigeria",
             "farm training",
-            "FarmX Learn",
+            "Goall26 Learn",
             "agricultural education",
           ],
           noindex: !publicIndexingEnabled(),
-          jsonLd: breadcrumbJsonLd([{ name: "FarmX Learn", path: "/learn" }]),
+          jsonLd: breadcrumbJsonLd([{ name: "Goall26 Learn", path: "/learn" }]),
         })
       : {},
   validateSearch: (search: Record<string, unknown>) => ({
@@ -121,7 +121,7 @@ function LearnHome() {
             : null,
         );
       } catch {
-        if (!cancelled) setError("FarmX Learn is temporarily unable to load. Please try again.");
+        if (!cancelled) setError("Goall26 Learn is temporarily unable to load. Please try again.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -160,7 +160,7 @@ function LearnHome() {
   };
 
   return (
-    <AppShell title="FarmX Learn">
+    <AppShell title="Goall26 Learn">
       <div className="space-y-7 pb-8">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand to-foreground p-5 text-brand-foreground shadow-lg sm:p-7">
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
@@ -169,14 +169,14 @@ function LearnHome() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest">
-                  <GraduationCap className="h-3.5 w-3.5" /> Official FarmX Learning Center
+                  <GraduationCap className="h-3.5 w-3.5" /> Official Goall26 Learning Center
                 </span>
                 <h1 className="mt-4 max-w-lg text-2xl font-black tracking-tight sm:text-3xl">
                   Learn practical skills. Build a stronger future.
                 </h1>
                 <p className="mt-2 max-w-xl text-xs leading-5 text-white/80">
                   Expert-led agriculture, business, technology, and practical skills courses created
-                  for the FarmX community.
+                  for the Goall26 community.
                 </p>
               </div>
               <div className="hidden rounded-3xl border border-white/20 bg-white/10 p-4 sm:block">
@@ -189,7 +189,7 @@ function LearnHome() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search courses, lessons and topics…"
-                aria-label="Search FarmX Learn"
+                aria-label="Search Goall26 Learn"
                 className="min-h-12 w-full rounded-2xl border border-white/20 bg-white pl-10 pr-20 text-sm font-semibold text-foreground outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-white/40"
               />
               {search && (
@@ -249,7 +249,7 @@ function LearnHome() {
           <>
             <CourseRail
               title="Featured Courses"
-              subtitle="Official FarmX programmes selected for practical impact"
+              subtitle="Official Goall26 programmes selected for practical impact"
               courses={featured}
             />
 
@@ -281,7 +281,7 @@ function LearnHome() {
             {newCourses.length > 0 && (
               <CourseRail
                 title="New Courses"
-                subtitle="Recently published by FarmX Learn"
+                subtitle="Recently published by Goall26 Learn"
                 courses={newCourses}
               />
             )}
@@ -299,7 +299,7 @@ function LearnHome() {
                 <SectionHeading
                   icon={<Award className="h-4 w-4" />}
                   title="My Certificates"
-                  subtitle="Your verified FarmX Learn achievements"
+                  subtitle="Your verified Goall26 Learn achievements"
                 />
                 <Link
                   to="/learn"
@@ -518,7 +518,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <section className="rounded-3xl border border-dashed border-brand/30 bg-card p-10 text-center">
       <LockKeyhole className="mx-auto h-8 w-8 text-brand" />
-      <h2 className="mt-3 text-base font-black">FarmX Learn is unavailable</h2>
+      <h2 className="mt-3 text-base font-black">Goall26 Learn is unavailable</h2>
       <p className="mt-2 text-xs text-muted-foreground">{message}</p>
       <button
         type="button"

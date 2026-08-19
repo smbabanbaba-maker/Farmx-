@@ -7,7 +7,7 @@ export type AppErrorContext = Record<string, unknown>;
  */
 export function reportApplicationError(error: unknown, context: AppErrorContext = {}) {
   if (import.meta.env.DEV) {
-    console.error("FarmX application error", {
+    console.error("Goall26 application error", {
       error,
       route: typeof window === "undefined" ? undefined : window.location.pathname,
       ...context,

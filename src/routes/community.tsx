@@ -34,10 +34,10 @@ import {
 export const Route = createFileRoute("/community")({
   head: () => ({
     meta: [
-      { title: "Community — FarmX" },
+      { title: "Community — Goall26" },
       {
         name: "description",
-        content: "Ask questions, share farming knowledge, and connect with the FarmX community.",
+        content: "Ask questions, share farming knowledge, and connect with the Goall26 community.",
       },
     ],
   }),
@@ -93,7 +93,7 @@ function Community() {
       if (typeof navigator !== "undefined" && navigator.share)
         await navigator
           .share({
-            title: `${post.author.name} on FarmX Community`,
+            title: `${post.author.name} on Goall26 Community`,
             text: post.content.slice(0, 120),
             url: absolute,
           })
@@ -113,7 +113,7 @@ function Community() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-                FarmX network
+                Goall26 network
               </p>
               <h1 className="mt-1 text-2xl font-black tracking-tight">Community</h1>
               <p className="mt-1 max-w-lg text-xs leading-relaxed text-muted-foreground">
@@ -289,7 +289,7 @@ function Community() {
           <Users className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
           <p className="text-[10px] leading-relaxed text-muted-foreground">
             Community is for discussion and knowledge sharing. Product listings remain in Market,
-            and FarmX does not process private payments here.
+            and Goall26 does not process private payments here.
           </p>
         </div>
       </div>
@@ -347,7 +347,7 @@ function CommunityPostCard({
                   {(post.author.verified || post.author.official) && (
                     <CheckCircle2
                       className="h-3.5 w-3.5 shrink-0 text-brand"
-                      aria-label={post.author.official ? "FarmX Official" : "Verified user"}
+                      aria-label={post.author.official ? "Goall26 Official" : "Verified user"}
                     />
                   )}
                 </div>
@@ -403,7 +403,7 @@ function CommunityPostCard({
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs font-black">{post.listing.title}</p>
               <p className="mt-1 truncate text-[10px] text-muted-foreground">
-                {post.listing.location ?? "FarmX Market"}
+                {post.listing.location ?? "Goall26 Market"}
                 {post.listing.price != null ? ` · ₦${post.listing.price.toLocaleString()}` : ""}
               </p>
               <p className="mt-1 text-[10px] font-black text-brand">
@@ -569,7 +569,7 @@ function CommunityEmpty({
         <Sparkles className="h-7 w-7" />
       </div>
       <h2 className="mt-4 text-base font-black">
-        {following ? "You’re not following anyone yet" : "Welcome to FarmX Community"}
+        {following ? "You’re not following anyone yet" : "Welcome to Goall26 Community"}
       </h2>
       <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
         {following

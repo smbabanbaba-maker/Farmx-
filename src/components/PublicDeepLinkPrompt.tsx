@@ -48,11 +48,11 @@ export function PublicDeepLinkPrompt({ path, title }: PublicDeepLinkPromptProps)
           <Smartphone className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-black">Continue in the FarmX app</p>
+          <p className="text-xs font-black">Continue in the Goall26 app</p>
           <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">
             {showFallback
               ? `If the app is not installed, continue viewing ${title} here.`
-              : "Open this public page in FarmX when the app is installed."}
+              : "Open this public page in Goall26 when the app is installed."}
           </p>
         </div>
         <button

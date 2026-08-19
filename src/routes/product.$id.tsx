@@ -43,16 +43,16 @@ export const Route = createFileRoute("/product/$id")({
     const listing = loaderData?.listing;
     if (!listing) {
       return createSeoHead({
-        title: "Listing unavailable | FarmX",
-        description: "This public FarmX listing is unavailable or has been removed.",
+        title: "Listing unavailable | Goall26",
+        description: "This public Goall26 listing is unavailable or has been removed.",
         path: `/product/${encodeURIComponent(params.id)}`,
         noindex: true,
       });
     }
     return createSeoHead({
-      title: `${listing.title} for sale in ${listing.city} | FarmX`,
+      title: `${listing.title} for sale in ${listing.city} | Goall26`,
       description: truncateDescription(
-        `${listing.title} available in ${listing.city}, ${listing.state}. View price, seller information, location and listing details on FarmX. ${listing.description}`,
+        `${listing.title} available in ${listing.city}, ${listing.state}. View price, seller information, location and listing details on Goall26. ${listing.description}`,
       ),
       path: `/product/${encodeURIComponent(listing.id)}`,
       image: listing.images[0] ?? listing.imagePlaceholder,
@@ -61,7 +61,7 @@ export const Route = createFileRoute("/product/$id")({
       jsonLd: [
         productJsonLd(listing),
         breadcrumbJsonLd([
-          { name: "FarmX Market", path: "/market" },
+          { name: "Goall26 Market", path: "/market" },
           {
             name: listing.category,
             path: `/market/category/${encodeURIComponent(listing.category)}`,
@@ -216,7 +216,7 @@ function ProductPage() {
     const url = typeof window === "undefined" ? "" : window.location.href;
     if (typeof navigator !== "undefined" && navigator.share)
       await navigator
-        .share({ title: listing.title, text: `View ${listing.title} on FarmX Market`, url })
+        .share({ title: listing.title, text: `View ${listing.title} on Goall26 Market`, url })
         .catch(() => undefined);
     else if (typeof navigator !== "undefined") {
       await navigator.clipboard?.writeText(url);
@@ -237,11 +237,11 @@ function ProductPage() {
       type: "system",
       eventId: `listing-report:${listing.id}:${Date.now()}`,
       title: "Report submitted",
-      body: "FarmX received your listing report and will review it.",
+      body: "Goall26 received your listing report and will review it.",
       priority: "important",
       targetUrl: "/reports",
     });
-    setNote("Report received. FarmX will review this listing.");
+    setNote("Report received. Goall26 will review this listing.");
   };
 
   return (
@@ -257,7 +257,7 @@ function ProductPage() {
           <div className="flex items-center gap-1">
             <PublicShareActions
               title={listing.title}
-              text={`View ${listing.title} on FarmX Market`}
+              text={`View ${listing.title} on Goall26 Market`}
               path={`/product/${encodeURIComponent(listing.id)}`}
             />
             <button
@@ -472,12 +472,12 @@ function ProductPage() {
         </section>
         <section className="rounded-2xl border border-brand/30 bg-brand/5 p-4">
           <h2 className="flex items-center gap-1.5 font-black">
-            <ShieldCheck className="h-4 w-4 text-brand" /> FarmX safety reminder
+            <ShieldCheck className="h-4 w-4 text-brand" /> Goall26 safety reminder
           </h2>
           <p className="mt-1 text-xs leading-5 text-muted-foreground">
             Always verify products and sellers before making payment. Meet safely, inspect
             agricultural goods before payment, avoid suspicious transfers, and report misleading
-            listings. FarmX does not hold or process private buyer-to-seller product payments.
+            listings. Goall26 does not hold or process private buyer-to-seller product payments.
           </p>
           <button
             onClick={() => setReportOpen(true)}
@@ -619,7 +619,7 @@ function ProductPage() {
                 </button>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                Help FarmX review suspicious or misleading marketplace content.
+                Help Goall26 review suspicious or misleading marketplace content.
               </p>
               <label className="mt-4 block text-xs font-bold">
                 Reason

@@ -1,5 +1,5 @@
 /**
- * FarmX Production Pricing Configuration
+ * Goall26 Production Pricing Configuration
  * Centralized fees for listings, promotions, and subscriptions.
  */
 

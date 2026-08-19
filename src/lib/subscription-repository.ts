@@ -13,11 +13,11 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     price: 0,
     currency: "₦",
     billingPeriod: "monthly",
-    description: "Get started on FarmX with essential marketplace access.",
+    description: "Get started on Goall26 with essential marketplace access.",
     maxListings: 3,
     topCredits: 0,
     features: [
-      "Create FarmX account",
+      "Create Goall26 account",
       "Browse Market",
       "Buy products/services",
       "Chat with sellers",

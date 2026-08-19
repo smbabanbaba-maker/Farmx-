@@ -8,7 +8,7 @@ async function describeS3Failure(response: Response) {
     return "S3 rejected the upload signature. Refresh the page and try again.";
   }
   if (code === "AccessDenied") {
-    return "S3 denied the upload. Check the FarmX media bucket permissions.";
+    return "S3 denied the upload. Check the Goall26 media bucket permissions.";
   }
   return message
     ? `S3 upload failed (${response.status}): ${message} (${code})`

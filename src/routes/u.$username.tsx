@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicProfile, getPublicProfilePhotoUrl } from "@/lib/profile.functions";
-import { getProfileRepository } from "@/lib/profile-repository";
 import { toggleCommunityFollow } from "@/lib/community.functions";
 import { useAuth } from "@/lib/use-auth";
 import {
@@ -24,29 +23,6 @@ import { useEffect, useState } from "react";
 export const Route = createFileRoute("/u/$username")({
   loader: async ({ params }) => {
     try {
-      const repository = await getProfileRepository();
-      if (repository.mode === "preview") {
-        const snapshot = await repository.getSnapshot();
-        if (
-          snapshot.profile.username !== params.username ||
-          snapshot.profile.privacy.profileVisibility !== "public"
-        )
-          return { data: null, photoUrl: null };
-        return {
-          data: {
-            profile: snapshot.profile,
-            stats: {
-              activeAds: snapshot.stats.activeAds,
-              followers: snapshot.stats.followers,
-              rating: snapshot.stats.rating,
-              reviews: snapshot.stats.reviews,
-            },
-          },
-          photoUrl: snapshot.profile.photoKey?.startsWith("data:image/")
-            ? snapshot.profile.photoKey
-            : null,
-        };
-      }
       const data = await getPublicProfile({ data: { username: params.username } });
       const photo = data.profile.photoKey
         ? await getPublicProfilePhotoUrl({ data: { username: params.username } })
@@ -60,18 +36,18 @@ export const Route = createFileRoute("/u/$username")({
     const data = loaderData?.data;
     if (!data) {
       return createSeoHead({
-        title: "Profile unavailable | FarmX",
-        description: "This public FarmX profile is unavailable or private.",
+        title: "Profile unavailable | Goall26",
+        description: "This public Goall26 profile is unavailable or private.",
         path: `/u/${encodeURIComponent(params.username)}`,
         noindex: true,
       });
     }
     const profile = data.profile;
     return createSeoHead({
-      title: `${profile.fullName} | FarmX public profile`,
+      title: `${profile.fullName} | Goall26 public profile`,
       description: truncateDescription(
         profile.bio ||
-          `${profile.fullName} is a public FarmX ${profile.role} profile in ${profile.state}.`,
+          `${profile.fullName} is a public Goall26 ${profile.role} profile in ${profile.state}.`,
       ),
       path: `/u/${encodeURIComponent(profile.username)}`,
       image: loaderData.photoUrl ?? undefined,
@@ -88,7 +64,7 @@ export const Route = createFileRoute("/u/$username")({
           verification: profile.verification,
         }),
         breadcrumbJsonLd([
-          { name: "FarmX", path: "/" },
+          { name: "Goall26", path: "/" },
           { name: "Public profiles", path: "/search" },
           { name: profile.fullName, path: `/u/${encodeURIComponent(profile.username)}` },
         ]),
@@ -136,25 +112,6 @@ function PublicProfile() {
     setError(null);
     void (async () => {
       try {
-        const repository = await getProfileRepository();
-        if (repository.mode === "preview") {
-          const snapshot = await repository.getSnapshot();
-          const profile = snapshot.profile;
-          if (profile.username !== username || profile.privacy.profileVisibility !== "public")
-            throw new Error("This FarmX profile is unavailable.");
-          if (!active) return;
-          setData({
-            profile,
-            stats: {
-              activeAds: snapshot.stats.activeAds,
-              followers: snapshot.stats.followers,
-              rating: snapshot.stats.rating,
-              reviews: snapshot.stats.reviews,
-            },
-          });
-          if (profile.photoKey?.startsWith("data:image/")) setPhotoUrl(profile.photoKey);
-          return;
-        }
         const result = await getPublicProfile({ data: { username } });
         if (!active) return;
         setData(result);
@@ -164,7 +121,9 @@ function PublicProfile() {
         }
       } catch (reason) {
         if (active)
-          setError(reason instanceof Error ? reason.message : "This FarmX profile is unavailable.");
+          setError(
+            reason instanceof Error ? reason.message : "This Goall26 profile is unavailable.",
+          );
       }
     })();
     return () => {
@@ -303,9 +262,9 @@ function PublicProfile() {
         {stats.reviews !== null && <Metric label="Reviews" value={stats.reviews} />}
       </section>
       <section className="rounded-2xl border border-brand/20 bg-brand/5 p-4">
-        <p className="text-xs font-bold text-brand">FarmX safety reminder</p>
+        <p className="text-xs font-bold text-brand">Goall26 safety reminder</p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          FarmX connects buyers and sellers. Agree directly with the profile owner and follow
+          Goall26 connects buyers and sellers. Agree directly with the profile owner and follow
           safe-meeting guidance before any private transaction.
         </p>
       </section>
@@ -321,7 +280,7 @@ function PublicShell({ children }: { children: React.ReactNode }) {
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-xs text-brand-foreground">
             F
           </span>
-          FarmX
+          Goall26
         </Link>
         {children}
       </div>

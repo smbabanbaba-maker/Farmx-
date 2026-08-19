@@ -33,22 +33,28 @@ export const Route = createFileRoute("/learn/$courseId")({
     const course = loaderData?.course;
     if (!course) {
       return createSeoHead({
-        title: "Course unavailable | FarmX Learn",
-        description: "This public FarmX Learn course is unavailable or has been removed.",
+        title: "Course unavailable | Goall26 Learn",
+        description: "This public Goall26 Learn course is unavailable or has been removed.",
         path: `/learn/${encodeURIComponent(params.courseId)}`,
         noindex: true,
       });
     }
     return createSeoHead({
-      title: `${course.title} | FarmX Learn`,
+      title: `${course.title} | Goall26 Learn`,
       description: truncateDescription(course.shortDescription || course.fullDescription),
       path: `/learn/${encodeURIComponent(course.id)}`,
       image: course.coverImage,
-      keywords: [course.title, course.category, course.subcategory, course.language, "FarmX Learn"],
+      keywords: [
+        course.title,
+        course.category,
+        course.subcategory,
+        course.language,
+        "Goall26 Learn",
+      ],
       jsonLd: [
         courseJsonLd(course),
         breadcrumbJsonLd([
-          { name: "FarmX Learn", path: "/learn" },
+          { name: "Goall26 Learn", path: "/learn" },
           { name: course.category, path: `/learn?category=${encodeURIComponent(course.category)}` },
           { name: course.title, path: `/learn/${encodeURIComponent(course.id)}` },
         ]),
@@ -76,7 +82,6 @@ function LearnCourseDetail() {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(loaderData.course);
   const [enrollment, setEnrollment] = useState<CourseEnrollment | null>(null);
-  const [mode, setMode] = useState<"preview" | "production">("production");
   const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
   const [registrationOpen, setRegistrationOpen] = useState(false);
   const [openModules, setOpenModules] = useState<Record<string, boolean>>({});
@@ -106,13 +111,11 @@ function LearnCourseDetail() {
           getMyProfile().catch(() => null),
           getLearnRepository(),
         ]);
-        const nextMode = "production" as const;
         const [nextCourse, nextEnrollment] = await Promise.all([
           repository.getCourseById(courseId),
           repository.getEnrollment("", courseId),
         ]);
         if (cancelled) return;
-        setMode(nextMode);
         setCourse(nextCourse?.status === "published" ? nextCourse : null);
         setEnrollment(nextEnrollment);
         if (nextCourse?.modules[0]) setOpenModules({ [nextCourse.modules[0].id]: true });
@@ -167,12 +170,9 @@ function LearnCourseDetail() {
   const completeLesson = async () => {
     if (!activeLesson || !enrollment) return;
     try {
-      const updated =
-        mode === "production"
-          ? await updateLearnProgress({
-              data: { enrollmentId: enrollment.id, lessonId: activeLesson.id },
-            })
-          : await (await getLearnRepository()).updateProgress(enrollment.id, activeLesson.id);
+      const updated = await updateLearnProgress({
+        data: { enrollmentId: enrollment.id, lessonId: activeLesson.id },
+      });
       setEnrollment(updated);
       setMessage(
         updated.progressPercent === 100
@@ -200,7 +200,7 @@ function LearnCourseDetail() {
         setAction("payment_required");
         setRegistrationOpen(false);
         setMessage(
-          "Your details are ready. Continue to verified payment; the course will remain locked until payment is confirmed by FarmX.",
+          "Your details are ready. Continue to verified payment; the course will remain locked until payment is confirmed by Goall26.",
         );
         return;
       }
@@ -219,7 +219,7 @@ function LearnCourseDetail() {
 
   if (loading)
     return (
-      <AppShell title="FarmX Learn">
+      <AppShell title="Goall26 Learn">
         <div className="space-y-4">
           <div className="h-56 animate-pulse rounded-3xl bg-muted" />
           <div className="h-10 animate-pulse rounded-xl bg-muted" />
@@ -229,7 +229,7 @@ function LearnCourseDetail() {
     );
   if (!course)
     return (
-      <AppShell title="FarmX Learn">
+      <AppShell title="Goall26 Learn">
         <section className="rounded-3xl border border-dashed border-brand/30 bg-card p-10 text-center">
           <BookOpen className="mx-auto h-8 w-8 text-brand" />
           <h1 className="mt-3 text-lg font-black">Course not found</h1>
@@ -248,14 +248,14 @@ function LearnCourseDetail() {
     );
 
   return (
-    <AppShell title="FarmX Learn">
+    <AppShell title="Goall26 Learn">
       <div className="space-y-6 pb-8">
         <Link
           to="/learn"
           search={{ q: "", category: undefined }}
           className="inline-flex min-h-10 items-center gap-2 text-xs font-black text-brand"
         >
-          <ArrowLeft className="h-4 w-4" /> FarmX Learn
+          <ArrowLeft className="h-4 w-4" /> Goall26 Learn
         </Link>
         <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm">
           <div className="relative flex min-h-52 items-center justify-center bg-gradient-to-br from-brand/20 via-accent to-brand/5 text-8xl">
@@ -312,7 +312,7 @@ function LearnCourseDetail() {
                     : `Enroll · ₦${course.price.toLocaleString()}`}
               </button>
               <span className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-border px-4 text-[10px] font-bold text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-brand" /> Secure FarmX enrollment
+                <ShieldCheck className="h-4 w-4 text-brand" /> Secure Goall26 enrollment
               </span>
             </div>
             {message && (
@@ -431,11 +431,11 @@ function LearnCourseDetail() {
             <section className="rounded-2xl border border-brand/20 bg-brand/5 p-4">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4 text-brand" />
-                <p className="text-xs font-black">Official FarmX content</p>
+                <p className="text-xs font-black">Official Goall26 content</p>
               </div>
               <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
-                Only authorized FarmX instructors and content managers can publish courses. Your
-                enrollment and progress stay connected to your FarmX account.
+                Only authorized Goall26 instructors and content managers can publish courses. Your
+                enrollment and progress stay connected to your Goall26 account.
               </p>
             </section>
             {enrollment && (
@@ -574,7 +574,7 @@ function RegistrationModal({
             </p>
             <h2 className="mt-1 text-xl font-black">Confirm your details</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              We prefilled your FarmX profile where available. Review before continuing.
+              We prefilled your Goall26 profile where available. Review before continuing.
             </p>
           </div>
           <button
@@ -649,7 +649,7 @@ function RegistrationModal({
             <p className="mt-1 text-[10px] leading-5 text-muted-foreground">
               {course.accessType === "FREE"
                 ? "You will be enrolled after confirming these details."
-                : "After confirmation, FarmX will take you through verified payment. Clicking Pay never unlocks a course by itself."}
+                : "After confirmation, Goall26 will take you through verified payment. Clicking Pay never unlocks a course by itself."}
             </p>
           </div>
           <button

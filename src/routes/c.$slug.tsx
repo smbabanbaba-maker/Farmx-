@@ -16,11 +16,11 @@ export const Route = createFileRoute("/c/$slug")({
     const profile = loaderData?.profile;
     const name = profile?.business?.name || profile?.fullName || params.slug;
     return createSeoHead({
-      title: `${name} — FarmX Company`,
+      title: `${name} — Goall26 Company`,
       description:
         profile?.business?.description ||
         profile?.bio ||
-        `Public FarmX company profile for ${name}.`,
+        `Public Goall26 company profile for ${name}.`,
       path: `/c/${encodeURIComponent(params.slug)}`,
       type: "website",
       noindex: !profile,

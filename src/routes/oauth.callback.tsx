@@ -60,7 +60,7 @@ function OAuthCallbackPage() {
             <>
               <Loader2 className="mx-auto h-8 w-8 animate-spin text-brand" />
               <h1 className="mt-4 text-lg font-black">Completing secure sign-in…</h1>
-              <p className="mt-2 text-sm text-muted-foreground">FarmX is loading your account.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Goall26 is loading your account.</p>
             </>
           )}
         </div>

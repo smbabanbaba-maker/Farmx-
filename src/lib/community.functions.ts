@@ -134,8 +134,6 @@ const uploadKeySchema = z.object({
 const notificationQuerySchema = z.object({ limit: z.number().int().min(1).max(100).default(100) });
 const notificationIdSchema = z.object({ notificationId: z.string().trim().min(1).max(200) });
 
-export type CommunityRuntimeMode = "preview" | "production";
-
 type CommunityConfig = {
   region: string;
   communityTable: string;
@@ -170,9 +168,6 @@ function hasProductionConfig() {
   );
 }
 
-export const getCommunityRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
-  mode: "production" as CommunityRuntimeMode,
-}));
 export const getCommunityViewer = createServerFn({ method: "GET" }).handler(async () => {
   const actor = await optionalUser();
   return { userId: actor.userId };
@@ -209,7 +204,7 @@ export const getCommunityNotifications = createServerFn({ method: "GET" })
           : item.type === "community"
             ? "community"
             : "system",
-      title: String(item.title ?? "FarmX notification"),
+      title: String(item.title ?? "Goall26 notification"),
       body: String(item.body ?? ""),
       at: Date.parse(String(item.createdAt ?? "")) || Date.now(),
       read: item.read === true,
@@ -218,7 +213,7 @@ export const getCommunityNotifications = createServerFn({ method: "GET" })
         typeof item.actorId === "string"
           ? {
               id: item.actorId,
-              name: typeof item.actorName === "string" ? item.actorName : "FarmX member",
+              name: typeof item.actorName === "string" ? item.actorName : "Goall26 member",
             }
           : undefined,
       targetUrl: typeof item.targetUrl === "string" ? item.targetUrl : undefined,
@@ -267,7 +262,7 @@ function getConfig(): CommunityConfig {
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
   if (!region || !communityTable || !profileTable || !listingsTable)
     throw new Error(
-      "Community service is not configured. Set AWS_REGION, FARMX_COMMUNITY_TABLE, FARMX_PROFILE_TABLE, and FARMX_LISTINGS_TABLE on the FarmX server.",
+      "Community service is not configured. Set AWS_REGION, FARMX_COMMUNITY_TABLE, FARMX_PROFILE_TABLE, and FARMX_LISTINGS_TABLE on the Goall26 server.",
     );
   return {
     region,
@@ -303,7 +298,7 @@ async function optionalUser() {
 function authorFromItem(item: CommunityItem): CommunityAuthor {
   return {
     id: String(item.authorId),
-    name: String(item.authorName ?? "FarmX member"),
+    name: String(item.authorName ?? "Goall26 member"),
     username: String(item.authorUsername ?? "farmx_member"),
     role: typeof item.authorRole === "string" ? item.authorRole : undefined,
     photo: typeof item.authorPhoto === "string" ? item.authorPhoto : undefined,
@@ -377,7 +372,7 @@ async function resolveAuthor(
   const profile = result.Item as Record<string, unknown> | undefined;
   return {
     id: userId,
-    name: typeof profile?.fullName === "string" ? profile.fullName : (email ?? "FarmX member"),
+    name: typeof profile?.fullName === "string" ? profile.fullName : (email ?? "Goall26 member"),
     username:
       typeof profile?.username === "string" ? profile.username : `member_${userId.slice(-8)}`,
     role: typeof profile?.role === "string" ? profile.role : undefined,
@@ -773,7 +768,7 @@ export const toggleCommunityPostLike = createServerFn({ method: "POST" })
     await writeProfileNotification(client, config, {
       recipientId: typeof post?.ownerId === "string" ? post.ownerId : undefined,
       actorId: actor.userId,
-      actorName: actor.email ?? "A FarmX member",
+      actorName: actor.email ?? "A Goall26 member",
       title: "Your Community post got a like",
       body: "Someone liked your Community post.",
       postId: data.postId,
@@ -896,7 +891,7 @@ export const shareCommunityPost = createServerFn({ method: "POST" })
     await writeProfileNotification(client, config, {
       recipientId: typeof post?.ownerId === "string" ? post.ownerId : undefined,
       actorId: actor.userId,
-      actorName: actor.email ?? "A FarmX member",
+      actorName: actor.email ?? "A Goall26 member",
       title: "Your Community post was shared",
       body: "Someone shared your Community post.",
       postId: data.postId,
@@ -946,7 +941,7 @@ export const markCommunityAnswer = createServerFn({ method: "POST" })
     await writeProfileNotification(client, config, {
       recipientId: typeof comment.authorId === "string" ? comment.authorId : undefined,
       actorId: actor.userId,
-      actorName: actor.email ?? "A FarmX member",
+      actorName: actor.email ?? "A Goall26 member",
       title: "Your answer was marked best",
       body: "The question owner marked your answer as the best answer.",
       postId: data.postId,
@@ -1117,7 +1112,7 @@ export const toggleCommunityCommentLike = createServerFn({ method: "POST" })
     await writeProfileNotification(client, config, {
       recipientId: typeof comment?.authorId === "string" ? comment.authorId : undefined,
       actorId: actor.userId,
-      actorName: actor.email ?? "A FarmX member",
+      actorName: actor.email ?? "A Goall26 member",
       title: "Your Community comment got a like",
       body: "Someone liked your comment.",
       postId: data.postId,
@@ -1190,7 +1185,7 @@ export const toggleCommunityFollow = createServerFn({ method: "POST" })
           category: "followers",
           type: "followers",
           title: "New follower",
-          body: `${data.targetUsername} has a new FarmX follower.`,
+          body: `${data.targetUsername} has a new Goall26 follower.`,
           targetUrl: `/u/${data.targetUsername}`,
           actorId: actor.userId,
           createdAt: now,

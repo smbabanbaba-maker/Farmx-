@@ -40,7 +40,7 @@ function LoginPage() {
       setError(
         reason instanceof Error
           ? reason.message
-          : "Google sign-in is not configured for this FarmX deployment.",
+          : "Google sign-in is not configured for this Goall26 deployment.",
       );
     }
   };
@@ -245,7 +245,7 @@ function ForgotPasswordDialog({
               Reset your password
             </h2>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              Enter your account email and FarmX will send a 6-digit verification code.
+              Enter your account email and Goall26 will send a 6-digit verification code.
             </p>
           </div>
           <button

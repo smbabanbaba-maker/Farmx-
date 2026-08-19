@@ -8,13 +8,13 @@ import { AlertTriangle, Paperclip, Clock } from "lucide-react";
 export const Route = createFileRoute("/disputes")({
   head: () => ({
     meta: [
-      { title: "Refund Claims & Disputes — FarmX" },
+      { title: "Refund Claims & Disputes — Goall26" },
       {
         name: "description",
         content:
-          "File a mismatch claim, upload evidence and follow refund status until money returns to your FarmX wallet.",
+          "File a mismatch claim, upload evidence and follow refund status until money returns to your Goall26 wallet.",
       },
-      { property: "og:title", content: "FarmX Disputes & Refunds" },
+      { property: "og:title", content: "Goall26 Disputes & Refunds" },
       {
         property: "og:description",
         content: "Mismatch claims, evidence tracking and refund statuses.",

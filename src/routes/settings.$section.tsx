@@ -122,15 +122,15 @@ function mergeSettings(saved: Partial<FarmXSettings>): FarmXSettings {
 const TITLES: Record<string, { title: string; description: string }> = {
   "personal-info": {
     title: "Personal information",
-    description: "Keep your FarmX identity and contact details accurate.",
+    description: "Keep your Goall26 identity and contact details accurate.",
   },
   business: {
     title: "Business profile",
-    description: "Manage the public business information connected to your FarmX account.",
+    description: "Manage the public business information connected to your Goall26 account.",
   },
   "login-methods": {
     title: "Login & connected accounts",
-    description: "Review how your account is protected. FarmX never displays passwords.",
+    description: "Review how your account is protected. Goall26 never displays passwords.",
   },
   security: {
     title: "Password & security",
@@ -138,7 +138,7 @@ const TITLES: Record<string, { title: string; description: string }> = {
   },
   language: {
     title: "Language & region",
-    description: "Choose the language and regional preferences used across FarmX.",
+    description: "Choose the language and regional preferences used across Goall26.",
   },
   notifications: {
     title: "Notifications",
@@ -146,7 +146,7 @@ const TITLES: Record<string, { title: string; description: string }> = {
   },
   privacy: {
     title: "Privacy",
-    description: "Choose what other FarmX users can see and who can contact you.",
+    description: "Choose what other Goall26 users can see and who can contact you.",
   },
   communication: {
     title: "Communication",
@@ -169,13 +169,13 @@ const TITLES: Record<string, { title: string; description: string }> = {
     description: "Choose the location used for marketplace results.",
   },
   balance: {
-    title: "FarmX Balance",
+    title: "Goall26 Balance",
     description:
       "View service funds and promotional credits. Withdrawals are shown only when supported.",
   },
   payments: {
     title: "Payment history",
-    description: "Review payment records returned by the FarmX server.",
+    description: "Review payment records returned by the Goall26 server.",
   },
   subscription: {
     title: "Subscription",
@@ -191,11 +191,11 @@ const TITLES: Record<string, { title: string; description: string }> = {
   },
   blocked: {
     title: "Blocked users",
-    description: "Manage blocked users stored in your FarmX account.",
+    description: "Manage blocked users stored in your Goall26 account.",
   },
   safety: {
     title: "Reports & safety",
-    description: "Use FarmX safety guidance and report supported marketplace concerns.",
+    description: "Use Goall26 safety guidance and report supported marketplace concerns.",
   },
   activity: {
     title: "My activity",
@@ -205,16 +205,19 @@ const TITLES: Record<string, { title: string; description: string }> = {
     title: "Recently viewed",
     description: "Listings you opened recently from the real Market repository.",
   },
-  saved: { title: "Saved ads", description: "Listings saved through your FarmX account." },
+  saved: { title: "Saved ads", description: "Listings saved through your Goall26 account." },
   support: {
     title: "Help & support",
-    description: "Find help, contact FarmX, and track your support requests.",
+    description: "Find help, contact Goall26, and track your support requests.",
   },
   legal: {
     title: "Terms & policies",
-    description: "Read the policies that govern FarmX accounts and marketplace activity.",
+    description: "Read the policies that govern Goall26 accounts and marketplace activity.",
   },
-  about: { title: "About FarmX", description: "Product information, version and official links." },
+  about: {
+    title: "About Goall26",
+    description: "Product information, version and official links.",
+  },
 };
 
 function SettingsSectionPage() {
@@ -932,7 +935,7 @@ function LoginMethods({ profile }: { profile: FarmXProfile }) {
       </Card>
       <Card title="Security notice" icon={ShieldCheck}>
         <p className="text-sm leading-6 text-muted-foreground">
-          FarmX does not display or store your password in the browser. Connected-account changes
+          Goall26 does not display or store your password in the browser. Connected-account changes
           require the Cognito Hosted UI configuration and an authenticated session.
         </p>
       </Card>
@@ -978,7 +981,8 @@ function SecurityPage({
     }
   };
   const deleteAccount = async () => {
-    if (window.prompt("Type DELETE to permanently remove your FarmX account") !== "DELETE") return;
+    if (window.prompt("Type DELETE to permanently remove your Goall26 account") !== "DELETE")
+      return;
     setDeleting(true);
     try {
       await deleteMyAccountData();
@@ -1002,7 +1006,7 @@ function SecurityPage({
       </Card>
       <Card title="Change password" icon={LockKeyhole}>
         <p className="mb-3 text-sm leading-6 text-muted-foreground">
-          FarmX passwords use exactly 6 digits. Password changes are sent directly to AWS Cognito.
+          Goall26 passwords use exactly 6 digits. Password changes are sent directly to AWS Cognito.
         </p>
         <div className="space-y-3">
           <Field
@@ -1062,7 +1066,7 @@ function SecurityPage({
       </Card>
       <Card title="Danger zone" icon={Trash2}>
         <p className="text-sm leading-6 text-muted-foreground">
-          Deletion permanently removes your FarmX profile and owned listings from the configured
+          Deletion permanently removes your Goall26 profile and owned listings from the configured
           data store, then deletes the Cognito account. This cannot be undone.
         </p>
         <button
@@ -1337,7 +1341,7 @@ function PreferencePage({
             })}
           </div>
           <p className="mt-4 text-[11px] leading-5 text-muted-foreground">
-            Preferences are saved to your authenticated FarmX profile. Critical security alerts
+            Preferences are saved to your authenticated Goall26 profile. Critical security alerts
             remain enabled.
           </p>
         </>
@@ -1350,7 +1354,7 @@ function BuyingPage() {
     <div className="space-y-4">
       <Card title="Buying interests" icon={ShoppingBag}>
         <p className="text-sm leading-6 text-muted-foreground">
-          Choose categories and price alerts from Market search. FarmX will only show saved-search
+          Choose categories and price alerts from Market search. Goall26 will only show saved-search
           alerts after you create a real search in the marketplace.
         </p>
         <Link
@@ -1413,8 +1417,8 @@ function LocationPage({
         />
         <Field label="LGA / City" value={location} onChange={setLocation} />
         <p className="mt-2 text-[11px] leading-5 text-muted-foreground">
-          FarmX does not request device location automatically. Choose a location manually or allow
-          your browser to provide one when a future location feature is enabled.
+          Goall26 does not request device location automatically. Choose a location manually or
+          allow your browser to provide one when a future location feature is enabled.
         </p>
       </Card>
       <button
@@ -1579,7 +1583,7 @@ function BalancePage() {
         </div>
         <div className="mt-3">
           <InfoRow
-            label="FarmX promotional credits"
+            label="Goall26 promotional credits"
             value={`₦${(summary?.promotionalCredits ?? 0).toLocaleString()}`}
           />
           <InfoRow label="Withdrawals" value="Shown only when the server supports seller payouts" />
@@ -1625,7 +1629,7 @@ function PaymentsPage() {
           ))}
         </div>
       ) : (
-        <EmptyState text="No verified FarmX service payments are available for this account." />
+        <EmptyState text="No verified Goall26 service payments are available for this account." />
       )}
     </Card>
   );
@@ -1886,7 +1890,7 @@ function SafetyPage() {
           onChange={setReason}
         />
         <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
-          Reports are submitted only through supported FarmX report actions. This page does not
+          Reports are submitted only through supported Goall26 report actions. This page does not
           create a report record.
         </p>
         <Link
@@ -1898,7 +1902,7 @@ function SafetyPage() {
       </Card>
       <Card title="Safety basics" icon={ShieldCheck}>
         <ul className="space-y-2 text-sm leading-6 text-muted-foreground">
-          <li>• Keep payments inside verified FarmX flows.</li>
+          <li>• Keep payments inside verified Goall26 flows.</li>
           <li>• Never share your password, OTP or private keys.</li>
           <li>• Meet safely and inspect products before handover.</li>
         </ul>
@@ -2038,7 +2042,7 @@ function SupportPage() {
       <Card title="Help centre" icon={CircleHelp}>
         <p className="text-sm leading-6 text-muted-foreground">
           Find answers about accounts, listings, payments, subscriptions, verification and safety in
-          the FarmX help centre.
+          the Goall26 help centre.
         </p>
         <Link
           to="/faq"
@@ -2047,10 +2051,10 @@ function SupportPage() {
           Open Help Centre <ChevronRight className="h-4 w-4" />
         </Link>
       </Card>
-      <Card title="Contact FarmX" icon={MessageCircle}>
+      <Card title="Contact Goall26" icon={MessageCircle}>
         <p className="text-sm leading-6 text-muted-foreground">
           When a support-ticket backend is enabled, open and closed tickets will appear here. Until
-          then, FarmX will not invent ticket numbers or statuses.
+          then, Goall26 will not invent ticket numbers or statuses.
         </p>
       </Card>
     </div>
@@ -2071,7 +2075,7 @@ function LegalPage() {
     "Data deletion policy",
   ];
   return (
-    <Card title="FarmX policies" icon={FileText}>
+    <Card title="Goall26 policies" icon={FileText}>
       <div className="space-y-1">
         {documents.map((item) => (
           <div
@@ -2081,7 +2085,7 @@ function LegalPage() {
             <FileText className="h-4 w-4 text-brand" />
             <span className="flex-1 text-sm font-bold">{item}</span>
             <span className="text-[11px] text-muted-foreground">
-              Available in the FarmX policy centre
+              Available in the Goall26 policy centre
             </span>
           </div>
         ))}
@@ -2092,11 +2096,11 @@ function LegalPage() {
 function AboutPage() {
   return (
     <div className="space-y-4">
-      <Card title="FarmX" icon={Globe2}>
+      <Card title="Goall26" icon={Globe2}>
         <div className="flex items-center gap-3">
-          <img src="/farmx-logo.png" alt="FarmX" className="h-14 w-14 rounded-2xl" />
+          <img src="/farmx-logo.png" alt="Goall26" className="h-14 w-14 rounded-2xl" />
           <div>
-            <p className="text-lg font-black">FarmX marketplace</p>
+            <p className="text-lg font-black">Goall26 marketplace</p>
             <p className="text-xs text-muted-foreground">
               Agricultural products, services, jobs and community.
             </p>

@@ -28,13 +28,18 @@ export const Route = createFileRoute("/jobs")({
   head: ({ matches }) =>
     matches[matches.length - 1]?.pathname === "/jobs"
       ? createSeoHead({
-          title: "Agricultural jobs in Nigeria | FarmX Jobs",
+          title: "Agricultural jobs in Nigeria | Goall26 Jobs",
           description:
-            "Find public agricultural, farm operations, logistics, technology and business jobs across Nigeria on FarmX.",
+            "Find public agricultural, farm operations, logistics, technology and business jobs across Nigeria on Goall26.",
           path: "/jobs",
-          keywords: ["Nigeria agricultural jobs", "farm jobs", "FarmX Jobs", "agriculture careers"],
+          keywords: [
+            "Nigeria agricultural jobs",
+            "farm jobs",
+            "Goall26 Jobs",
+            "agriculture careers",
+          ],
           noindex: !publicIndexingEnabled(),
-          jsonLd: breadcrumbJsonLd([{ name: "FarmX Jobs", path: "/jobs" }]),
+          jsonLd: breadcrumbJsonLd([{ name: "Goall26 Jobs", path: "/jobs" }]),
         })
       : {},
   validateSearch: (search: Record<string, unknown>) => ({
@@ -103,7 +108,7 @@ function JobsHome() {
   const appliedJobIds = new Set(applications.map((a) => a.jobId));
 
   return (
-    <AppShell title="FarmX Jobs">
+    <AppShell title="Goall26 Jobs">
       <div className="space-y-6 pb-10">
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand via-brand to-foreground p-5 text-brand-foreground shadow-lg sm:p-7">
           <div className="relative">

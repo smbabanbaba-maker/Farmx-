@@ -160,6 +160,13 @@ const listingActionSchema = z.object({
   listingId: z.string().uuid(),
   status: listingStatusSchema,
 });
+const listingUpdateSchema = z.object({
+  listingId: z.string().uuid(),
+  title: z.string().trim().min(5).max(100),
+  price: z.number().positive().max(1_000_000_000),
+  location: z.string().trim().min(2).max(120),
+  status: listingStatusSchema,
+});
 const listingIdSchema = z.object({ listingId: z.string().uuid() });
 
 export type FarmXProfile = z.infer<typeof profileSchema> & {
@@ -265,40 +272,22 @@ export const DEFAULT_FARMX_SETTINGS: FarmXSettings = {
   blockedUsers: [],
 };
 
-function hasProfileProductionConfig() {
-  return Boolean(
-    process.env.AWS_REGION &&
-    process.env.FARMX_PROFILE_TABLE &&
-    process.env.FARMX_LISTINGS_TABLE &&
-    process.env.FARMX_MEDIA_BUCKET &&
-    (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
-    (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
-  );
-}
-
-export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
-  mode: hasProfileProductionConfig() ? ("production" as const) : ("preview" as const),
-}));
+export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(async () => {
+  getConfig();
+  return { mode: "production" as const };
+});
 
 function getConfig() {
-  const region = process.env.AWS_REGION || "eu-west-1";
+  const region = process.env.AWS_REGION;
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   const listingsTable = process.env.FARMX_LISTINGS_TABLE;
   const bucket = process.env.FARMX_MEDIA_BUCKET;
+  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
+  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
 
-  let userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
-  if (!userPoolId || userPoolId.startsWith("u-west-1")) {
-    userPoolId = "eu-west-1_HXI6OOXpg";
-  }
-
-  const clientId =
-    process.env.COGNITO_WEB_CLIENT_ID ??
-    process.env.VITE_COGNITO_WEB_CLIENT_ID ??
-    "5160g8vs8f7c55fnvovjtgqnab";
-
-  if (!profileTable || !listingsTable || !bucket) {
+  if (!region || !profileTable || !listingsTable || !bucket || !userPoolId || !clientId) {
     throw new Error(
-      "Profile service is not configured. Set FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, and FARMX_MEDIA_BUCKET on the FarmX server.",
+      "Profile service is not configured. Set FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, and FARMX_MEDIA_BUCKET on the Goall26 server.",
     );
   }
 
@@ -321,7 +310,7 @@ async function requireAuthenticatedUser() {
     clientId,
   });
   const claims = await verifier.verify(token);
-  if (!claims.sub) throw new Error("Your FarmX account identity could not be verified.");
+  if (!claims.sub) throw new Error("Your Goall26 account identity could not be verified.");
 
   return {
     userId: claims.sub,
@@ -364,7 +353,7 @@ export const getMyAds = createServerFn({ method: "GET" }).handler(async () => {
     listingId: String(listing.listingId),
     title: String(listing.title),
     price: Number(listing.price),
-    region: String(listing.region),
+    region: String(listing.location ?? listing.region ?? ""),
     status: String(listing.status),
     createdAt: String(listing.createdAt),
     updatedAt: String(listing.updatedAt),
@@ -404,6 +393,40 @@ export const updateMyAdStatus = createServerFn({ method: "POST" })
     return { listingId: data.listingId, status: data.status, updatedAt };
   });
 
+export const updateMyAd = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => listingUpdateSchema.parse(input))
+  .handler(async ({ data }) => {
+    privateResponse();
+    const config = getConfig();
+    const actor = await requireAuthenticatedUser();
+    const updatedAt = new Date().toISOString();
+    await createDocumentClient(config.region).send(
+      new UpdateCommand({
+        TableName: config.listingsTable,
+        Key: { pk: `LISTING#${data.listingId}`, sk: `LISTING#${data.listingId}` },
+        ConditionExpression: "ownerId = :ownerId",
+        UpdateExpression:
+          "SET title = :title, price = :price, #location = :location, #region = :location, #status = :status, gsi1pk = :gsi1pk, gsi1sk = :gsi1sk, updatedAt = :updatedAt",
+        ExpressionAttributeNames: {
+          "#location": "location",
+          "#region": "region",
+          "#status": "status",
+        },
+        ExpressionAttributeValues: {
+          ":ownerId": actor.userId,
+          ":title": data.title,
+          ":price": data.price,
+          ":location": data.location,
+          ":status": data.status,
+          ":gsi1pk": `LISTING_STATUS#${data.status}`,
+          ":gsi1sk": `${updatedAt}#${data.listingId}`,
+          ":updatedAt": updatedAt,
+        },
+      }),
+    );
+    return { listingId: data.listingId, updatedAt };
+  });
+
 export const deleteMyAd = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => listingIdSchema.parse(input))
   .handler(async ({ data }) => {
@@ -437,7 +460,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
     );
     const profile = profileResult.Items?.[0] as FarmXProfile | undefined;
     if (!profile || profile.privacy.profileVisibility !== "public") {
-      throw new Error("This FarmX profile is unavailable.");
+      throw new Error("This Goall26 profile is unavailable.");
     }
 
     const [listingResult, followerResult] = await Promise.all([
@@ -593,7 +616,7 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
     const defaultUsername = `farmer_${cleanId || "user"}`;
     const defaultProfile = {
       userId: actor.userId,
-      fullName: actor.name?.trim() || actor.email?.split("@")[0] || "FarmX Member",
+      fullName: actor.name?.trim() || actor.email?.split("@")[0] || "Goall26 Member",
       username: defaultUsername,
       role: "farmer" as const,
       bio: "",
@@ -700,7 +723,7 @@ export const saveMyProfile = createServerFn({ method: "POST" })
     const previous = existing.Item as FarmXProfile | undefined;
     const usernameOwner = matchingUsername.Items?.[0]?.userId;
     if (usernameOwner && usernameOwner !== actor.userId) {
-      throw new Error("That FarmX username is already in use.");
+      throw new Error("That Goall26 username is already in use.");
     }
 
     const item: FarmXProfile & {

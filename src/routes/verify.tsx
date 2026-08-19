@@ -9,10 +9,10 @@ import { BadgeCheck, Clock, Loader2, ShieldCheck, Upload, XCircle } from "lucide
 export const Route = createFileRoute("/verify")({
   head: () => ({
     meta: [
-      { title: "Seller Verification (KYC) — FarmX" },
+      { title: "Seller Verification (KYC) — Goall26" },
       {
         name: "description",
-        content: "Submit identity and business documents for FarmX seller verification.",
+        content: "Submit identity and business documents for Goall26 seller verification.",
       },
     ],
   }),
@@ -201,7 +201,7 @@ function VerifyPage() {
             <BadgeCheck className="mx-auto h-10 w-10 text-green-600" />
             <p className="mt-2 text-sm font-bold text-green-800">{t("approved")}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Your verification was reviewed and approved by FarmX.
+              Your verification was reviewed and approved by Goall26.
             </p>
           </div>
         ) : (

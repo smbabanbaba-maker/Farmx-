@@ -6,14 +6,14 @@ import { ShieldCheck, Truck, RotateCcw, BadgeCheck } from "lucide-react";
 export const Route = createFileRoute("/buyer-protection")({
   head: () => ({
     meta: [
-      { title: "Buyer Protection — FarmX" },
+      { title: "Buyer Protection — Goall26" },
       {
         name: "description",
         content:
-          "FarmX escrow payments, pay on delivery and refund policy protect every purchase from verified sellers.",
+          "Goall26 escrow payments, pay on delivery and refund policy protect every purchase from verified sellers.",
       },
-      { property: "og:title", content: "FarmX Buyer Protection" },
-      { property: "og:description", content: "Escrow, pay on delivery and refunds on FarmX." },
+      { property: "og:title", content: "Goall26 Buyer Protection" },
+      { property: "og:description", content: "Escrow, pay on delivery and refunds on Goall26." },
     ],
   }),
   component: BuyerProtection,

@@ -1,5 +1,5 @@
 /**
- * FarmX ⇄ Paystack client integration
+ * Goall26 ⇄ Paystack client integration
  *
  * SECURITY:
  *  - Only the PUBLIC key (`pk_*`) ever belongs in the browser.
@@ -15,7 +15,7 @@
  *      POST /payments/init         -> returns { authorization_url, reference }  (creates a Paystack tx)
  *      POST /payments/verify       -> body { reference } -> verifies + updates wallet/listing
  *      POST /subscriptions/bluetek -> creates ₦4,500/mo plan for the company
- *      POST /wallet/topup          -> credits FarmX Wallet after verified Paystack tx
+ *      POST /wallet/topup          -> credits Goall26 Wallet after verified Paystack tx
  */
 
 export const PAYSTACK_PUBLIC_KEY =

@@ -1,4 +1,4 @@
-// FarmX Production Signup
+// Goall26 Production Signup
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
@@ -47,7 +47,7 @@ function SignUpPage() {
       console.error("Signup error details:", errorObj);
 
       const msg = errorObj.message?.toLowerCase().includes("password")
-        ? "The 6-digit password was rejected by AWS Cognito. Confirm the FarmX User Pool password policy is set to minimum 6 with no uppercase, lowercase, number, or symbol requirements."
+        ? "The 6-digit password was rejected by AWS Cognito. Confirm the Goall26 User Pool password policy is set to minimum 6 with no uppercase, lowercase, number, or symbol requirements."
         : errorObj.message || "Something went wrong. Please try again.";
       setError(msg);
     } finally {
@@ -63,7 +63,7 @@ function SignUpPage() {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">
               <UserPlus className="h-6 w-6" />
             </div>
-            <h1 className="text-xl font-bold">Join FarmX Today</h1>
+            <h1 className="text-xl font-bold">Join Goall26 Today</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Connect with Nigeria's agricultural community.
             </p>
@@ -177,7 +177,7 @@ function SignUpPage() {
                 />
               </div>
               <p className="text-[10px] text-muted-foreground px-1">
-                Use exactly 6 numbers for your FarmX password.
+                Use exactly 6 numbers for your Goall26 password.
               </p>
             </div>
 

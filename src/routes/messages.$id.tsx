@@ -43,8 +43,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 export const Route = createFileRoute("/messages/$id")({
   head: () => ({
     meta: [
-      { title: "Chat — FarmX" },
-      { name: "description", content: "Secure marketplace conversation on FarmX." },
+      { title: "Chat — Goall26" },
+      { name: "description", content: "Secure marketplace conversation on Goall26." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -299,7 +299,7 @@ function ChatDetail() {
           )}
           <div className="text-center">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-[10px] font-semibold text-muted-foreground">
-              <ShieldCheck className="h-3 w-3" /> Private FarmX conversation
+              <ShieldCheck className="h-3 w-3" /> Private Goall26 conversation
             </span>
           </div>
           {grouped.map((group) => (
@@ -504,7 +504,7 @@ function ListingContextCard({ product }: { product: ProductRef }) {
         <p className="truncate text-xs font-black">{product.name}</p>
         <p className="text-[11px] font-black text-brand">₦{product.price.toLocaleString()}</p>
         <p className="truncate text-[10px] text-muted-foreground">
-          {product.location ?? "FarmX listing"}
+          {product.location ?? "Goall26 listing"}
         </p>
       </div>
       <span className="flex items-center gap-1 text-[10px] font-black text-brand">
@@ -532,7 +532,7 @@ function SafetyReminder() {
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <p className="text-[11px] leading-relaxed">
         <span className="font-black">Stay safe.</span> Verify the seller and item before making any
-        payment. FarmX does not process private buyer-to-seller payments.
+        payment. Goall26 does not process private buyer-to-seller payments.
       </p>
     </div>
   );
@@ -702,7 +702,7 @@ function ReportDialog({
             <Flag className="mx-auto h-8 w-8 text-brand" />
             <h2 className="mt-3 text-base font-black">Report submitted</h2>
             <p className="mt-2 text-xs text-muted-foreground">
-              Reference {reportRef}. FarmX moderation will review it.
+              Reference {reportRef}. Goall26 moderation will review it.
             </p>
             <div className="mt-5 flex gap-2">
               <Link

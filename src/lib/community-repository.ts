@@ -38,7 +38,6 @@ export type CommunityQuery = {
   limit?: number;
 };
 export type CommunityRepository = {
-  mode: "preview" | "production";
   getViewerId: () => Promise<string>;
   getFeed: (query?: CommunityQuery) => Promise<CommunityFeed>;
   getPost: (postId: string) => Promise<CommunityPost | null>;
@@ -87,7 +86,6 @@ function validateMedia(file: File) {
 
 function createProductionRepository(): CommunityRepository {
   return {
-    mode: "production",
     getViewerId: async () => (await getCommunityViewer()).userId,
     getFeed: (query = {}) =>
       getCommunityFeed({
@@ -136,9 +134,6 @@ let repositoryPromise: Promise<CommunityRepository> | undefined;
 export async function getCommunityRepository(): Promise<CommunityRepository> {
   repositoryPromise ??= Promise.resolve(createProductionRepository());
   return repositoryPromise;
-}
-export function getCommunityRuntimeModeClient() {
-  return "production" as const;
 }
 export { COMMUNITY_TOPICS };
 export function topicLabel(topic: CommunityTopic) {

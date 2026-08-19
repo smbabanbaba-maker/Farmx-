@@ -1,15 +1,15 @@
-name: Build FarmX APK
+name: Build Goall26 APK
 
 on:
   workflow_dispatch:
 
 jobs:
   build-apk:
-    name: Build FarmX Android APK
+    name: Build Goall26 Android APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout FarmX
+      - name: Checkout Goall26
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -32,7 +32,7 @@ jobs:
             <head>
               <meta charset="UTF-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>FarmX</title>
+              <title>Goall26</title>
             </head>
             <body></body>
           </html>
@@ -45,16 +45,16 @@ jobs:
 
       - name: Initialize Capacitor
         run: |
-          npx cap init FarmX com.sylution.farmx --web-dir dist
+          npx cap init Goall26 com.sylution.farmx --web-dir dist
 
-      - name: Configure FarmX
+      - name: Configure Goall26
         run: |
           cat > capacitor.config.ts <<'EOF'
           import type { CapacitorConfig } from '@capacitor/cli';
 
           const config: CapacitorConfig = {
             appId: 'com.sylution.farmx',
-            appName: 'FarmX',
+            appName: 'Goall26',
             webDir: 'dist',
             server: {
               url: 'https://farmx-rvrb.vercel.app',
@@ -74,8 +74,8 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug
 
-      - name: Upload FarmX APK
+      - name: Upload Goall26 APK
         uses: actions/upload-artifact@v4
         with:
-          name: FarmX-APK
+          name: Goall26-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk

@@ -1,6 +1,6 @@
-# FarmX Marketplace
+# Goall26 Marketplace
 
-FarmX is a responsive marketplace for farmers, businesses, buyers, and service providers. The application keeps the original FarmX marketplace experience while providing polished account controls, messages, buyer protection, subscriptions, listings, a community area, wallet workflows, and AWS-ready persistence.
+Goall26 is a responsive marketplace for farmers, businesses, buyers, and service providers. The application keeps the original Goall26 marketplace experience while providing polished account controls, messages, buyer protection, subscriptions, listings, a community area, wallet workflows, and AWS-ready persistence.
 
 ## Product scope
 
@@ -34,15 +34,15 @@ The local development server starts on `http://localhost:3000`.
 
 ## AWS foundation
 
-The repository includes `infra/farmx-aws.yaml`, a CloudFormation template that provisions the core services needed by FarmX.
+The repository includes `infra/farmx-aws.yaml`, a CloudFormation template that provisions the core services needed by Goall26.
 
-| Service             | Purpose                                                               | FarmX configuration                                       |
+| Service             | Purpose                                                               | Goall26 configuration                                       |
 | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
 | Amazon S3           | Private listing photos with short-lived upload and download links.    | `FARMX_MEDIA_BUCKET`                                      |
 | Amazon DynamoDB     | Listing records with indexes for active listings and seller listings. | `FARMX_LISTINGS_TABLE`                                    |
 | Amazon Cognito      | Customer identity, account recovery, and stronger password controls.  | `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_WEB_CLIENT_ID` |
 | AWS Secrets Manager | Server-side payment secret storage.                                   | Runtime access only; never expose a secret in `VITE_*`.   |
-| IAM                 | Least-privilege permissions for the FarmX server runtime.             | Attach the output policy to the runtime role.             |
+| IAM                 | Least-privilege permissions for the Goall26 server runtime.             | Attach the output policy to the runtime role.             |
 
 > The app uses S3 presigned URLs so browser users do not receive AWS credentials. The URLs are intentionally short-lived and the bucket stays private. [1]
 
@@ -63,7 +63,7 @@ aws cloudformation deploy \
     Environment=production
 ```
 
-After deployment, copy the stack outputs into your deployment environment. The browser only receives variables prefixed with `VITE_`; `AWS_REGION`, the S3 bucket, DynamoDB table, and payment secret must remain on the FarmX server.
+After deployment, copy the stack outputs into your deployment environment. The browser only receives variables prefixed with `VITE_`; `AWS_REGION`, the S3 bucket, DynamoDB table, and payment secret must remain on the Goall26 server.
 
 ```bash
 AWS_REGION=eu-west-1
@@ -82,7 +82,7 @@ DynamoDB is configured in on-demand mode with point-in-time recovery. Its table 
 | Step | Required action                                                                                                                                                                                          |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | Deploy `infra/farmx-aws.yaml` once for each environment.                                                                                                                                                 |
-| 2    | Run the FarmX server with the IAM policy output from the stack attached to its runtime role.                                                                                                             |
+| 2    | Run the Goall26 server with the IAM policy output from the stack attached to its runtime role.                                                                                                             |
 | 3    | Set the server-only values listed above in the deployment environment.                                                                                                                                   |
 | 4    | Configure the S3 bucket CORS origin to match the exact public application URL.                                                                                                                           |
 | 5    | Replace `farmx-demo-user` in `src/routes/post-product.tsx` with the Cognito subject claim once sign-in is connected.                                                                                     |
@@ -91,7 +91,7 @@ DynamoDB is configured in on-demand mode with point-in-time recovery. Its table 
 
 ## Security model
 
-FarmX does not place an AWS access key, database credential, or payment secret in browser code. Uploads are signed by the server for the exact image object and a limited time. The CloudFormation template blocks public S3 access, enables server-side encryption, limits the application role to `products/*`, enables DynamoDB encryption and point-in-time recovery, and sets a dedicated secret location for payment processing.
+Goall26 does not place an AWS access key, database credential, or payment secret in browser code. Uploads are signed by the server for the exact image object and a limited time. The CloudFormation template blocks public S3 access, enables server-side encryption, limits the application role to `products/*`, enables DynamoDB encryption and point-in-time recovery, and sets a dedicated secret location for payment processing.
 
 ## Repository structure
 
@@ -102,12 +102,12 @@ src/
   components/             Reusable application UI
   lib/                    State, AWS server functions, payment contracts, and utilities
   routes/                 Marketplace pages and account flows
-public/                   FarmX logo and browser assets
+public/                   Goall26 logo and browser assets
 ```
 
 ## Vercel deployment
 
-FarmX yanzu yana ɗauke da Nitro da `vercel.json`, wanda ke sa Vercel ya gina TanStack Start server functions da SSR routes daidai. Bayan wannan commit ya shiga GitHub, Vercel zai fara sabon deployment idan repository ɗin yana haɗe da project ɗinka.
+Goall26 yanzu yana ɗauke da Nitro da `vercel.json`, wanda ke sa Vercel ya gina TanStack Start server functions da SSR routes daidai. Bayan wannan commit ya shiga GitHub, Vercel zai fara sabon deployment idan repository ɗin yana haɗe da project ɗinka.
 
 | Vercel setting   | Saitin da za ka tabbatar                               |
 | ---------------- | ------------------------------------------------------ |

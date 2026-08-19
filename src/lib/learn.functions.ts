@@ -44,25 +44,12 @@ const adminUpdateSchema = z.object({
   updates: z.record(z.string(), z.unknown()),
 });
 
-function hasLearnProductionConfig() {
-  return Boolean(
-    process.env.AWS_REGION &&
-    process.env.FARMX_LEARN_TABLE &&
-    (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
-    (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
-  );
-}
-
-export const getLearnRuntimeMode = createServerFn({ method: "GET" }).handler(async () => ({
-  mode: hasLearnProductionConfig() ? ("production" as const) : ("preview" as const),
-}));
-
 function getConfig() {
   const region = process.env.AWS_REGION;
   const learnTable = process.env.FARMX_LEARN_TABLE;
   if (!region || !learnTable) {
     throw new Error(
-      "Learn service is not configured. Set AWS_REGION and FARMX_LEARN_TABLE on the FarmX server.",
+      "Learn service is not configured. Set AWS_REGION and FARMX_LEARN_TABLE on the Goall26 server.",
     );
   }
   return { region, learnTable };
@@ -93,7 +80,7 @@ async function requireLearnAdmin() {
   const isAdmin =
     actor.groups.some((group) => ["admin", "content_manager", "instructor"].includes(group)) ||
     configuredIds.has(actor.userId);
-  if (!isAdmin) throw new Error("Only authorized FarmX content managers can manage courses.");
+  if (!isAdmin) throw new Error("Only authorized Goall26 content managers can manage courses.");
   return actor;
 }
 

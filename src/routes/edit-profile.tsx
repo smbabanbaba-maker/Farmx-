@@ -51,7 +51,7 @@ const blankProfile: ProfileDraft = {
 
 function EditProfile() {
   const navigate = useNavigate();
-  const { status, profile, error, refresh, mode } = useProfileData();
+  const { status, profile, error, refresh } = useProfileData();
   const existingPhotoUrl = useProfilePhoto(profile?.photoKey);
   const { isLoggedIn, loading: authLoading } = useAuth();
   const [form, setForm] = useState<ProfileDraft>(blankProfile);
@@ -104,24 +104,15 @@ function EditProfile() {
     setFormError(null);
     try {
       const compressed = await compressProfilePhoto(file);
-      const repository = await getProfileRepository();
-      if (repository.mode === "preview") {
-        const previewDataUrl = await blobToDataUrl(compressed);
-        if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
-        setPhotoPreview(previewDataUrl);
-        update("photoKey", previewDataUrl);
-        setNotice("Preview photo added. Save your Profile to keep it in development preview.");
-      } else {
-        const mimeType = "image/webp";
-        const { objectKey, uploadUrl } = await createProfilePhotoUpload({
-          data: { contentType: mimeType },
-        });
-        await putFileToSignedUrl(uploadUrl, compressed, mimeType);
-        if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
-        setPhotoPreview(URL.createObjectURL(compressed));
-        update("photoKey", objectKey);
-        setNotice("Profile photo uploaded. Save your profile to use it.");
-      }
+      const mimeType = "image/webp";
+      const { objectKey, uploadUrl } = await createProfilePhotoUpload({
+        data: { contentType: mimeType },
+      });
+      await putFileToSignedUrl(uploadUrl, compressed, mimeType);
+      if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(URL.createObjectURL(compressed));
+      update("photoKey", objectKey);
+      setNotice("Profile photo uploaded. Save your profile to use it.");
     } catch (uploadError) {
       setFormError(
         uploadError instanceof Error ? uploadError.message : "Unable to upload profile photo.",
@@ -134,20 +125,9 @@ function EditProfile() {
   const removePhoto = async () => {
     setFormError(null);
     try {
-      const repository = await getProfileRepository();
-      if (
-        repository.mode === "production" &&
-        profile?.photoKey &&
-        form.photoKey === profile.photoKey
-      ) {
+      if (profile?.photoKey && form.photoKey === profile.photoKey) {
         await removeMyProfilePhoto();
         await refresh();
-      }
-      if (repository.mode === "preview") {
-        await repository.updatePreview((state) => {
-          state.profile.photoKey = undefined;
-          state.profile.updatedAt = new Date().toISOString();
-        });
       }
       if (photoPreview?.startsWith("blob:")) URL.revokeObjectURL(photoPreview);
       setPhotoPreview(null);
@@ -189,7 +169,7 @@ function EditProfile() {
         skills,
       });
       await refresh();
-      setNotice("Your FarmX Profile was saved successfully.");
+      setNotice("Your Goall26 Profile was saved successfully.");
       setTimeout(() => navigate({ to: "/profile" }), 700);
     } catch (saveError) {
       setFormError(saveError instanceof Error ? saveError.message : "Unable to save your Profile.");
@@ -211,7 +191,7 @@ function EditProfile() {
           <ShieldCheck className="mx-auto h-8 w-8 text-brand" />
           <h1 className="mt-3 font-bold">Profile access is required</h1>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Sign in with your verified FarmX Cognito account before changing personal information.
+            Sign in with your verified Goall26 Cognito account before changing personal information.
           </p>
           <p className="mt-2 text-xs text-brand">{error}</p>
           <button
@@ -243,12 +223,6 @@ function EditProfile() {
           <ArrowLeft className="h-4 w-4" /> Back to profile
         </Link>
 
-        {mode === "preview" && (
-          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-            Preview data mode — your Profile changes are stored in this browser until AWS services
-            are configured.
-          </p>
-        )}
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center gap-4">
             <button
@@ -448,7 +422,7 @@ function EditProfile() {
         <section className="flex gap-2 rounded-2xl border border-brand/20 bg-brand/5 p-3">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
           <p className="text-xs leading-5 text-muted-foreground">
-            Profile data is validated and written through the authenticated FarmX Profile service.
+            Profile data is validated and written through the authenticated Goall26 Profile service.
             Privacy settings must also be enforced by backend authorization.
           </p>
         </section>
@@ -608,15 +582,6 @@ function parseTags(value: string) {
         .filter(Boolean),
     ),
   ].slice(0, 10);
-}
-
-async function blobToDataUrl(blob: Blob): Promise<string> {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Unable to prepare preview image."));
-    reader.readAsDataURL(blob);
-  });
 }
 
 async function compressProfilePhoto(file: File): Promise<Blob> {

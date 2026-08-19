@@ -5,13 +5,13 @@ import { useI18n } from "@/lib/i18n";
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — FarmX Help Centre" },
+      { title: "FAQ — Goall26 Help Centre" },
       {
         name: "description",
         content:
-          "Answers about FarmX listings, subscription plans, escrow payments, verification and refunds.",
+          "Answers about Goall26 listings, subscription plans, escrow payments, verification and refunds.",
       },
-      { property: "og:title", content: "FarmX FAQ" },
+      { property: "og:title", content: "Goall26 FAQ" },
       { property: "og:description", content: "Listings, plans, escrow and verification answers." },
     ],
   }),
@@ -29,7 +29,7 @@ const ITEMS = [
   },
   {
     q: "What is escrow?",
-    a: "FarmX holds the buyer's money until delivery is confirmed. Only verified sellers can use escrow.",
+    a: "Goall26 holds the buyer's money until delivery is confirmed. Only verified sellers can use escrow.",
   },
   {
     q: "How do I get the verified badge?",

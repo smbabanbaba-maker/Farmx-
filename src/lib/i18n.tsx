@@ -61,7 +61,7 @@ const en: Dict = {
   "home.weather.unavailable": "Weather unavailable",
   "home.weather.notifTitle": "Weather update for {location}",
   "home.weather.notifBody": "{temp}°C · {summary} · Humidity {humidity}%",
-  "home.search.title": "Search FarmX",
+  "home.search.title": "Search Goall26",
   "home.search.subtitle": "Products, services, businesses, jobs and Community",
   "home.search.placeholder": "What are you looking for?",
   "home.search.clear": "Clear search",
@@ -192,7 +192,7 @@ const en: Dict = {
   days7: "7 days",
   days30: "30 days",
   postAd: "Post ad",
-  termsNote: "By posting this ad you accept the FarmX Terms of Use and Privacy Policy.",
+  termsNote: "By posting this ad you accept the Goall26 Terms of Use and Privacy Policy.",
   publishListing: "Publish Listing",
   state: "State",
   lga: "LGA",
@@ -234,7 +234,7 @@ const en: Dict = {
   "post.noTitle": "No Title",
   "post.safetyTitle": "Safety First!",
   "post.safetyTip":
-    "FarmX is a classified marketplace. Always meet in public places, inspect items thoroughly before payment, and never pay in advance to sellers you don't trust.",
+    "Goall26 is a classified marketplace. Always meet in public places, inspect items thoroughly before payment, and never pay in advance to sellers you don't trust.",
   "post.readSafety": "Read safety tips",
   "post.saveLocation": "Save location",
   "post.cityPlaceholder": "e.g. Kofar Mata, Ikeja, Maitama",
@@ -423,7 +423,7 @@ const ha: Dict = {
   "home.weather.unavailable": "Ba a samun yanayi",
   "home.weather.notifTitle": "Sabuntawar yanayi ga {location}",
   "home.weather.notifBody": "{temp}°C · {summary} · Danshi {humidity}%",
-  "home.search.title": "Nemo a FarmX",
+  "home.search.title": "Nemo a Goall26",
   "home.search.subtitle": "Kaya, ayyuka, kamfanoni, ayyuka da Al'umma",
   "home.search.placeholder": "Me kake nema?",
   "home.search.clear": "Share nema",
@@ -528,7 +528,7 @@ const ha: Dict = {
   days7: "Kwana 7",
   days30: "Kwana 30",
   postAd: "Sanya talla",
-  termsNote: "Ta hanyar sanya wannan talla ka amince da Sharuɗɗan FarmX.",
+  termsNote: "Ta hanyar sanya wannan talla ka amince da Sharuɗɗan Goall26.",
   publishListing: "Wallafa Talla",
   state: "Jiha",
   lga: "Karamar Hukuma",
@@ -571,7 +571,7 @@ const ha: Dict = {
   "post.noTitle": "Babu Suna",
   "post.safetyTitle": "Tsaro Farko!",
   "post.safetyTip":
-    "FarmX kasuwa ce ta tallace-tallace. Koyaushe ku hadu a wuraren jama'a, ku bincika abubuwa sosai kafin biya, kuma kada ku biya kudi a gaba ga masu sayarwa da ba ku amince da su ba.",
+    "Goall26 kasuwa ce ta tallace-tallace. Koyaushe ku hadu a wuraren jama'a, ku bincika abubuwa sosai kafin biya, kuma kada ku biya kudi a gaba ga masu sayarwa da ba ku amince da su ba.",
   "post.readSafety": "Karanta shawarwarin tsaro",
   "post.saveLocation": "Ajiye wuri",
   "post.cityPlaceholder": "misali. Kofar Mata, Ikeja, Maitama",
@@ -751,7 +751,7 @@ const yo: Dict = {
   "home.weather.thunderstorms": "Àrá àti mànàmáná",
   "home.weather.changingConditions": "Ojú-ọjọ́ ń yí padà",
   "home.weather.unavailable": "Ojú-ọjọ́ kò sí",
-  "home.search.title": "Wá ní FarmX",
+  "home.search.title": "Wá ní Goall26",
   "home.search.subtitle": "Ọjà, iṣẹ́, ilé-iṣẹ́, iṣẹ́ àti Àwùjọ",
   "home.search.placeholder": "Kí ni o ń wá?",
   "home.search.clear": "Pa ìwá kúrò",
@@ -856,7 +856,7 @@ const yo: Dict = {
   days7: "Ọjọ́ 7",
   days30: "Ọjọ́ 30",
   postAd: "Fi ìpolówó sí",
-  termsNote: "Nípa fífi ìpolówó yìí sí, o gba Àwọn Òfin FarmX.",
+  termsNote: "Nípa fífi ìpolówó yìí sí, o gba Àwọn Òfin Goall26.",
   sellerInfo: "Àlàyé olutà",
   replySpeed: "Ìyára ìdáhùn",
   memberSince: "Ọmọ ẹgbẹ́ láti",
@@ -945,7 +945,7 @@ const ig: Dict = {
   "home.weather.thunderstorms": "Égbè eluigwe",
   "home.weather.changingConditions": "Ihu igwe na-agbanwe",
   "home.weather.unavailable": "Ihu igwe adịghị",
-  "home.search.title": "Chọọ FarmX",
+  "home.search.title": "Chọọ Goall26",
   "home.search.subtitle": "Ngwaahịa, ọrụ, ụlọ ọrụ, ọrụ na Obodo",
   "home.search.placeholder": "Gịnị ka ị na-achọ?",
   "home.search.clear": "Kpochapụ ọchụchọ",
@@ -1050,7 +1050,7 @@ const ig: Dict = {
   days7: "Ụbọchị 7",
   days30: "Ụbọchị 30",
   postAd: "Tinye mgbasa ozi",
-  termsNote: "Site na itinye mgbasa ozi a, ị nakweere usoro FarmX.",
+  termsNote: "Site na itinye mgbasa ozi a, ị nakweere usoro Goall26.",
   sellerInfo: "Ozi onye na-ere",
   replySpeed: "Ọsọ nzaghachi",
   memberSince: "Onye otu kemgbe",
@@ -1096,7 +1096,7 @@ const ig: Dict = {
   payWithEscrow: "Kwụọ site na escrow",
 };
 
-// Kanuri uses ISO 639-1 `kr`; the standard Latin-script FarmX UI remains LTR.
+// Kanuri uses ISO 639-1 `kr`; the standard Latin-script Goall26 UI remains LTR.
 // The English spread keeps the application key-complete while the Kanuri glossary is reviewed.
 const kr: Dict = {
   ...en,
@@ -1120,7 +1120,7 @@ const kr: Dict = {
   "home.weather.thunderstorms": "Hadari",
   "home.weather.changingConditions": "Yanayi yana canzawa",
   "home.weather.unavailable": "Yanayi ba ya samuwa",
-  "home.search.title": "FarmX nəmə",
+  "home.search.title": "Goall26 nəmə",
   "home.search.subtitle": "Kaya, aiki, kamfani, aiki da jama'a",
   "home.search.placeholder": "Nəmi kə?",
   "home.search.clear": "Nəmə rufe",
@@ -1279,7 +1279,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const fallbackKeys = useMemo(() => getEnglishFallbackKeys(lang), [lang]);
   useEffect(() => {
     if (import.meta.env.DEV && fallbackKeys.length > 0) {
-      console.warn(`[FarmX i18n] ${lang} uses English fallback keys`, fallbackKeys);
+      console.warn(`[Goall26 i18n] ${lang} uses English fallback keys`, fallbackKeys);
     }
   }, [fallbackKeys, lang]);
   const t = (key: string, vars?: TranslationVars) =>

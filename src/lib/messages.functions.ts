@@ -42,7 +42,7 @@ function getConfig() {
   const region = process.env.AWS_REGION;
   const profileTable = process.env.FARMX_PROFILE_TABLE;
   if (!region || !profileTable) {
-    throw new Error("Messaging service is not configured on the FarmX server.");
+    throw new Error("Messaging service is not configured on the Goall26 server.");
   }
   return { region, profileTable };
 }

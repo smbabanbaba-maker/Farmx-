@@ -29,17 +29,17 @@ import { useEffect, useMemo, useState } from "react";
 export const Route = createFileRoute("/")({
   head: () =>
     createSeoHead({
-      title: "FarmX — Agricultural Marketplace, Jobs & Community",
+      title: "Goall26 — Agricultural Marketplace, Jobs & Community",
       description:
-        "Buy and sell agricultural products, discover jobs, learn practical skills and connect with Nigeria’s farming community on FarmX.",
+        "Buy and sell agricultural products, discover jobs, learn practical skills and connect with Nigeria’s farming community on Goall26.",
       path: "/",
       image: "/farmx-logo.png",
       keywords: [
-        "FarmX",
+        "Goall26",
         "Nigeria agricultural marketplace",
         "farm products",
         "agriculture jobs",
-        "FarmX Learn",
+        "Goall26 Learn",
       ],
       jsonLd: [organizationJsonLd(), websiteJsonLd()],
     }),

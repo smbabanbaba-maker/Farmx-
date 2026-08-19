@@ -40,14 +40,14 @@ import { useMemo, useState } from "react";
 export const Route = createFileRoute("/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — FarmX" },
+      { title: "Notifications — Goall26" },
       {
         name: "description",
         content:
-          "Real FarmX messages, listing activity, account, community and service notifications.",
+          "Real Goall26 messages, listing activity, account, community and service notifications.",
       },
-      { property: "og:title", content: "FarmX Notifications" },
-      { property: "og:description", content: "Stay up to date with your FarmX activity." },
+      { property: "og:title", content: "Goall26 Notifications" },
+      { property: "og:description", content: "Stay up to date with your Goall26 activity." },
     ],
   }),
   component: NotificationsPage,
@@ -92,12 +92,12 @@ const LABELS: Record<string, string> = {
   community: "Community",
   account: "Account",
   security: "Security",
-  system: "FarmX",
+  system: "Goall26",
   order: "Listing updates",
-  escrow: "FarmX services",
+  escrow: "Goall26 services",
   dispute: "Account",
   kyc: "Account",
-  billing: "FarmX services",
+  billing: "Goall26 services",
 };
 
 function NotificationsPage() {
@@ -167,11 +167,11 @@ function NotificationsPage() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-              FarmX activity
+              Goall26 activity
             </p>
             <h1 className="mt-1 text-2xl font-black tracking-tight">Notifications</h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              Important updates from your FarmX account and marketplace activity.
+              Important updates from your Goall26 account and marketplace activity.
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -277,7 +277,7 @@ function NotificationsPage() {
         <div className="flex items-start gap-2 rounded-2xl border border-brand/15 bg-brand/[0.04] p-3">
           <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
           <p className="text-[10px] leading-relaxed text-muted-foreground">
-            Notifications show activity that belongs to your FarmX account. Private phone numbers,
+            Notifications show activity that belongs to your Goall26 account. Private phone numbers,
             payment details, and conversations are never exposed here.
           </p>
         </div>
@@ -386,7 +386,7 @@ function NotificationCard({
                 )}
               </div>
               <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                {LABELS[notification.category] ?? "FarmX"}
+                {LABELS[notification.category] ?? "Goall26"}
               </p>
             </div>
             <span className="shrink-0 text-[10px] text-muted-foreground">
@@ -407,7 +407,7 @@ function NotificationCard({
                   {notification.listing.title}
                 </span>
                 <span className="block truncate text-[10px] text-muted-foreground">
-                  {notification.listing.location ?? "FarmX listing"}
+                  {notification.listing.location ?? "Goall26 listing"}
                   {notification.listing.price != null
                     ? ` · ₦${notification.listing.price.toLocaleString()}`
                     : ""}

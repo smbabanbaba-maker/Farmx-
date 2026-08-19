@@ -9,14 +9,14 @@ import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/se
 export const Route = createFileRoute("/market/categories")({
   head: () =>
     createSeoHead({
-      title: "Marketplace categories | FarmX",
+      title: "Marketplace categories | Goall26",
       description:
-        "Explore public FarmX marketplace categories for agriculture, vehicles, property, services and more.",
+        "Explore public Goall26 marketplace categories for agriculture, vehicles, property, services and more.",
       path: "/market/categories",
-      keywords: ["FarmX categories", "agriculture categories", "Nigeria marketplace categories"],
+      keywords: ["Goall26 categories", "agriculture categories", "Nigeria marketplace categories"],
       noindex: !publicIndexingEnabled(),
       jsonLd: breadcrumbJsonLd([
-        { name: "FarmX Market", path: "/market" },
+        { name: "Goall26 Market", path: "/market" },
         { name: "Categories", path: "/market/categories" },
       ]),
     }),
@@ -51,7 +51,7 @@ function MarketCategories() {
           </Link>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand">
-              FarmX Market
+              Goall26 Market
             </p>
             <h1 className="text-xl font-black">Agricultural categories</h1>
           </div>

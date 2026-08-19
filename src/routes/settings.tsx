@@ -55,11 +55,11 @@ import type { UserSubscription } from "@/lib/subscription.types";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings Center — FarmX" },
+      { title: "Settings Center — Goall26" },
       {
         name: "description",
         content:
-          "Manage your FarmX account, privacy, marketplace preferences, payments, safety and support.",
+          "Manage your Goall26 account, privacy, marketplace preferences, payments, safety and support.",
       },
     ],
   }),
@@ -168,7 +168,7 @@ const SETTING_GROUPS: SettingGroup[] = [
     items: [
       {
         slug: "balance",
-        label: "FarmX Balance",
+        label: "Goall26 Balance",
         description: "Service credits and available funds",
         icon: WalletCards,
       },
@@ -255,7 +255,7 @@ const SETTING_GROUPS: SettingGroup[] = [
       },
       {
         slug: "about",
-        label: "About FarmX",
+        label: "About Goall26",
         description: "Version, mission, contact and licences",
         icon: Globe2,
       },
@@ -317,7 +317,7 @@ function SettingsPage() {
     };
   }, [profile?.photoKey]);
 
-  const fullName = profile?.fullName ?? "FarmX member";
+  const fullName = profile?.fullName ?? "Goall26 member";
   const location = profile?.location || profile?.state || "Location not set";
   const verificationLabel =
     profile?.verification === "approved"
@@ -465,8 +465,9 @@ function SettingsPage() {
             <div>
               <h2 className="text-sm font-black">Account actions</h2>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                FarmX keeps private account data behind your authenticated session. Changes made in
-                a child page are saved to the relevant service and reflected here when you return.
+                Goall26 keeps private account data behind your authenticated session. Changes made
+                in a child page are saved to the relevant service and reflected here when you
+                return.
               </p>
             </div>
           </div>

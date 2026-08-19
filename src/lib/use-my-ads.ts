@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getProfileRepository, type ProfileDataMode } from "@/lib/profile-repository";
+import { getProfileRepository } from "@/lib/profile-repository";
 
 export type MyAd = {
   listingId: string;
@@ -17,17 +17,16 @@ export type MyAd = {
 };
 
 type AdsState =
-  | { status: "idle"; ads: MyAd[]; error: null; mode: ProfileDataMode | null }
-  | { status: "loading"; ads: MyAd[]; error: null; mode: ProfileDataMode | null }
-  | { status: "ready"; ads: MyAd[]; error: null; mode: ProfileDataMode }
-  | { status: "error"; ads: MyAd[]; error: string; mode: ProfileDataMode | null };
+  | { status: "idle"; ads: MyAd[]; error: null }
+  | { status: "loading"; ads: MyAd[]; error: null }
+  | { status: "ready"; ads: MyAd[]; error: null }
+  | { status: "error"; ads: MyAd[]; error: string };
 
 export function useMyAds(enabled: boolean) {
   const [state, setState] = useState<AdsState>({
     status: "idle",
     ads: [],
     error: null,
-    mode: null,
   });
 
   const refresh = useCallback(async () => {
@@ -36,25 +35,23 @@ export function useMyAds(enabled: boolean) {
       status: "loading",
       ads: current.ads,
       error: null,
-      mode: current.mode,
     }));
     try {
       const repository = await getProfileRepository();
       const ads = await repository.getAds();
-      setState({ status: "ready", ads, error: null, mode: repository.mode });
+      setState({ status: "ready", ads, error: null });
     } catch (error) {
       setState({
         status: "error",
         ads: [],
         error: error instanceof Error ? error.message : "Unable to load your advertisements.",
-        mode: null,
       });
     }
   }, [enabled]);
 
   useEffect(() => {
     if (enabled) void refresh();
-    else setState({ status: "idle", ads: [], error: null, mode: null });
+    else setState({ status: "idle", ads: [], error: null });
   }, [enabled, refresh]);
 
   return { ...state, refresh };

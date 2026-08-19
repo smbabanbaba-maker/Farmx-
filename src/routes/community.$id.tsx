@@ -33,8 +33,8 @@ import {
 export const Route = createFileRoute("/community/$id")({
   head: () => ({
     meta: [
-      { title: "Community post — FarmX" },
-      { name: "description", content: "Read and join the discussion on FarmX Community." },
+      { title: "Community post — Goall26" },
+      { name: "description", content: "Read and join the discussion on Goall26 Community." },
     ],
   }),
   component: CommunityPostPage,
@@ -154,7 +154,7 @@ function CommunityPostPage() {
       if (navigator.share)
         await navigator
           .share({
-            title: `${post.author.name} on FarmX Community`,
+            title: `${post.author.name} on Goall26 Community`,
             text: post.content.slice(0, 120),
             url,
           })
@@ -221,7 +221,7 @@ function CommunityPostPage() {
         });
       setReportOpen(false);
       setReportDetails("");
-      setNotice("Thanks. Your report was sent to FarmX moderation.");
+      setNotice("Thanks. Your report was sent to Goall26 moderation.");
     } catch {
       setNotice("The report could not be submitted.");
     }
@@ -368,7 +368,7 @@ function CommunityPostPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-black">{post.listing.title}</p>
                       <p className="mt-1 text-[10px] text-muted-foreground">
-                        {post.listing.location ?? "FarmX Market"}
+                        {post.listing.location ?? "Goall26 Market"}
                         {post.listing.price != null
                           ? ` · ₦${post.listing.price.toLocaleString()}`
                           : ""}
@@ -542,7 +542,7 @@ function CommunityPostPage() {
             <div className="flex items-start gap-2 rounded-2xl border border-brand/15 bg-brand/[0.04] p-3">
               <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" />
               <p className="text-[10px] leading-relaxed text-muted-foreground">
-                FarmX Community is for public discussion. Do not share OTPs, private addresses,
+                Goall26 Community is for public discussion. Do not share OTPs, private addresses,
                 phone numbers, or payment details in comments.
               </p>
             </div>

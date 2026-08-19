@@ -434,7 +434,7 @@ function PostProduct() {
         type: "listings",
         eventId: `listing-published:${published.id}`,
         title: "Listing published",
-        body: `${form.title.trim()} is now live on FarmX.`,
+        body: `${form.title.trim()} is now live on Goall26.`,
         listing: {
           id: published.id,
           title: form.title.trim(),
@@ -1237,7 +1237,7 @@ function PostProduct() {
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-                  FarmX selector
+                  Goall26 selector
                 </p>
                 <h2 className="mt-1 text-lg font-black">
                   {selector === "category"

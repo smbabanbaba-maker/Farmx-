@@ -37,7 +37,6 @@ export type ListingFormState = {
   promoId: "none" | "top" | "premium";
 };
 export type ListingRepository = {
-  mode: "preview" | "production";
   uploadPhoto: (file: File) => Promise<{ objectKey: string }>;
   publish: (data: ListingFormState) => Promise<{ id: string }>;
   saveDraft: (data: Partial<ListingFormState>) => void;
@@ -100,7 +99,6 @@ async function hydrateDraft(draft: Partial<ListingFormState>) {
 }
 
 const productionRepository: ListingRepository = {
-  mode: "production",
   uploadPhoto: (file) => uploadFileToS3("listings", file),
   async publish(data) {
     const promoDays = data.promoId === "premium" ? 30 : data.promoId === "top" ? 7 : 0;

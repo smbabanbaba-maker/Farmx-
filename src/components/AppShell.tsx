@@ -59,7 +59,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           <Link to="/" className="flex items-center gap-2">
             <img
               src={LOGO}
-              alt="FarmX"
+              alt="Goall26"
               decoding="async"
               className="h-9 w-9 rounded-full object-cover"
             />
@@ -288,7 +288,7 @@ function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose:
             className="h-8 w-8 rounded-full object-cover opacity-80"
           />
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-            FarmX Marketplace
+            Goall26 Marketplace
           </p>
         </div>
       </div>

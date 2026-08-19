@@ -39,8 +39,11 @@ import {
 export const Route = createFileRoute("/wallet")({
   head: () => ({
     meta: [
-      { title: "FarmX Services Wallet" },
-      { name: "description", content: "Secure payments for official FarmX marketplace services." },
+      { title: "Goall26 Services Wallet" },
+      {
+        name: "description",
+        content: "Secure payments for official Goall26 marketplace services.",
+      },
     ],
   }),
   component: WalletPage,
@@ -205,7 +208,7 @@ function WalletPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
-                    FarmX Services
+                    Goall26 Services
                   </p>
                   <h1 className="mt-2 text-2xl font-black">Wallet</h1>
                 </div>
@@ -217,12 +220,12 @@ function WalletPage() {
                   {hidden ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="mt-8 text-xs font-semibold text-white/70">Available FarmX Balance</p>
+              <p className="mt-8 text-xs font-semibold text-white/70">Available Goall26 Balance</p>
               <p className="mt-1 text-3xl font-black">
                 {hidden ? "••••••" : money(summary?.cashBalance ?? 0)}
               </p>
               <p className="mt-2 max-w-sm text-[11px] leading-5 text-white/65">
-                This wallet is only for official FarmX services, not buyer-to-seller product
+                This wallet is only for official Goall26 services, not buyer-to-seller product
                 payments.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -230,7 +233,7 @@ function WalletPage() {
                   className="min-h-11 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-slate-950"
                   onClick={() => {
                     setNotice(
-                      "FarmX uses direct service payments instead of stored buyer-to-seller funds.",
+                      "Goall26 uses direct service payments instead of stored buyer-to-seller funds.",
                     );
                     document
                       .getElementById("farmx-services")
@@ -279,9 +282,9 @@ function WalletPage() {
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
                   Official services
                 </p>
-                <h2 className="mt-1 text-lg font-black">FarmX Services</h2>
+                <h2 className="mt-1 text-lg font-black">Goall26 Services</h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Visibility tools configured by FarmX.
+                  Visibility tools configured by Goall26.
                 </p>
               </div>
               {loading ? (
@@ -292,9 +295,11 @@ function WalletPage() {
                 </div>
               ) : services.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border p-6 text-center">
-                  <p className="text-sm font-black">No FarmX services are currently configured.</p>
+                  <p className="text-sm font-black">
+                    No Goall26 services are currently configured.
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Services will appear here when enabled by FarmX.
+                    Services will appear here when enabled by Goall26.
                   </p>
                 </div>
               ) : (
@@ -327,7 +332,7 @@ function WalletPage() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-brand" />
                 <p className="text-[11px] leading-5 text-muted-foreground">
-                  <strong className="text-foreground">Secure payment:</strong> FarmX never stores
+                  <strong className="text-foreground">Secure payment:</strong> Goall26 never stores
                   CVV, PIN, OTP, raw card numbers, or bank login details. Payment status is verified
                   server-side.
                 </p>
@@ -613,7 +618,7 @@ function Payment({
           <div>
             <p className="text-xs font-black">Reference {reference}</p>
             <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-              FarmX will not activate the service until payment is verified.
+              Goall26 will not activate the service until payment is verified.
             </p>
           </div>
         </div>
@@ -667,10 +672,12 @@ function Success({
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-green-700">
           Payment successful
         </p>
-        <h1 className="mt-2 text-2xl font-black">{service?.label ?? "FarmX service"} activated</h1>
+        <h1 className="mt-2 text-2xl font-black">
+          {service?.label ?? "Goall26 service"} activated
+        </h1>
         <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-muted-foreground">
-          Your FarmX service has been activated after payment verification. It increases visibility;
-          it does not guarantee sales.
+          Your Goall26 service has been activated after payment verification. It increases
+          visibility; it does not guarantee sales.
         </p>
         {reference && <p className="mt-3 text-xs font-black">Reference: {reference}</p>}
       </div>
@@ -704,7 +711,7 @@ function History({
       </div>
       {items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-6 text-center">
-          <p className="text-sm font-black">No FarmX service transactions yet.</p>
+          <p className="text-sm font-black">No Goall26 service transactions yet.</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Verified service payments will appear here.
           </p>
@@ -720,7 +727,7 @@ function History({
               <span className="min-w-0">
                 <span className="block truncate text-xs font-black">{item.serviceLabel}</span>
                 <span className="mt-1 block truncate text-[10px] text-muted-foreground">
-                  {item.listingTitle ?? "FarmX account service"} · {date(item.createdAt)}
+                  {item.listingTitle ?? "Goall26 account service"} · {date(item.createdAt)}
                 </span>
               </span>
               <span className="shrink-0 text-right">
@@ -752,7 +759,7 @@ function Transaction({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-              FarmX receipt
+              Goall26 receipt
             </p>
             <h2 className="mt-1 text-lg font-black">Transaction details</h2>
           </div>
@@ -766,7 +773,7 @@ function Transaction({
         </div>
         <dl className="mt-5 space-y-2">
           <Row label="Service" value={transaction.serviceLabel} />
-          <Row label="Listing" value={transaction.listingTitle ?? "FarmX account service"} />
+          <Row label="Listing" value={transaction.listingTitle ?? "Goall26 account service"} />
           <Row label="Amount" value={money(transaction.amount)} />
           <Row label="Reference" value={transaction.reference} />
           <Row

@@ -37,7 +37,7 @@ const POST_TYPES: { id: CommunityPostType; label: string; helper: string }[] = [
   { id: "discussion", label: "Discussion", helper: "Start a thoughtful conversation" },
   { id: "photo", label: "Photo post", helper: "Share one or more images" },
   { id: "video", label: "Video post", helper: "Share a short video" },
-  { id: "announcement", label: "Announcement", helper: "For authorised FarmX accounts" },
+  { id: "announcement", label: "Announcement", helper: "For authorised Goall26 accounts" },
 ];
 
 export function CommunityComposer({
@@ -202,7 +202,7 @@ export function CommunityComposer({
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-5 py-4 backdrop-blur">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-              FarmX Community
+              Goall26 Community
             </p>
             <h2 className="mt-1 text-lg font-black">
               {initialPost ? "Edit post" : "Create a post"}
@@ -387,7 +387,7 @@ export function CommunityComposer({
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-black">{listing.title}</p>
                 <p className="mt-1 truncate text-[10px] text-muted-foreground">
-                  {listing.location ?? "FarmX Market"}
+                  {listing.location ?? "Goall26 Market"}
                   {listing.price != null ? ` · ₦${listing.price.toLocaleString()}` : ""}
                 </p>
               </div>
@@ -529,7 +529,7 @@ function ListingPicker({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-              FarmX Market
+              Goall26 Market
             </p>
             <h3 className="mt-1 text-base font-black">Choose a listing to share</h3>
           </div>
@@ -587,7 +587,7 @@ function ListingThumb({ image }: { image?: string }) {
     <div className="flex h-11 w-14 items-center justify-center overflow-hidden rounded-xl bg-brand/10 text-brand">
       <ListingImage
         src={image}
-        alt="Attached FarmX listing"
+        alt="Attached Goall26 listing"
         placeholder=""
         className="h-full w-full object-cover"
       />

@@ -161,7 +161,7 @@ function toMarketListing(item: Record<string, unknown>): MarketListing {
   const price = typeof item.price === "number" ? item.price : null;
   const location = parseLocation(text(item.location));
   const images = stringArray(item.imageKeys);
-  const sellerName = text(item.sellerName, "FarmX Member");
+  const sellerName = text(item.sellerName, "Goall26 Member");
   const sellerUsername = text(
     item.sellerUsername,
     sellerName

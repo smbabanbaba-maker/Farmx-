@@ -49,14 +49,14 @@ const CONTENT: Record<
 > = {
   ads: {
     title: "My ads",
-    description: "Manage the adverts you created on FarmX.",
+    description: "Manage the adverts you created on Goall26.",
     empty: "No adverts have been created from this account yet.",
     icon: LayoutDashboard,
     action: { label: "Post an advert", to: "/post-product" },
   },
   promotions: {
     title: "Pro sales",
-    description: "Manage paid FarmX boosts, featured placements and campaigns.",
+    description: "Manage paid Goall26 boosts, featured placements and campaigns.",
     empty: "No active promotional campaigns yet.",
     icon: Sparkles,
   },
@@ -86,10 +86,10 @@ const CONTENT: Record<
     icon: BarChart3,
   },
   balance: {
-    title: "FarmX balance",
+    title: "Goall26 balance",
     description:
-      "Payments and credits for FarmX services such as subscriptions and promotions. This is not a product-payment wallet.",
-    empty: "No FarmX service payments or credits yet.",
+      "Payments and credits for Goall26 services such as subscriptions and promotions. This is not a product-payment wallet.",
+    empty: "No Goall26 service payments or credits yet.",
     icon: WalletCards,
   },
   services: {
@@ -101,13 +101,13 @@ const CONTENT: Record<
   },
   reviews: {
     title: "Ratings & reviews",
-    description: "Reviews from eligible and verified FarmX interactions.",
+    description: "Reviews from eligible and verified Goall26 interactions.",
     empty: "No reviews yet.",
     icon: Star,
   },
   network: {
     title: "Followers & following",
-    description: "People and businesses connected to your FarmX profile.",
+    description: "People and businesses connected to your Goall26 profile.",
     empty: "No followers or followed profiles yet.",
     icon: UsersRound,
   },
@@ -120,7 +120,7 @@ const CONTENT: Record<
   },
   business: {
     title: "Business profile",
-    description: "Set up professional business information for your public FarmX presence.",
+    description: "Set up professional business information for your public Goall26 presence.",
     empty: "No business profile has been created yet.",
     icon: Building2,
     action: { label: "Create business profile", to: "/company" },
@@ -134,7 +134,8 @@ const CONTENT: Record<
   },
   support: {
     title: "Help & support",
-    description: "Find answers and get help with your FarmX account, advertisements and services.",
+    description:
+      "Find answers and get help with your Goall26 account, advertisements and services.",
     empty: "You have no support tickets yet.",
     icon: CircleHelp,
     action: { label: "Open Help Centre", to: "/faq" },
@@ -228,7 +229,7 @@ function BuyerInquiriesPanel({
               </div>
               <p className="mt-2 text-xs leading-5 text-foreground">“{inquiry.lastMessage}”</p>
               <p className="mt-2 text-[10px] text-muted-foreground">
-                {formatDate(inquiry.date)} · Last interaction in FarmX chat
+                {formatDate(inquiry.date)} · Last interaction in Goall26 chat
               </p>
             </div>
           </div>
@@ -621,7 +622,7 @@ function EmptyPanel({
       <p className="mt-3 text-sm font-bold">{text}</p>
       {detail && <p className="mt-1 text-xs text-muted-foreground">{detail}</p>}
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        FarmX only shows activity that belongs to your authenticated account; it does not invent
+        Goall26 only shows activity that belongs to your authenticated account; it does not invent
         statistics.
       </p>
       {action && (

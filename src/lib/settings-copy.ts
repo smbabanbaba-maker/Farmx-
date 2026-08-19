@@ -32,7 +32,7 @@ const en: Record<string, string> = {
   "item.saved-searches.description": "Search criteria and alert preferences",
   "item.location.label": "Location preferences",
   "item.location.description": "Marketplace location and search radius",
-  "item.balance.label": "FarmX Balance",
+  "item.balance.label": "Goall26 Balance",
   "item.balance.description": "Service credits and available funds",
   "item.payments.label": "Payment history",
   "item.payments.description": "Verified subscriptions, boosts and service payments",
@@ -56,7 +56,7 @@ const en: Record<string, string> = {
   "item.support.description": "Help centre, support and problem reports",
   "item.legal.label": "Terms & policies",
   "item.legal.description": "Terms, privacy, marketplace and payment rules",
-  "item.about.label": "About FarmX",
+  "item.about.label": "About Goall26",
   "item.about.description": "Version, mission, contact and licences",
 };
 
@@ -92,7 +92,7 @@ const ha: Record<string, string> = {
   "item.saved-searches.description": "Bincike da sanarwarsa",
   "item.location.label": "Zaɓin wuri",
   "item.location.description": "Wurin kasuwa da nisan bincike",
-  "item.balance.label": "Ma'aunin FarmX",
+  "item.balance.label": "Ma'aunin Goall26",
   "item.balance.description": "Kuɗin ayyuka da sauran kuɗi",
   "item.payments.label": "Tarihin biya",
   "item.payments.description": "Biyan kuɗin da uwar garke ta tabbatar",
@@ -116,7 +116,7 @@ const ha: Record<string, string> = {
   "item.support.description": "Tambayoyi da rahoton matsala",
   "item.legal.label": "Sharuɗɗa da manufofi",
   "item.legal.description": "Sirri, kasuwa da biyan kuɗi",
-  "item.about.label": "Game da FarmX",
+  "item.about.label": "Game da Goall26",
   "item.about.description": "Sigar manhaja da bayanai",
 };
 
@@ -152,7 +152,7 @@ const ig: Record<string, string> = {
   "item.saved-searches.description": "Nchọgharị na ọkwa",
   "item.location.label": "Nhọrọ ebe",
   "item.location.description": "Ebe ahịa na anya nchọgharị",
-  "item.balance.label": "Balance FarmX",
+  "item.balance.label": "Balance Goall26",
   "item.balance.description": "Ego ọrụ na ego dị",
   "item.payments.label": "Akụkọ ịkwụ ụgwọ",
   "item.payments.description": "Ịkwụ ụgwọ nke sava kwadoro",
@@ -176,7 +176,7 @@ const ig: Record<string, string> = {
   "item.support.description": "Ajụjụ na akụkọ nsogbu",
   "item.legal.label": "Usoro na iwu",
   "item.legal.description": "Nzuzo, ahịa na ịkwụ ụgwọ",
-  "item.about.label": "Banyere FarmX",
+  "item.about.label": "Banyere Goall26",
   "item.about.description": "Ụdị ngwa na ozi",
 };
 
@@ -212,7 +212,7 @@ const yo: Record<string, string> = {
   "item.saved-searches.description": "Àwárí àti ìkìlọ̀",
   "item.location.label": "Yíyan ibi",
   "item.location.description": "Ibi ọjà àti ààlà àwárí",
-  "item.balance.label": "Ìwọ̀n FarmX",
+  "item.balance.label": "Ìwọ̀n Goall26",
   "item.balance.description": "Owó iṣẹ́ àti owó tó wà",
   "item.payments.label": "Ìtàn ìsanwó",
   "item.payments.description": "Ìsanwó tí olupin ti jẹ́rìísí",
@@ -236,7 +236,7 @@ const yo: Record<string, string> = {
   "item.support.description": "Ìbéèrè àti ìròyìn ìṣòro",
   "item.legal.label": "Àwọn òfin àti ìlànà",
   "item.legal.description": "Àṣírí, ọjà àti ìsanwó",
-  "item.about.label": "Nípa FarmX",
+  "item.about.label": "Nípa Goall26",
   "item.about.description": "Ẹ̀dà app àti àlàyé",
 };
 

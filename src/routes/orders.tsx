@@ -22,13 +22,13 @@ import {
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
-      { title: "My Orders & Escrow — FarmX" },
+      { title: "My Orders & Escrow — Goall26" },
       {
         name: "description",
         content:
-          "Track FarmX orders, escrow funds held until delivery, promo expiry and refund claims in one place.",
+          "Track Goall26 orders, escrow funds held until delivery, promo expiry and refund claims in one place.",
       },
-      { property: "og:title", content: "FarmX Orders & Escrow" },
+      { property: "og:title", content: "Goall26 Orders & Escrow" },
       {
         property: "og:description",
         content: "Escrow status, delivery confirmation and refund claims.",

@@ -37,16 +37,16 @@ export const Route = createFileRoute("/jobs/$id")({
     const job = loaderData?.job;
     if (!job) {
       return createSeoHead({
-        title: "Job unavailable | FarmX",
-        description: "This public FarmX job is unavailable or has been removed.",
+        title: "Job unavailable | Goall26",
+        description: "This public Goall26 job is unavailable or has been removed.",
         path: `/jobs/${encodeURIComponent(params.id)}`,
         noindex: true,
       });
     }
     return createSeoHead({
-      title: `${job.title} at ${job.company} in ${job.state} | FarmX Jobs`,
+      title: `${job.title} at ${job.company} in ${job.state} | Goall26 Jobs`,
       description: truncateDescription(
-        `${job.title} at ${job.company} in ${job.location}, ${job.state}. View responsibilities, requirements and application details on FarmX Jobs. ${job.description}`,
+        `${job.title} at ${job.company} in ${job.location}, ${job.state}. View responsibilities, requirements and application details on Goall26 Jobs. ${job.description}`,
       ),
       path: `/jobs/${encodeURIComponent(job.id)}`,
       image: job.employer.logo,
@@ -54,7 +54,7 @@ export const Route = createFileRoute("/jobs/$id")({
       jsonLd: [
         jobJsonLd(job),
         breadcrumbJsonLd([
-          { name: "FarmX Jobs", path: "/jobs" },
+          { name: "Goall26 Jobs", path: "/jobs" },
           { name: job.category, path: `/jobs?category=${encodeURIComponent(job.category)}` },
           { name: job.title, path: `/jobs/${encodeURIComponent(job.id)}` },
         ]),
