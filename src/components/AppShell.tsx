@@ -1,12 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
-  Home,
   ShoppingBag,
   Briefcase,
   Plus,
   MessageSquare,
-  Users,
   User,
   Menu,
   X,
@@ -43,12 +41,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   }, [pathname]);
 
   const tabs = [
-    { to: "/", icon: Home, label: t("home"), badge: 0 },
     { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
     { to: "/messages", icon: MessageSquare, label: t("chats"), badge: totalUnread },
     { to: "/post", icon: Plus, label: t("post"), badge: 0 },
     { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
-    { to: "/community", icon: Users, label: t("community"), badge: 0 },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
   ] as const;
 
@@ -56,7 +52,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
     <div className="min-h-screen bg-background text-foreground pb-20">
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-2xl flex items-center justify-between px-4 py-3">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/market" className="flex items-center gap-2">
             <img
               src={LOGO}
               alt="Goall26"
@@ -64,7 +60,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               className="h-9 w-9 rounded-full object-cover"
             />
             <span className="font-black text-lg tracking-tight">
-              Farm<span className="text-brand">X</span>
+              Goall<span className="text-brand">26</span>
             </span>
           </Link>
           <div className="flex items-center gap-1">
@@ -121,9 +117,9 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>
 
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur border-t border-border">
-        <div className="mx-auto max-w-2xl grid grid-cols-7">
+        <div className="mx-auto max-w-2xl grid grid-cols-5">
           {tabs.map((tab) => {
-            const active = tab.to === "/" ? pathname === "/" : pathname.startsWith(tab.to);
+            const active = pathname.startsWith(tab.to);
             const Icon = tab.icon;
             if (tab.to === "/post") {
               return (
