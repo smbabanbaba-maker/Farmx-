@@ -130,7 +130,7 @@ function Market() {
   };
 
   return (
-    <AppShell title={t("market")}>
+    <AppShell title={t("home")}>
       <div className="space-y-6 pb-6">
         <section className="space-y-3" aria-label="Market search and location">
           <form

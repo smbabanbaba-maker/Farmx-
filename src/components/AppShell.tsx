@@ -1,9 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
-  ShoppingBag,
-  Briefcase,
-  Plus,
+  Home,
+  Bookmark,
+  SquarePlus,
   MessageSquare,
   User,
   Menu,
@@ -41,10 +41,10 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   }, [pathname]);
 
   const tabs = [
-    { to: "/market", icon: ShoppingBag, label: t("market"), badge: 0 },
-    { to: "/messages", icon: MessageSquare, label: t("chats"), badge: totalUnread },
-    { to: "/post", icon: Plus, label: t("post"), badge: 0 },
-    { to: "/jobs", icon: Briefcase, label: t("jobs"), badge: 0 },
+    { to: "/market", icon: Home, label: t("home"), badge: 0 },
+    { to: "/saved", icon: Bookmark, label: t("saved"), badge: 0 },
+    { to: "/post", icon: SquarePlus, label: t("sell"), badge: 0 },
+    { to: "/messages", icon: MessageSquare, label: t("messages"), badge: totalUnread },
     { to: "/profile", icon: User, label: t("profile"), badge: 0 },
   ] as const;
 
@@ -121,40 +121,22 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
           {tabs.map((tab) => {
             const active = pathname.startsWith(tab.to);
             const Icon = tab.icon;
-            if (tab.to === "/post") {
-              return (
-                <Link
-                  key={tab.to}
-                  to={tab.to}
-                  aria-label={t("postNewAd")}
-                  className="relative flex min-w-0 min-h-14 flex-col items-center justify-center px-0.5 py-1.5"
-                >
-                  <span className="h-11 w-11 -mt-4 rounded-full bg-brand text-brand-foreground flex items-center justify-center shadow-lg border-4 border-background">
-                    <Plus className="h-6 w-6 stroke-[3]" />
-                  </span>
-                  <span
-                    className={`max-w-full truncate text-[9px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
-                  >
-                    {tab.label}
-                  </span>
-                </Link>
-              );
-            }
             return (
               <Link
                 key={tab.to}
                 to={tab.to}
-                className={`relative flex min-w-0 min-h-14 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[9px] font-medium ${active ? "text-brand" : "text-muted-foreground"}`}
+                aria-label={tab.label}
+                className={`relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition-colors active:scale-[0.97] ${active ? "text-brand" : "text-muted-foreground"}`}
               >
                 <div className="relative">
-                  <Icon className={`h-5 w-5 ${active ? "stroke-[2.5]" : ""}`} />
+                  <Icon className={`h-6 w-6 ${active ? "stroke-[2.7]" : "stroke-[1.9]"}`} />
                   {tab.badge > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
+                    <span className="absolute -right-2 -top-1.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
                       {tab.badge > 9 ? "9+" : tab.badge}
                     </span>
                   )}
                 </div>
-                <span className="truncate max-w-full">{tab.label}</span>
+                <span className="max-w-full truncate">{tab.label}</span>
               </Link>
             );
           })}

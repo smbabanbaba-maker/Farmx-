@@ -18,6 +18,8 @@ type Dict = Record<string, string>;
 const en: Dict = {
   // nav / core
   home: "Home",
+  saved: "Saved",
+  sell: "Sell",
   market: "Market",
   wallet: "Wallet",
   jobs: "Jobs",
@@ -381,6 +383,8 @@ const en: Dict = {
 const ha: Dict = {
   ...en,
   home: "Gida",
+  saved: "Ajiye",
+  sell: "Sayar",
   market: "Kasuwa",
   wallet: "Jaka",
   jobs: "Ayyuka",
@@ -711,6 +715,8 @@ const ha: Dict = {
 const yo: Dict = {
   ...en,
   home: "Ile",
+  saved: "Fipamọ́",
+  sell: "Ta",
   market: "Ọjà",
   wallet: "Àpò",
   jobs: "Iṣẹ́",
@@ -905,6 +911,8 @@ const yo: Dict = {
 const ig: Dict = {
   ...en,
   home: "Ụlọ",
+  saved: "Echekwara",
+  sell: "Ree",
   market: "Ahịa",
   wallet: "Obere akpa",
   jobs: "Ọrụ",
@@ -1101,6 +1109,8 @@ const ig: Dict = {
 const kr: Dict = {
   ...en,
   home: "Gana",
+  saved: "Ajiye",
+  sell: "Sayar",
   "home.greeting": "Kəla, {name}",
   "home.location.selectState": "Nigeriya jihar nəmə",
   "home.weather.live": "A RAYE",
