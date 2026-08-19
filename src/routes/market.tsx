@@ -4,20 +4,10 @@ import { AppShell } from "@/components/AppShell";
 import { ListingRail, MarketListingCard } from "@/components/MarketListingCard";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import type { MarketCategory } from "@/lib/market-types";
-import { useCompany } from "@/lib/company-store";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useI18n } from "@/lib/i18n";
 import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
-import {
-  ChevronRight,
-  CircleHelp,
-  MapPin,
-  Search,
-  ShieldCheck,
-  Sparkles,
-  Tractor,
-  X,
-} from "lucide-react";
+import { ChevronRight, CircleHelp, MapPin, Search, ShieldCheck, X } from "lucide-react";
 
 export const Route = createFileRoute("/market")({
   head: () =>
@@ -49,7 +39,6 @@ export const Route = createFileRoute("/market")({
 function Market() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const { state } = useCompany();
   const [repository, setRepository] = useState<MarketRepository | null>(null);
   const [query, setQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -143,39 +132,23 @@ function Market() {
   return (
     <AppShell title={t("market")}>
       <div className="space-y-6 pb-6">
-        <section className="rounded-3xl border border-brand/20 bg-gradient-to-br from-brand/10 via-card to-accent p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.12em] text-brand">
-                <Sparkles className="h-3.5 w-3.5" /> Goall26 classified marketplace
-              </p>
-              <h1 className="mt-2 text-2xl font-black tracking-tight">Find what you need.</h1>
-              <p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">
-                Discover vehicles, property, electronics, agriculture, services, and trusted
-                businesses. Contact sellers directly—Goall26 does not process private product
-                payments.
-              </p>
-            </div>
-            <div className="hidden rounded-2xl bg-brand p-3 text-brand-foreground sm:block">
-              <Tractor className="h-8 w-8" />
-            </div>
-          </div>
+        <section className="space-y-3" aria-label="Market search and location">
           <form
-            className="relative mt-5"
+            className="relative"
             onSubmit={(event) => {
               event.preventDefault();
               void submitSearch();
             }}
           >
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => window.setTimeout(() => setSearchFocused(false), 150)}
-              placeholder="Search products, equipment, services, sellers…"
+              placeholder="Search products, services or sellers"
               aria-label="Search Goall26 Market"
-              className="w-full rounded-2xl border border-border bg-background py-3 pl-10 pr-20 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-10 pr-20 text-sm outline-none shadow-sm transition focus:border-brand focus:ring-2 focus:ring-brand/15"
             />
             {query && (
               <button
@@ -190,7 +163,7 @@ function Market() {
             )}
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-brand px-3 py-2 text-xs font-black text-brand-foreground"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-xl bg-brand px-3.5 py-2 text-xs font-black text-brand-foreground"
             >
               Search
             </button>
@@ -217,13 +190,13 @@ function Market() {
               </div>
             )}
           </form>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5 text-brand" />
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex min-w-0 items-center gap-2 text-xs font-bold text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0 text-brand" />
               <select
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
-                className="rounded-lg border border-border bg-background px-2 py-1.5 text-[10px] font-bold outline-none"
+                className="min-w-0 truncate rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-bold outline-none"
               >
                 <option value="">All locations</option>
                 {Object.keys(NIGERIA_STATES_LGAS)
@@ -234,61 +207,39 @@ function Market() {
                     </option>
                   ))}
               </select>
-            </div>
+            </label>
             <Link
               to="/market/search"
               search={{ q: "" }}
-              className="inline-flex items-center gap-1 text-[10px] font-black text-brand"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-black text-brand"
             >
-              Advanced filters <ChevronRight className="h-3 w-3" />
+              Filters <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         </section>
 
-        {state.tier === "none" && (
-          <Link
-            to="/subscribe"
-            className="flex items-center justify-between rounded-2xl border border-brand/30 bg-card p-3 transition hover:border-brand"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-brand" />
-              <div>
-                <p className="text-sm font-bold">Get subscribed</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Unlock more listings, visibility and marketplace tools.
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-black text-brand">
-              Subscribe <ChevronRight className="inline h-3.5 w-3.5" />
-            </span>
-          </Link>
-        )}
-
-        <section className="space-y-2">
+        <section className="space-y-2" aria-label="Market categories">
           <div className="flex items-end justify-between px-1">
             <div>
-              <h2 className="text-base font-black">Browse categories</h2>
-              <p className="text-[10px] text-muted-foreground">
-                Everything for you, your farm and business.
-              </p>
+              <h2 className="text-base font-black">Categories</h2>
+              <p className="text-[10px] text-muted-foreground">Shop by what you need.</p>
             </div>
             <Link to="/market/categories" className="text-[11px] font-bold text-brand">
               See all
             </Link>
           </div>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {categories.slice(0, 8).map((category) => (
               <Link
                 key={category.id}
                 to="/market/category/$category"
                 params={{ category: category.id }}
-                className="group rounded-2xl border border-border bg-card p-2 text-center transition hover:border-brand/40 hover:bg-brand/5"
+                className="group flex min-w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2.5 text-center transition hover:border-brand/40 hover:bg-brand/5"
               >
-                <span className="mx-auto flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-xl">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-xl">
                   {category.icon}
                 </span>
-                <span className="mt-1.5 block truncate text-[9px] font-bold group-hover:text-brand">
+                <span className="w-full truncate text-[9px] font-bold group-hover:text-brand">
                   {category.name}
                 </span>
               </Link>
