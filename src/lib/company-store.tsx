@@ -161,7 +161,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
           gps: c.gps,
           partners: c.partners,
           followers: state.company?.followers ?? 0,
-          themeColor: c.themeColor ?? state.company?.themeColor ?? "#dc2626",
+          themeColor: c.themeColor ?? state.company?.themeColor ?? "#0B1F3A",
           createdAt: state.company?.createdAt ?? Date.now(),
         };
         persist({ ...state, company: full });

@@ -60,13 +60,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
               className="h-9 w-9 rounded-full object-cover"
             />
             <span className="font-black text-lg tracking-tight">
-              Goall<span className="text-brand">26</span>
+              <span className="text-navy">Goall</span>
+              <span className="text-orange">26</span>
             </span>
           </Link>
           <div className="flex items-center gap-1">
             <Link
               to="/notifications"
-              className="relative p-2 rounded-full hover:bg-accent"
+              className="relative rounded-full p-2 text-navy hover:bg-accent"
               aria-label={
                 unreadNotifications > 0
                   ? `${unreadNotifications} ${t("notifications")}`
@@ -85,13 +86,13 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 <>
                   <Link
                     to="/login"
-                    className="rounded-lg border border-brand px-2.5 py-1 text-xs font-bold text-brand hover:bg-brand/5"
+                    className="rounded-lg border border-navy px-2.5 py-1 text-xs font-bold text-navy hover:bg-navy/5"
                   >
                     Sign In
                   </Link>
                   <Link
                     to="/signup"
-                    className="rounded-lg bg-brand px-2.5 py-1 text-xs font-bold text-brand-foreground shadow-sm"
+                    className="rounded-lg bg-orange px-2.5 py-1 text-xs font-bold text-white shadow-sm"
                   >
                     Sign Up
                   </Link>
@@ -126,7 +127,7 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
                 key={tab.to}
                 to={tab.to}
                 aria-label={tab.label}
-                className={`relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition-colors active:scale-[0.97] ${active ? "text-brand" : "text-muted-foreground"}`}
+                className={`relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition-colors active:scale-[0.97] ${active ? "text-navy" : "text-muted-foreground"}`}
               >
                 <div className="relative">
                   <Icon className={`h-6 w-6 ${active ? "stroke-[2.7]" : "stroke-[1.9]"}`} />
@@ -179,7 +180,7 @@ function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose:
               <button
                 key={l.code}
                 onClick={() => setLang(l.code as Lang)}
-                className={`px-3 py-2 text-sm rounded-lg border ${lang === l.code ? "bg-brand text-brand-foreground border-brand" : "bg-background border-border hover:bg-accent"}`}
+                className={`px-3 py-2 text-sm rounded-lg border ${lang === l.code ? "bg-navy text-white border-navy" : "bg-background border-border hover:bg-accent"}`}
               >
                 {l.label}
               </button>
@@ -195,13 +196,13 @@ function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose:
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => setMode("light")}
-              className={`px-3 py-2 text-sm rounded-lg border ${mode === "light" ? "bg-brand text-brand-foreground border-brand" : "bg-background border-border"}`}
+              className={`px-3 py-2 text-sm rounded-lg border ${mode === "light" ? "bg-navy text-white border-navy" : "bg-background border-border"}`}
             >
               {t("light")}
             </button>
             <button
               onClick={() => setMode("dark")}
-              className={`px-3 py-2 text-sm rounded-lg border ${mode === "dark" ? "bg-brand text-brand-foreground border-brand" : "bg-background border-border"}`}
+              className={`px-3 py-2 text-sm rounded-lg border ${mode === "dark" ? "bg-navy text-white border-navy" : "bg-background border-border"}`}
             >
               {t("dark")}
             </button>
@@ -219,7 +220,7 @@ function SettingsDrawer({ isLoggedIn, onClose }: { isLoggedIn: boolean; onClose:
             step="0.05"
             value={fontScale}
             onChange={(e) => setFontScale(parseFloat(e.target.value))}
-            className="w-full accent-[oklch(0.55_0.22_27)]"
+            className="w-full accent-orange"
           />
         </section>
 

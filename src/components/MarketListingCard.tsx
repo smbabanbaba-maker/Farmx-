@@ -43,7 +43,7 @@ export function MarketListingCard({
           className="rounded-full bg-background/90 p-1.5 shadow-sm"
           aria-label={saved ? `Remove ${listing.title} from saved` : `Save ${listing.title}`}
         >
-          <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-brand text-brand" : ""}`} />
+          <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-orange text-orange" : ""}`} />
         </button>
         <button
           onClick={(event) => {
@@ -63,7 +63,7 @@ export function MarketListingCard({
         className="block"
         aria-label={`Open ${listing.title}`}
       >
-        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-br from-brand/10 via-accent to-brand/5 text-5xl">
+        <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-muted-background text-5xl">
           <ListingImage
             src={listing.images[0]}
             alt={listing.title}
@@ -72,7 +72,7 @@ export function MarketListingCard({
           />
           <div className="absolute left-2 top-2 flex flex-wrap gap-1">
             {listing.featured && (
-              <span className="rounded-full bg-brand px-2 py-1 text-[9px] font-black text-brand-foreground">
+              <span className="rounded-full bg-orange px-2 py-1 text-[9px] font-black text-white">
                 FEATURED
               </span>
             )}
@@ -95,7 +95,7 @@ export function MarketListingCard({
             </span>
           </div>
           <div className="mt-2 flex items-baseline justify-between gap-2">
-            <span className="truncate text-base font-black text-brand">
+            <span className="truncate text-base font-black text-orange">
               {listing.priceLabel ??
                 (listing.price === null ? "Request quote" : `₦${listing.price.toLocaleString()}`)}
             </span>
@@ -103,7 +103,7 @@ export function MarketListingCard({
           </div>
           <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
             <span className="flex min-w-0 items-center gap-1.5 truncate">
-              <div className="h-4 w-4 shrink-0 overflow-hidden rounded-full bg-brand/10">
+              <div className="h-4 w-4 shrink-0 overflow-hidden rounded-full bg-navy/10">
                 <ListingImage
                   src={listing.seller.photo}
                   alt=""
@@ -113,7 +113,10 @@ export function MarketListingCard({
               </div>
               <span className="truncate font-bold text-foreground/80">{listing.seller.name}</span>
               {verified && (
-                <BadgeCheck className="h-3 w-3 shrink-0 text-brand" aria-label="Verified seller" />
+                <BadgeCheck
+                  className="h-3 w-3 shrink-0 text-success"
+                  aria-label="Verified seller"
+                />
               )}
             </span>
             <span className="flex shrink-0 items-center gap-0.5 font-bold text-foreground">
@@ -131,7 +134,7 @@ export function MarketListingCard({
                 <MessageCircle className="h-3 w-3" />
                 {listing.stats.inquiries}
               </span>
-              <span className="rounded-full bg-brand/5 text-brand px-1.5 py-0.5 font-bold">
+              <span className="rounded-full bg-navy/5 text-navy px-1.5 py-0.5 font-bold">
                 {listing.category}
               </span>
               <span className="rounded-full bg-muted px-1.5 py-0.5 capitalize">

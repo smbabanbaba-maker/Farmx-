@@ -148,7 +148,7 @@ function Market() {
               onBlur={() => window.setTimeout(() => setSearchFocused(false), 150)}
               placeholder="Search products, services or sellers"
               aria-label="Search Goall26 Market"
-              className="h-12 w-full rounded-2xl border border-border bg-card pl-10 pr-20 text-sm outline-none shadow-sm transition focus:border-brand focus:ring-2 focus:ring-brand/15"
+              className="h-12 w-full rounded-2xl border border-border bg-card pl-10 pr-20 text-sm outline-none shadow-sm transition focus:border-navy focus:ring-2 focus:ring-navy/15"
             />
             {query && (
               <button
@@ -183,7 +183,7 @@ function Market() {
                     }}
                     className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-xs font-semibold hover:bg-muted"
                   >
-                    <Search className="h-3.5 w-3.5 text-brand" />
+                    <Search className="h-3.5 w-3.5 text-navy" />
                     {suggestion}
                   </button>
                 ))}
@@ -192,7 +192,7 @@ function Market() {
           </form>
           <div className="flex items-center justify-between gap-3">
             <label className="flex min-w-0 items-center gap-2 text-xs font-bold text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0 text-brand" />
+              <MapPin className="h-4 w-4 shrink-0 text-navy" />
               <select
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
@@ -211,7 +211,7 @@ function Market() {
             <Link
               to="/market/search"
               search={{ q: "" }}
-              className="inline-flex shrink-0 items-center gap-1 text-xs font-black text-brand"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-black text-navy"
             >
               Filters <ChevronRight className="h-3.5 w-3.5" />
             </Link>
@@ -224,7 +224,7 @@ function Market() {
               <h2 className="text-base font-black">Categories</h2>
               <p className="text-[10px] text-muted-foreground">Shop by what you need.</p>
             </div>
-            <Link to="/market/categories" className="text-[11px] font-bold text-brand">
+            <Link to="/market/categories" className="text-[11px] font-bold text-navy">
               See all
             </Link>
           </div>
@@ -234,12 +234,12 @@ function Market() {
                 key={category.id}
                 to="/market/category/$category"
                 params={{ category: category.id }}
-                className="group flex min-w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2.5 text-center transition hover:border-brand/40 hover:bg-brand/5"
+                className="group flex min-w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2.5 text-center transition hover:border-navy/40 hover:bg-navy/5"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-xl">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/10 text-xl">
                   {category.icon}
                 </span>
-                <span className="w-full truncate text-[9px] font-bold group-hover:text-brand">
+                <span className="w-full truncate text-[9px] font-bold group-hover:text-navy">
                   {category.name}
                 </span>
               </Link>
