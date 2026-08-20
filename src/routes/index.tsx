@@ -8,7 +8,7 @@ export const Route = createFileRoute("/")({
       description:
         "Browse real products, services, equipment, property and businesses on the Goall26 marketplace.",
       path: "/",
-      image: "/farmx-logo.png",
+      image: "/goall26-logo.png",
       keywords: [
         "Goall26 Market",
         "Nigeria marketplace",

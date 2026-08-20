@@ -6,7 +6,7 @@ import {
   getMyProfilePhotoUrl,
   removeMyProfilePhoto,
   saveMyProfile,
-  type FarmXProfile,
+  type Goall26Profile,
 } from "@/lib/profile.functions";
 import { useProfileData } from "@/lib/use-profile";
 import { putFileToSignedUrl } from "@/lib/s3-client";
@@ -26,7 +26,7 @@ import { useProfilePhoto } from "@/lib/use-profile-photo";
 
 export const Route = createFileRoute("/edit-profile")({ component: EditProfile });
 
-type ProfileDraft = Omit<FarmXProfile, "userId" | "createdAt" | "updatedAt" | "verification">;
+type ProfileDraft = Omit<Goall26Profile, "userId" | "createdAt" | "updatedAt" | "verification">;
 
 const blankProfile: ProfileDraft = {
   fullName: "",
@@ -41,8 +41,8 @@ const blankProfile: ProfileDraft = {
   skills: [],
   privacy: {
     profileVisibility: "public",
-    messagePermission: "farmx_members",
-    callPermission: "farmx_members",
+    messagePermission: "goall26_members",
+    callPermission: "goall26_members",
     showFollowers: true,
     showActivity: false,
     showBusinessInfo: true,
@@ -372,7 +372,7 @@ function EditProfile() {
           <Choice
             label="Who can view your profile?"
             value={form.privacy.profileVisibility}
-            options={["public", "farmx_members", "private"]}
+            options={["public", "goall26_members", "private"]}
             onChange={(value) =>
               update("privacy", {
                 ...form.privacy,
@@ -383,7 +383,7 @@ function EditProfile() {
           <Choice
             label="Who can message you?"
             value={form.privacy.messagePermission}
-            options={["everyone", "farmx_members", "followers"]}
+            options={["everyone", "goall26_members", "followers"]}
             onChange={(value) =>
               update("privacy", {
                 ...form.privacy,
@@ -394,7 +394,7 @@ function EditProfile() {
           <Choice
             label="Who can call you?"
             value={form.privacy.callPermission}
-            options={["everyone", "farmx_members", "nobody"]}
+            options={["everyone", "goall26_members", "nobody"]}
             onChange={(value) =>
               update("privacy", {
                 ...form.privacy,

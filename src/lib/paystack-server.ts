@@ -1,10 +1,14 @@
+import { getServerEnv } from "@/lib/server-env";
 import { GetSecretValueCommand, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { getAwsClientOptions } from "@/lib/aws-config";
 
 let cachedSecret: { value: string; expiresAt: number } | null = null;
 
 function getSecretIdentifier() {
-  return process.env.FARMX_PAYSTACK_SECRET_ARN ?? process.env.FARMX_PAYSTACK_SECRET_NAME;
+  return (
+    getServerEnv("GOALL26_PAYSTACK_SECRET_ARN", "FARMX_PAYSTACK_SECRET_ARN") ??
+    getServerEnv("GOALL26_PAYSTACK_SECRET_NAME", "FARMX_PAYSTACK_SECRET_NAME")
+  );
 }
 
 function parseSecretString(secretString: string) {

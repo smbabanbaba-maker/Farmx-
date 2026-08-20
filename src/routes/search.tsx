@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { FarmXSearchBar } from "@/components/FarmXSearchBar";
+import { Goall26SearchBar } from "@/components/Goall26SearchBar";
 import { MarketListingCard } from "@/components/MarketListingCard";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { getMarketRepository, type MarketFilters, type MarketSort } from "@/lib/market-repository";
@@ -142,7 +142,7 @@ function GlobalSearch() {
               Search public listings, services, businesses, jobs, and Community posts.
             </p>
           </div>
-          <FarmXSearchBar initialQuery={q} placeholder="Search products, services, businesses…" />
+          <Goall26SearchBar initialQuery={q} placeholder="Search products, services, businesses…" />
         </header>
 
         {!q.trim() ? (

@@ -18,7 +18,7 @@ interface PrefState {
   toggles: Record<string, boolean>; // settings switches
 }
 
-const KEY = "farmx-prefs-v1";
+const KEY = "goall26-prefs-v1";
 const initial: PrefState = {
   saved: [],
   followed: [],

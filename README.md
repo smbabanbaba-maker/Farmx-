@@ -34,12 +34,12 @@ The local development server starts on `http://localhost:3000`.
 
 ## AWS foundation
 
-The repository includes `infra/farmx-aws.yaml`, a CloudFormation template that provisions the core services needed by Goall26.
+The repository includes `infra/goall26-aws.yaml`, a CloudFormation template that provisions the core services needed by Goall26.
 
 | Service             | Purpose                                                               | Goall26 configuration                                       |
 | ------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
-| Amazon S3           | Private listing photos with short-lived upload and download links.    | `FARMX_MEDIA_BUCKET`                                      |
-| Amazon DynamoDB     | Listing records with indexes for active listings and seller listings. | `FARMX_LISTINGS_TABLE`                                    |
+| Amazon S3           | Private listing photos with short-lived upload and download links.    | `GOALL26_MEDIA_BUCKET`                                      |
+| Amazon DynamoDB     | Listing records with indexes for active listings and seller listings. | `GOALL26_LISTINGS_TABLE`                                    |
 | Amazon Cognito      | Customer identity, account recovery, and stronger password controls.  | `VITE_COGNITO_USER_POOL_ID`, `VITE_COGNITO_WEB_CLIENT_ID` |
 | AWS Secrets Manager | Server-side payment secret storage.                                   | Runtime access only; never expose a secret in `VITE_*`.   |
 | IAM                 | Least-privilege permissions for the Goall26 server runtime.             | Attach the output policy to the runtime role.             |
@@ -52,11 +52,11 @@ First choose the public HTTPS origin that will serve the app, for example `https
 
 ```bash
 aws cloudformation validate-template \
-  --template-body file://infra/farmx-aws.yaml
+  --template-body file://infra/goall26-aws.yaml
 
 aws cloudformation deploy \
-  --template-file infra/farmx-aws.yaml \
-  --stack-name farmx-production \
+  --template-file infra/goall26-aws.yaml \
+  --stack-name goall26-production \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
     ApplicationOrigin=https://app.example.com \
@@ -67,8 +67,8 @@ After deployment, copy the stack outputs into your deployment environment. The b
 
 ```bash
 AWS_REGION=eu-west-1
-FARMX_MEDIA_BUCKET=<CloudFormation MediaBucketName output>
-FARMX_LISTINGS_TABLE=<CloudFormation ListingsTableName output>
+GOALL26_MEDIA_BUCKET=<CloudFormation MediaBucketName output>
+GOALL26_LISTINGS_TABLE=<CloudFormation ListingsTableName output>
 VITE_API_BASE_URL=https://api.example.com
 VITE_COGNITO_USER_POOL_ID=<CloudFormation CognitoUserPoolId output>
 VITE_COGNITO_WEB_CLIENT_ID=<CloudFormation CognitoWebClientId output>
@@ -81,11 +81,11 @@ DynamoDB is configured in on-demand mode with point-in-time recovery. Its table 
 
 | Step | Required action                                                                                                                                                                                          |
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | Deploy `infra/farmx-aws.yaml` once for each environment.                                                                                                                                                 |
+| 1    | Deploy `infra/goall26-aws.yaml` once for each environment.                                                                                                                                                 |
 | 2    | Run the Goall26 server with the IAM policy output from the stack attached to its runtime role.                                                                                                             |
 | 3    | Set the server-only values listed above in the deployment environment.                                                                                                                                   |
 | 4    | Configure the S3 bucket CORS origin to match the exact public application URL.                                                                                                                           |
-| 5    | Replace `farmx-demo-user` in `src/routes/post-product.tsx` with the Cognito subject claim once sign-in is connected.                                                                                     |
+| 5    | Confirm the listing owner is always the authenticated Cognito subject claim before publishing.                                                                                     |
 | 6    | Create the payment API endpoints and keep the Paystack secret only in AWS Secrets Manager. Verify every payment server-side before activating a subscription, promotion, wallet credit, or escrow state. |
 | 7    | Point the domain DNS records to the selected hosting service. Leave the existing SOA record unchanged.                                                                                                   |
 
@@ -97,7 +97,7 @@ Goall26 does not place an AWS access key, database credential, or payment secret
 
 ```text
 infra/
-  farmx-aws.yaml          AWS foundation template
+  goall26-aws.yaml        AWS foundation template
 src/
   components/             Reusable application UI
   lib/                    State, AWS server functions, payment contracts, and utilities

@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import {
   DeleteCommand,
@@ -37,8 +38,8 @@ const fleetIdSchema = z.object({ id: z.string().uuid() });
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const inventoryTable = process.env.FARMX_INVENTORY_TABLE;
-  const fleetTable = process.env.FARMX_FLEET_TABLE;
+  const inventoryTable = getServerEnv("GOALL26_INVENTORY_TABLE", "FARMX_INVENTORY_TABLE");
+  const fleetTable = getServerEnv("GOALL26_FLEET_TABLE", "FARMX_FLEET_TABLE");
   if (!region || !inventoryTable || !fleetTable) {
     throw new Error("Goall26 Inventory and Fleet AWS tables are not configured on the server.");
   }

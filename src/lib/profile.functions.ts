@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
@@ -48,9 +49,9 @@ const profileSchema = z.object({
     .regex(/^profiles\/[a-z0-9-]+\/avatar\/[a-z0-9-]+\.(jpg|jpeg|png|webp)$/i)
     .optional(),
   privacy: z.object({
-    profileVisibility: z.enum(["public", "farmx_members", "private"]),
-    messagePermission: z.enum(["everyone", "farmx_members", "followers"]),
-    callPermission: z.enum(["everyone", "farmx_members", "nobody"]),
+    profileVisibility: z.enum(["public", "goall26_members", "private"]),
+    messagePermission: z.enum(["everyone", "goall26_members", "followers"]),
+    callPermission: z.enum(["everyone", "goall26_members", "nobody"]),
     showFollowers: z.boolean(),
     showActivity: z.boolean(),
     showBusinessInfo: z.boolean(),
@@ -169,7 +170,7 @@ const listingUpdateSchema = z.object({
 });
 const listingIdSchema = z.object({ listingId: z.string().uuid() });
 
-export type FarmXProfile = z.infer<typeof profileSchema> & {
+export type Goall26Profile = z.infer<typeof profileSchema> & {
   userId: string;
   createdAt: string;
   updatedAt: string;
@@ -231,10 +232,10 @@ const businessInputSchema = z.object({
   coverKey: z.string().max(300).optional(),
 });
 
-export type FarmXSettings = z.infer<typeof settingsInputSchema>;
-export type FarmXBusinessProfile = z.infer<typeof businessInputSchema>;
+export type Goall26Settings = z.infer<typeof settingsInputSchema>;
+export type Goall26BusinessProfile = z.infer<typeof businessInputSchema>;
 
-export const DEFAULT_FARMX_SETTINGS: FarmXSettings = {
+export const DEFAULT_FARMX_SETTINGS: Goall26Settings = {
   notifications: {
     securityAlerts: true,
     loginAlerts: true,
@@ -279,15 +280,15 @@ export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(a
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
-  const bucket = process.env.FARMX_MEDIA_BUCKET;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
+  const bucket = getServerEnv("GOALL26_MEDIA_BUCKET", "FARMX_MEDIA_BUCKET");
   const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
   const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
 
   if (!region || !profileTable || !listingsTable || !bucket || !userPoolId || !clientId) {
     throw new Error(
-      "Profile service is not configured. Set FARMX_PROFILE_TABLE, FARMX_LISTINGS_TABLE, and FARMX_MEDIA_BUCKET on the Goall26 server.",
+      "Profile service is not configured. Set GOALL26_PROFILE_TABLE, GOALL26_LISTINGS_TABLE, and GOALL26_MEDIA_BUCKET on the Goall26 server.",
     );
   }
 
@@ -458,7 +459,7 @@ export const getPublicProfile = createServerFn({ method: "GET" })
         Limit: 1,
       }),
     );
-    const profile = profileResult.Items?.[0] as FarmXProfile | undefined;
+    const profile = profileResult.Items?.[0] as Goall26Profile | undefined;
     if (!profile || profile.privacy.profileVisibility !== "public") {
       throw new Error("This Goall26 profile is unavailable.");
     }
@@ -550,7 +551,7 @@ export const getPublicProfilePhotoUrl = createServerFn({ method: "GET" })
         Limit: 1,
       }),
     );
-    const profile = profileResult.Items?.[0] as FarmXProfile | undefined;
+    const profile = profileResult.Items?.[0] as Goall26Profile | undefined;
     if (!profile?.photoKey || profile.privacy.profileVisibility !== "public") {
       return { downloadUrl: null };
     }
@@ -605,7 +606,7 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
 
   const listings = listingResult.Items ?? [];
   const activeListings = listings.filter((listing) => listing.status === "ACTIVE");
-  let profile = (profileResult.Item as FarmXProfile | undefined) ?? null;
+  let profile = (profileResult.Item as Goall26Profile | undefined) ?? null;
 
   if (!profile) {
     const now = new Date().toISOString();
@@ -660,7 +661,7 @@ export const getMyProfile = createServerFn({ method: "GET" }).handler(async () =
           Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
         }),
       );
-      profile = (retryResult.Item as FarmXProfile | undefined) ?? defaultProfile;
+      profile = (retryResult.Item as Goall26Profile | undefined) ?? defaultProfile;
     }
   }
 
@@ -720,13 +721,13 @@ export const saveMyProfile = createServerFn({ method: "POST" })
         }),
       ),
     ]);
-    const previous = existing.Item as FarmXProfile | undefined;
+    const previous = existing.Item as Goall26Profile | undefined;
     const usernameOwner = matchingUsername.Items?.[0]?.userId;
     if (usernameOwner && usernameOwner !== actor.userId) {
       throw new Error("That Goall26 username is already in use.");
     }
 
-    const item: FarmXProfile & {
+    const item: Goall26Profile & {
       pk: string;
       sk: string;
       entityType: string;
@@ -793,7 +794,7 @@ export const getMySettings = createServerFn({ method: "GET" }).handler(async () 
       Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
     }),
   );
-  return { settings: (result.Item?.settings ?? null) as FarmXSettings | null };
+  return { settings: (result.Item?.settings ?? null) as Goall26Settings | null };
 });
 
 export const saveMySettings = createServerFn({ method: "POST" })
@@ -825,7 +826,7 @@ export const getMyBusinessProfile = createServerFn({ method: "GET" }).handler(as
       Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
     }),
   );
-  return { business: (result.Item?.business ?? null) as FarmXBusinessProfile | null };
+  return { business: (result.Item?.business ?? null) as Goall26BusinessProfile | null };
 });
 
 export const saveMyBusinessProfile = createServerFn({ method: "POST" })
@@ -965,7 +966,7 @@ export const removeMyBusinessMedia = createServerFn({ method: "POST" })
         Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
       }),
     );
-    const profile = result.Item as (FarmXProfile & { pk: string; sk: string }) | undefined;
+    const profile = result.Item as (Goall26Profile & { pk: string; sk: string }) | undefined;
     const key = data.kind === "logo" ? profile?.business?.logoKey : profile?.business?.coverKey;
     if (!key) return { removed: false };
     const nextBusiness = {
@@ -1048,7 +1049,7 @@ export const removeMyProfilePhoto = createServerFn({ method: "POST" }).handler(a
       Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
     }),
   );
-  const profile = existing.Item as (FarmXProfile & { pk: string; sk: string }) | undefined;
+  const profile = existing.Item as (Goall26Profile & { pk: string; sk: string }) | undefined;
   if (!profile?.photoKey) return { removed: false };
 
   const { photoKey, ...withoutPhoto } = profile;

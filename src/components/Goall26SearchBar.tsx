@@ -10,7 +10,7 @@ import {
   type SearchSuggestion,
 } from "@/lib/global-search";
 
-type FarmXSearchBarProps = {
+type Goall26SearchBarProps = {
   compact?: boolean;
   initialQuery?: string;
   location?: string;
@@ -18,13 +18,13 @@ type FarmXSearchBarProps = {
   className?: string;
 };
 
-export function FarmXSearchBar({
+export function Goall26SearchBar({
   compact = false,
   initialQuery = "",
   location,
   placeholder,
   className = "",
-}: FarmXSearchBarProps) {
+}: Goall26SearchBarProps) {
   const { t } = useI18n();
   const resolvedPlaceholder = placeholder ?? t("home.search.placeholder");
   const navigate = useNavigate();

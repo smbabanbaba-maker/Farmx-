@@ -13,13 +13,13 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved =
       typeof window !== "undefined"
-        ? (localStorage.getItem("farmx-loc") as LocationName | null)
+        ? (localStorage.getItem("goall26-loc") as LocationName | null)
         : null;
     if (saved && (LOCATIONS as readonly string[]).includes(saved)) setLoc(saved);
   }, []);
   const setLocation = (l: LocationName) => {
     setLoc(l);
-    if (typeof window !== "undefined") localStorage.setItem("farmx-loc", l);
+    if (typeof window !== "undefined") localStorage.setItem("goall26-loc", l);
   };
   return (
     <LocationCtx.Provider value={{ location, setLocation, all: LOCATIONS }}>

@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
@@ -31,14 +32,14 @@ const listingSchema = z.object({
 export type ListingInput = z.infer<typeof listingSchema>;
 
 function getListingsTable() {
-  const tableName = process.env.FARMX_LISTINGS_TABLE;
+  const tableName = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   const region = process.env.AWS_REGION;
-  const mediaBucket = process.env.FARMX_MEDIA_BUCKET;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
+  const mediaBucket = getServerEnv("GOALL26_MEDIA_BUCKET", "FARMX_MEDIA_BUCKET");
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
 
   if (!tableName || !region || !mediaBucket || !profileTable) {
     throw new Error(
-      "AWS listing services are not configured. Set AWS_REGION, FARMX_LISTINGS_TABLE, FARMX_PROFILE_TABLE, and FARMX_MEDIA_BUCKET on the server.",
+      "AWS listing services are not configured. Set AWS_REGION, GOALL26_LISTINGS_TABLE, GOALL26_PROFILE_TABLE, and GOALL26_MEDIA_BUCKET on the server.",
     );
   }
 

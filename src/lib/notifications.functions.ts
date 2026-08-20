@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeaders } from "@tanstack/react-start/server";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -35,7 +36,7 @@ const readSchema = z.object({ notificationId: z.string().min(1).max(180) });
 function hasProductionConfig() {
   return Boolean(
     process.env.AWS_REGION &&
-    process.env.FARMX_PROFILE_TABLE &&
+    getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE") &&
     (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
     (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
   );
@@ -43,7 +44,7 @@ function hasProductionConfig() {
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
   if (!region || !profileTable) throw new Error("Notification storage is not configured.");
   return { region, profileTable };
 }

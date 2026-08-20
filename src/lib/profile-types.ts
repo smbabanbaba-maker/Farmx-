@@ -1,5 +1,5 @@
 import type { MyAd } from "@/lib/use-my-ads";
-import type { FarmXProfile, ProfileStats } from "@/lib/profile.functions";
+import type { Goall26Profile, ProfileStats } from "@/lib/profile.functions";
 
 export type Inquiry = {
   id: string;
@@ -104,7 +104,7 @@ export type ProfileActivity = {
 };
 
 export type ProfileDataState = {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   stats: ProfileStats;
   ads: MyAd[];
   inquiries: Inquiry[];

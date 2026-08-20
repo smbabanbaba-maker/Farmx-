@@ -1254,7 +1254,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const saved = (typeof window !== "undefined" &&
-      localStorage.getItem("farmx-lang")) as Lang | null;
+      localStorage.getItem("goall26-lang")) as Lang | null;
     if (saved && T[saved]) setLangState(saved);
 
     void getMyProfile()
@@ -1262,7 +1262,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
         const preferred = profile?.preferredLanguage;
         if (preferred && T[preferred]) {
           setLangState(preferred);
-          if (typeof window !== "undefined") localStorage.setItem("farmx-lang", preferred);
+          if (typeof window !== "undefined") localStorage.setItem("goall26-lang", preferred);
         }
       })
       .catch(() => {
@@ -1278,7 +1278,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLang = (next: Lang) => {
     setLangState(next);
-    if (typeof window !== "undefined") localStorage.setItem("farmx-lang", next);
+    if (typeof window !== "undefined") localStorage.setItem("goall26-lang", next);
     void saveMyLanguagePreference({ data: { preferredLanguage: next } }).catch(() => {
       // Local persistence remains available when the user is signed out or offline.
     });

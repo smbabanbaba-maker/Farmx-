@@ -2,8 +2,8 @@ import type { JobPost } from "@/lib/job.types";
 import type { MarketCategory, MarketListing } from "@/lib/market-types";
 import type { Course } from "@/lib/learn.types";
 
-const FALLBACK_SITE_URL = "https://farmx.ng";
-const BRAND_LOGO_PATH = "/farmx-logo.png";
+const FALLBACK_SITE_URL = "https://goall26.example";
+const BRAND_LOGO_PATH = "/goall26-logo.png";
 
 type JsonLd = Record<string, unknown>;
 

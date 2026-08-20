@@ -363,7 +363,7 @@ function ChatDetail() {
               <button
                 type="button"
                 onClick={() => {
-                  sendCoupon(conversation.id, "FARMX10", 10);
+                  sendCoupon(conversation.id, "GOALL26", 10);
                   setAttachOpen(false);
                 }}
                 className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-bold hover:border-brand"

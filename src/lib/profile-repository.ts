@@ -5,7 +5,7 @@ import {
   saveMyProfile,
   updateMyAd,
   updateMyAdStatus,
-  type FarmXProfile,
+  type Goall26Profile,
   type ProfileStats,
 } from "@/lib/profile.functions";
 import type { MyAd } from "@/lib/use-my-ads";
@@ -14,10 +14,10 @@ import type { ProfileDataState } from "@/lib/profile-types";
 export type ProfileSnapshot = ProfileDataState;
 export type ProfileRepository = {
   getSnapshot(): Promise<ProfileSnapshot>;
-  getProfile(): Promise<{ profile: FarmXProfile | null; stats: ProfileStats }>;
+  getProfile(): Promise<{ profile: Goall26Profile | null; stats: ProfileStats }>;
   saveProfile(
-    profile: Omit<FarmXProfile, "userId" | "createdAt" | "updatedAt" | "verification">,
-  ): Promise<FarmXProfile>;
+    profile: Omit<Goall26Profile, "userId" | "createdAt" | "updatedAt" | "verification">,
+  ): Promise<Goall26Profile>;
   getAds(): Promise<MyAd[]>;
   updateAd(
     listingId: string,
@@ -28,11 +28,11 @@ export type ProfileRepository = {
 };
 
 const emptySnapshot = (
-  profile: FarmXProfile | null,
+  profile: Goall26Profile | null,
   stats: ProfileStats,
   ads: MyAd[],
 ): ProfileSnapshot => ({
-  profile: profile ?? ({} as FarmXProfile),
+  profile: profile ?? ({} as Goall26Profile),
   stats,
   ads,
   inquiries: [],

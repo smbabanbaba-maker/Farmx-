@@ -79,7 +79,7 @@ function weatherSummary(code: number) {
 }
 
 async function getWeather(location: LocationName, signal: AbortSignal): Promise<WeatherSnapshot> {
-  const cachedKey = `farmx-weather:${location}`;
+  const cachedKey = `goall26-weather:${location}`;
   try {
     const cached = sessionStorage.getItem(cachedKey);
     if (cached) {

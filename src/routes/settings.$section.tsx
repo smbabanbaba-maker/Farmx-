@@ -46,8 +46,8 @@ import {
   removeMyBusinessMedia,
   saveMyBusinessProfile,
   saveMySettings,
-  type FarmXBusinessProfile,
-  type FarmXSettings,
+  type Goall26BusinessProfile,
+  type Goall26Settings,
 } from "@/lib/profile.functions";
 import { useProfileData } from "@/lib/use-profile";
 import { settingsText } from "@/lib/settings-copy";
@@ -59,7 +59,7 @@ import {
   removeMyProfilePhoto,
   saveMyLanguagePreference,
   saveMyProfile,
-  type FarmXProfile,
+  type Goall26Profile,
 } from "@/lib/profile.functions";
 import { getMyAds, updateMyAdStatus } from "@/lib/profile.functions";
 import {
@@ -78,7 +78,7 @@ export const Route = createFileRoute("/settings/$section")({
 });
 
 type ProfileForm = Pick<
-  FarmXProfile,
+  Goall26Profile,
   | "fullName"
   | "username"
   | "role"
@@ -108,7 +108,7 @@ type Transaction = {
   activatedUntil?: string;
 };
 
-function mergeSettings(saved: Partial<FarmXSettings>): FarmXSettings {
+function mergeSettings(saved: Partial<Goall26Settings>): Goall26Settings {
   return {
     ...DEFAULT_FARMX_SETTINGS,
     ...saved,
@@ -408,7 +408,7 @@ function PersonalInfo({
   onSaved,
   onError,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
@@ -648,7 +648,7 @@ function PersonalInfo({
   );
 }
 
-const EMPTY_BUSINESS: FarmXBusinessProfile = {
+const EMPTY_BUSINESS: Goall26BusinessProfile = {
   name: "",
   description: "",
   category: "",
@@ -664,8 +664,8 @@ const EMPTY_BUSINESS: FarmXBusinessProfile = {
   services: [],
 };
 
-function BusinessPage({ profile }: { profile: FarmXProfile }) {
-  const [form, setForm] = useState<FarmXBusinessProfile>(EMPTY_BUSINESS);
+function BusinessPage({ profile }: { profile: Goall26Profile }) {
+  const [form, setForm] = useState<Goall26BusinessProfile>(EMPTY_BUSINESS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [mediaBusy, setMediaBusy] = useState<"logo" | "cover" | null>(null);
@@ -709,7 +709,10 @@ function BusinessPage({ profile }: { profile: FarmXProfile }) {
       active = false;
     };
   }, []);
-  const update = <K extends keyof FarmXBusinessProfile>(key: K, value: FarmXBusinessProfile[K]) => {
+  const update = <K extends keyof Goall26BusinessProfile>(
+    key: K,
+    value: Goall26BusinessProfile[K],
+  ) => {
     setForm((current) => ({ ...current, [key]: value }));
     setSaved(false);
   };
@@ -921,7 +924,7 @@ function BuildingIcon({ className }: { className?: string }) {
     </span>
   );
 }
-function LoginMethods({ profile }: { profile: FarmXProfile }) {
+function LoginMethods({ profile }: { profile: Goall26Profile }) {
   return (
     <div className="space-y-4">
       <Card title="Current login methods" icon={LockKeyhole}>
@@ -946,7 +949,7 @@ function SecurityPage({
   profile,
   onNotice,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   onNotice: (tone: "success" | "error", text: string) => void;
 }) {
   const { signOut } = useAuth();
@@ -1086,7 +1089,7 @@ function LanguagePage({
   onSaved,
   onError,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
@@ -1145,7 +1148,7 @@ function PrivacyPage({
   onSaved,
   onError,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
@@ -1182,19 +1185,19 @@ function PrivacyPage({
         <SelectField
           label="Who can see your profile?"
           value={form.profileVisibility}
-          options={["public", "farmx_members", "private"]}
+          options={["public", "goall26_members", "private"]}
           onChange={(value) => update("profileVisibility", value as typeof form.profileVisibility)}
         />
         <SelectField
           label="Who can message you?"
           value={form.messagePermission}
-          options={["everyone", "farmx_members", "followers"]}
+          options={["everyone", "goall26_members", "followers"]}
           onChange={(value) => update("messagePermission", value as typeof form.messagePermission)}
         />
         <SelectField
           label="Who can call you?"
           value={form.callPermission}
-          options={["everyone", "farmx_members", "nobody"]}
+          options={["everyone", "goall26_members", "nobody"]}
           onChange={(value) => update("callPermission", value as typeof form.callPermission)}
         />
       </Card>
@@ -1273,7 +1276,7 @@ function PreferencePage({
   title: string;
   items: [string, string][];
 }) {
-  const [settings, setSettings] = useState<FarmXSettings>(DEFAULT_FARMX_SETTINGS);
+  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_FARMX_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1300,7 +1303,7 @@ function PreferencePage({
     const next = {
       ...settings,
       [kind]: { ...settings[kind], [key]: value },
-    } as FarmXSettings;
+    } as Goall26Settings;
     setSettings(next);
     setSavingKey(key);
     setError(null);
@@ -1376,7 +1379,7 @@ function LocationPage({
   onSaved,
   onError,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   onSaved: () => void;
   onError: (message: string) => void;
 }) {
@@ -1436,7 +1439,7 @@ function SellingPage({
   stats,
   onNotice,
 }: {
-  profile: FarmXProfile;
+  profile: Goall26Profile;
   stats: { activeAds: number; totalAds: number } | null;
   onNotice: (tone: "success" | "error", text: string) => void;
 }) {
@@ -1769,7 +1772,7 @@ function BoostingPage() {
     </div>
   );
 }
-function VerificationPage({ profile }: { profile: FarmXProfile }) {
+function VerificationPage({ profile }: { profile: Goall26Profile }) {
   return (
     <Card title="Verification checklist" icon={BadgeCheck}>
       <VerificationRow
@@ -2098,7 +2101,7 @@ function AboutPage() {
     <div className="space-y-4">
       <Card title="Goall26" icon={Globe2}>
         <div className="flex items-center gap-3">
-          <img src="/farmx-logo.png" alt="Goall26" className="h-14 w-14 rounded-2xl" />
+          <img src="/goall26-logo.png" alt="Goall26" className="h-14 w-14 rounded-2xl" />
           <div>
             <p className="text-lg font-black">Goall26 marketplace</p>
             <p className="text-xs text-muted-foreground">

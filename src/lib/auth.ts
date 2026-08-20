@@ -160,7 +160,7 @@ export function signOut() {
     user.signOut();
   }
   if (typeof window !== "undefined") {
-    localStorage.removeItem("farmx-session-active");
+    localStorage.removeItem("goall26-session-active");
   }
 }
 
@@ -191,7 +191,7 @@ export async function deleteCognitoAccount(): Promise<void> {
     });
   });
   clearSessionCache();
-  if (typeof window !== "undefined") localStorage.removeItem("farmx-session-active");
+  if (typeof window !== "undefined") localStorage.removeItem("goall26-session-active");
 }
 
 export async function signIn(email: string, password: string): Promise<unknown> {
@@ -212,7 +212,7 @@ export async function signIn(email: string, password: string): Promise<unknown> 
       onSuccess: (result) => {
         clearSessionCache();
         if (typeof window !== "undefined") {
-          localStorage.setItem("farmx-session-active", "true");
+          localStorage.setItem("goall26-session-active", "true");
         }
         resolve(result);
       },

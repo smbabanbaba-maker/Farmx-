@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { randomUUID } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeaders } from "@tanstack/react-start/server";
@@ -66,12 +67,15 @@ export const getJobRuntimeMode = createServerFn({ method: "GET" }).handler(async
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const jobsTable = process.env.FARMX_JOBS_TABLE;
-  const applicationsTable = process.env.FARMX_JOB_APPLICATIONS_TABLE;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
+  const jobsTable = getServerEnv("GOALL26_JOBS_TABLE", "FARMX_JOBS_TABLE");
+  const applicationsTable = getServerEnv(
+    "GOALL26_JOB_APPLICATIONS_TABLE",
+    "FARMX_JOB_APPLICATIONS_TABLE",
+  );
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
   if (!region || !jobsTable || !applicationsTable || !profileTable) {
     throw new Error(
-      "Jobs service is not configured. Set AWS_REGION, FARMX_JOBS_TABLE, FARMX_JOB_APPLICATIONS_TABLE, and FARMX_PROFILE_TABLE.",
+      "Jobs service is not configured. Set AWS_REGION, GOALL26_JOBS_TABLE, GOALL26_JOB_APPLICATIONS_TABLE, and GOALL26_PROFILE_TABLE.",
     );
   }
   return { region, jobsTable, applicationsTable, profileTable };

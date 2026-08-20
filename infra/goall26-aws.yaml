@@ -587,31 +587,31 @@ Resources:
 
 Outputs:
   MediaBucketName:
-    Description: Use as FARMX_MEDIA_BUCKET on the Goall26 server.
+    Description: Use as GOALL26_MEDIA_BUCKET on the Goall26 server.
     Value: !Ref MediaBucket
   ListingsTableName:
-    Description: Use as FARMX_LISTINGS_TABLE on the Goall26 server.
+    Description: Use as GOALL26_LISTINGS_TABLE on the Goall26 server.
     Value: !Ref ListingsTable
   ProfileTableName:
-    Description: Use as FARMX_PROFILE_TABLE on the Goall26 server.
+    Description: Use as GOALL26_PROFILE_TABLE on the Goall26 server.
     Value: !Ref ProfileTable
   CommunityTableName:
-    Description: Use as FARMX_COMMUNITY_TABLE on the Goall26 server.
+    Description: Use as GOALL26_COMMUNITY_TABLE on the Goall26 server.
     Value: !Ref CommunityTable
   JobsTableName:
-    Description: Use as FARMX_JOBS_TABLE on the Goall26 server.
+    Description: Use as GOALL26_JOBS_TABLE on the Goall26 server.
     Value: !Ref JobsTable
   InventoryTableName:
-    Description: Use as FARMX_INVENTORY_TABLE on the Goall26 server.
+    Description: Use as GOALL26_INVENTORY_TABLE on the Goall26 server.
     Value: !Ref InventoryTable
   FleetTableName:
-    Description: Use as FARMX_FLEET_TABLE on the Goall26 server.
+    Description: Use as GOALL26_FLEET_TABLE on the Goall26 server.
     Value: !Ref FleetTable
   JobApplicationsTableName:
-    Description: Use as FARMX_JOB_APPLICATIONS_TABLE on the Goall26 server.
+    Description: Use as GOALL26_JOB_APPLICATIONS_TABLE on the Goall26 server.
     Value: !Ref JobApplicationsTable
   LearnTableName:
-    Description: Use as FARMX_LEARN_TABLE on the Goall26 server.
+    Description: Use as GOALL26_LEARN_TABLE on the Goall26 server.
     Value: !Ref LearnTable
   VercelRuntimeRoleArn:
     Description: Use as AWS_ROLE_ARN in the Vercel production environment.

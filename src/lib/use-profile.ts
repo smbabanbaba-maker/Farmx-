@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import type { FarmXProfile, ProfileStats } from "@/lib/profile.functions";
+import type { Goall26Profile, ProfileStats } from "@/lib/profile.functions";
 import { getProfileRepository } from "@/lib/profile-repository";
 
 export type ProfileLoadState =
   | { status: "loading"; profile: null; stats: null; error: null }
-  | { status: "ready"; profile: FarmXProfile | null; stats: ProfileStats; error: null }
+  | { status: "ready"; profile: Goall26Profile | null; stats: ProfileStats; error: null }
   | { status: "error"; profile: null; stats: null; error: string };
 
 const loadingState: ProfileLoadState = {

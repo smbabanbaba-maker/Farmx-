@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DeleteCommand,
@@ -83,11 +84,11 @@ type PublicMarketPage = {
 };
 
 function getMarketConfig() {
-  const tableName = process.env.FARMX_LISTINGS_TABLE;
+  const tableName = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   const region = process.env.AWS_REGION;
   if (!tableName || !region) {
     throw new Error(
-      "Market service is not configured. Set AWS_REGION and FARMX_LISTINGS_TABLE on the server.",
+      "Market service is not configured. Set AWS_REGION and GOALL26_LISTINGS_TABLE on the server.",
     );
   }
   return { tableName, region };
@@ -369,7 +370,7 @@ export const saveListing = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => listingIdSchema.parse(input))
   .handler(async ({ data }) => {
     const region = process.env.AWS_REGION;
-    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
     if (!region || !profileTable) throw new Error("Profile table not configured.");
     const actor = await requireAuthenticatedUser();
     const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
@@ -394,7 +395,7 @@ export const unsaveListing = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => listingIdSchema.parse(input))
   .handler(async ({ data }) => {
     const region = process.env.AWS_REGION;
-    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
     if (!region || !profileTable) throw new Error("Profile table not configured.");
     const actor = await requireAuthenticatedUser();
     const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
@@ -412,7 +413,7 @@ export const followSeller = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => sellerNameSchema.parse(input))
   .handler(async ({ data }) => {
     const region = process.env.AWS_REGION;
-    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
     if (!region || !profileTable) throw new Error("Profile table not configured.");
     const actor = await requireAuthenticatedUser();
     const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
@@ -437,7 +438,7 @@ export const unfollowSeller = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => sellerNameSchema.parse(input))
   .handler(async ({ data }) => {
     const region = process.env.AWS_REGION;
-    const profileTable = process.env.FARMX_PROFILE_TABLE;
+    const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
     if (!region || !profileTable) throw new Error("Profile table not configured.");
     const actor = await requireAuthenticatedUser();
     const client = DynamoDBDocumentClient.from(new DynamoDBClient(getAwsClientOptions(region)));
@@ -472,8 +473,8 @@ export const recordListingView = createServerFn({ method: "POST" })
 
 export const getSavedListings = createServerFn({ method: "GET" }).handler(async () => {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   if (!region || !profileTable || !listingsTable) throw new Error("Tables not configured.");
 
   const actor = await requireAuthenticatedUser();
@@ -519,8 +520,8 @@ const searchSchema = z.object({ query: z.string().trim().min(1).max(160) });
 
 function getProfileConfig() {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   if (!region || !profileTable || !listingsTable)
     throw new Error("Profile and listings tables are not configured.");
   return { region, profileTable, listingsTable };

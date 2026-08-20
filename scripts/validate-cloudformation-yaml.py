@@ -17,7 +17,7 @@ def cloudformation_tag(loader, tag_suffix, node):
 
 CloudFormationLoader.add_multi_constructor("!", cloudformation_tag)
 
-path = Path("infra/farmx-aws.yaml")
+path = Path("infra/goall26-aws.yaml")
 with path.open(encoding="utf-8") as handle:
     yaml.load(handle, Loader=CloudFormationLoader)
 print("CloudFormation YAML syntax OK")

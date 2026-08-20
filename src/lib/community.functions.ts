@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -160,9 +161,9 @@ function enforceRateLimit(userId: string, action: string, max: number, windowMs:
 function hasProductionConfig() {
   return Boolean(
     process.env.AWS_REGION &&
-    process.env.FARMX_COMMUNITY_TABLE &&
-    process.env.FARMX_PROFILE_TABLE &&
-    process.env.FARMX_LISTINGS_TABLE &&
+    getServerEnv("GOALL26_COMMUNITY_TABLE", "FARMX_COMMUNITY_TABLE") &&
+    getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE") &&
+    getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE") &&
     (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
     (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
   );
@@ -257,12 +258,12 @@ export const markCommunityNotificationRead = createServerFn({ method: "POST" })
 
 function getConfig(): CommunityConfig {
   const region = process.env.AWS_REGION;
-  const communityTable = process.env.FARMX_COMMUNITY_TABLE;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  const communityTable = getServerEnv("GOALL26_COMMUNITY_TABLE", "FARMX_COMMUNITY_TABLE");
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   if (!region || !communityTable || !profileTable || !listingsTable)
     throw new Error(
-      "Community service is not configured. Set AWS_REGION, FARMX_COMMUNITY_TABLE, FARMX_PROFILE_TABLE, and FARMX_LISTINGS_TABLE on the Goall26 server.",
+      "Community service is not configured. Set AWS_REGION, GOALL26_COMMUNITY_TABLE, GOALL26_PROFILE_TABLE, and GOALL26_LISTINGS_TABLE on the Goall26 server.",
     );
   return {
     region,
@@ -299,7 +300,7 @@ function authorFromItem(item: CommunityItem): CommunityAuthor {
   return {
     id: String(item.authorId),
     name: String(item.authorName ?? "Goall26 member"),
-    username: String(item.authorUsername ?? "farmx_member"),
+    username: String(item.authorUsername ?? "goall26_member"),
     role: typeof item.authorRole === "string" ? item.authorRole : undefined,
     photo: typeof item.authorPhoto === "string" ? item.authorPhoto : undefined,
     verified: item.authorVerified === true,

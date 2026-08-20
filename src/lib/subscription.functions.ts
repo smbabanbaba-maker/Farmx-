@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
@@ -40,7 +41,7 @@ const webhookSchema = z.object({
 function hasProductionConfig() {
   return Boolean(
     process.env.AWS_REGION &&
-    process.env.FARMX_PROFILE_TABLE &&
+    getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE") &&
     (process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID) &&
     (process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID),
   );
@@ -48,8 +49,8 @@ function hasProductionConfig() {
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   if (!region || !profileTable) {
     throw new Error("Goall26 subscription storage is not configured on the server.");
   }
@@ -310,8 +311,8 @@ export const initiateSubscriptionPayment = createServerFn({ method: "POST" })
         amount: Math.round(plan.price * 100),
         reference,
         channels,
-        callback_url: process.env.FARMX_PAYMENT_CALLBACK_URL,
-        metadata: { paymentType: "subscription", planTier: plan.tier, farmxUserId: actor.userId },
+        callback_url: getServerEnv("GOALL26_PAYMENT_CALLBACK_URL", "FARMX_PAYMENT_CALLBACK_URL"),
+        metadata: { paymentType: "subscription", planTier: plan.tier, goall26UserId: actor.userId },
       }),
     });
     const payload = (await providerResponse.json()) as {

@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -13,11 +14,11 @@ const viewKeySchema = z.object({
 
 function getStorageConfig() {
   const region = process.env.AWS_REGION;
-  const bucket = process.env.FARMX_MEDIA_BUCKET;
+  const bucket = getServerEnv("GOALL26_MEDIA_BUCKET", "FARMX_MEDIA_BUCKET");
 
   if (!region || !bucket) {
     throw new Error(
-      "AWS storage is not configured. Set AWS_REGION and FARMX_MEDIA_BUCKET on the server.",
+      "AWS storage is not configured. Set AWS_REGION and GOALL26_MEDIA_BUCKET on the server.",
     );
   }
 

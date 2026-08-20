@@ -9,7 +9,7 @@ import {
   getWalletSummary,
   initiateServicePayment,
   verifyServicePayment,
-  type FarmXTransaction,
+  type Goall26Transaction,
   type WalletService,
   type WalletServicePackage,
   type WalletSummary,
@@ -82,7 +82,7 @@ function WalletPage() {
   const ads = useMyAds(true);
   const [summary, setSummary] = useState<WalletSummary | null>(null);
   const [services, setServices] = useState<WalletService[]>([]);
-  const [transactions, setTransactions] = useState<FarmXTransaction[]>([]);
+  const [transactions, setTransactions] = useState<Goall26Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [hidden, setHidden] = useState(false);
   const [step, setStep] = useState<Step>("home");
@@ -95,7 +95,7 @@ function WalletPage() {
   const [notice, setNotice] = useState<string>();
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
-  const [transaction, setTransaction] = useState<FarmXTransaction>();
+  const [transaction, setTransaction] = useState<Goall26Transaction>();
   const service = services.find((item) => item.id === serviceId);
   const selectedPackage = service?.packages.find((item) => item.id === packageId);
   const eligibleAds = useMemo(
@@ -236,7 +236,7 @@ function WalletPage() {
                       "Goall26 uses direct service payments instead of stored buyer-to-seller funds.",
                     );
                     document
-                      .getElementById("farmx-services")
+                      .getElementById("goall26-services")
                       ?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
@@ -277,7 +277,7 @@ function WalletPage() {
                 {notice}
               </p>
             )}
-            <section id="farmx-services" className="scroll-mt-24">
+            <section id="goall26-services" className="scroll-mt-24">
               <div className="mb-3">
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
                   Official services
@@ -695,8 +695,8 @@ function History({
   items,
   onSelect,
 }: {
-  items: FarmXTransaction[];
-  onSelect: (item: FarmXTransaction) => void;
+  items: Goall26Transaction[];
+  onSelect: (item: Goall26Transaction) => void;
 }) {
   return (
     <section id="transactions" className="scroll-mt-24">
@@ -750,7 +750,7 @@ function Transaction({
   transaction,
   onClose,
 }: {
-  transaction: FarmXTransaction;
+  transaction: Goall26Transaction;
   onClose: () => void;
 }) {
   return (

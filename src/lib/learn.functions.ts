@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
@@ -46,10 +47,10 @@ const adminUpdateSchema = z.object({
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const learnTable = process.env.FARMX_LEARN_TABLE;
+  const learnTable = getServerEnv("GOALL26_LEARN_TABLE", "FARMX_LEARN_TABLE");
   if (!region || !learnTable) {
     throw new Error(
-      "Learn service is not configured. Set AWS_REGION and FARMX_LEARN_TABLE on the Goall26 server.",
+      "Learn service is not configured. Set AWS_REGION and GOALL26_LEARN_TABLE on the Goall26 server.",
     );
   }
   return { region, learnTable };
@@ -72,7 +73,7 @@ async function requireAuthenticatedUser() {
 async function requireLearnAdmin() {
   const actor = await requireAuth();
   const configuredIds = new Set(
-    (process.env.FARMX_LEARN_ADMIN_USER_IDS ?? "")
+    (getServerEnv("GOALL26_LEARN_ADMIN_USER_IDS", "FARMX_LEARN_ADMIN_USER_IDS") ?? "")
       .split(",")
       .map((id) => id.trim())
       .filter(Boolean),

@@ -19,8 +19,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [fontScale, setFontScaleState] = useState<number>(1);
 
   useEffect(() => {
-    const m = (localStorage.getItem("farmx-mode") as Mode) || "light";
-    const f = parseFloat(localStorage.getItem("farmx-font") || "1");
+    const m = (localStorage.getItem("goall26-mode") as Mode) || "light";
+    const f = parseFloat(localStorage.getItem("goall26-font") || "1");
     setModeState(m);
     setFontScaleState(f);
   }, []);
@@ -32,11 +32,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setMode = (m: Mode) => {
     setModeState(m);
-    localStorage.setItem("farmx-mode", m);
+    localStorage.setItem("goall26-mode", m);
   };
   const setFontScale = (n: number) => {
     setFontScaleState(n);
-    localStorage.setItem("farmx-font", String(n));
+    localStorage.setItem("goall26-font", String(n));
   };
 
   return (

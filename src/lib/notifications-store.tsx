@@ -69,7 +69,7 @@ export type NotificationInput = Omit<
   eventId?: string;
 };
 
-const CHANNEL = "farmx-notifications-sync-v2";
+const CHANNEL = "goall26-notifications-sync-v2";
 const MAX = 100;
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 const USE_SERVER_NOTIFICATION_STORE = !API_BASE && import.meta.env.PROD;
@@ -322,7 +322,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         try {
           new Notification(item.title, {
             body: item.body,
-            icon: "/farmx-logo.png",
+            icon: "/goall26-logo.png",
             tag: item.eventId,
           });
         } catch {

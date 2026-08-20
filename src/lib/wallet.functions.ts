@@ -1,3 +1,4 @@
+import { getServerEnv } from "@/lib/server-env";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeader, setResponseHeaders } from "@tanstack/react-start/server";
@@ -48,11 +49,11 @@ const webhookSchema = z.object({
 
 function getConfig() {
   const region = process.env.AWS_REGION;
-  const profileTable = process.env.FARMX_PROFILE_TABLE;
-  const listingsTable = process.env.FARMX_LISTINGS_TABLE;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
   if (!region || !profileTable || !listingsTable) {
     throw new Error(
-      "Wallet service is not configured. Set AWS_REGION, FARMX_PROFILE_TABLE, and FARMX_LISTINGS_TABLE.",
+      "Wallet service is not configured. Set AWS_REGION, GOALL26_PROFILE_TABLE, and GOALL26_LISTINGS_TABLE.",
     );
   }
   return { region, profileTable, listingsTable };
@@ -129,10 +130,10 @@ export type WalletService = {
 };
 
 function configuredServices(): WalletService[] {
-  const raw = process.env.FARMX_SERVICE_PACKAGES_JSON;
+  const raw = getServerEnv("GOALL26_SERVICE_PACKAGES_JSON", "FARMX_SERVICE_PACKAGES_JSON");
   if (!raw) {
     throw new Error(
-      "Goall26 services are not configured. Set FARMX_SERVICE_PACKAGES_JSON on the server before accepting payments.",
+      "Goall26 services are not configured. Set GOALL26_SERVICE_PACKAGES_JSON on the server before accepting payments.",
     );
   }
   try {
@@ -160,7 +161,7 @@ function configuredServices(): WalletService[] {
       .parse(parsed);
   } catch {
     throw new Error(
-      "FARMX_SERVICE_PACKAGES_JSON is invalid. Configure Goall26 service packages before accepting payments.",
+      "GOALL26_SERVICE_PACKAGES_JSON is invalid. Configure Goall26 service packages before accepting payments.",
     );
   }
 }
@@ -169,7 +170,7 @@ export const getWalletServices = createServerFn({ method: "GET" }).handler(async
   configuredServices(),
 );
 
-export type FarmXTransaction = {
+export type Goall26Transaction = {
   id: string;
   reference: string;
   serviceType: string;
@@ -224,10 +225,10 @@ export const getTransactions = createServerFn({ method: "GET" }).handler(async (
     listingTitle: typeof item.listingTitle === "string" ? item.listingTitle : undefined,
     amount: Number(item.amount ?? 0),
     paymentMethod: String(item.paymentMethod ?? "card"),
-    status: (item.status as FarmXTransaction["status"]) ?? "successful",
+    status: (item.status as Goall26Transaction["status"]) ?? "successful",
     createdAt: String(item.createdAt ?? new Date().toISOString()),
     activatedUntil: typeof item.activatedUntil === "string" ? item.activatedUntil : undefined,
-  })) satisfies FarmXTransaction[];
+  })) satisfies Goall26Transaction[];
 });
 
 export const initiateServicePayment = createServerFn({ method: "POST" })
@@ -291,12 +292,12 @@ export const initiateServicePayment = createServerFn({ method: "POST" })
           amount: Math.round(selectedPackage.amount * 100),
           reference,
           channels,
-          callback_url: process.env.FARMX_PAYMENT_CALLBACK_URL,
+          callback_url: getServerEnv("GOALL26_PAYMENT_CALLBACK_URL", "FARMX_PAYMENT_CALLBACK_URL"),
           metadata: {
             serviceType: data.serviceType,
             packageId: selectedPackage.id,
             listingId: data.listingId,
-            farmxUserId: actor.userId,
+            goall26UserId: actor.userId,
           },
         }),
       });

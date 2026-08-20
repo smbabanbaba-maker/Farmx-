@@ -20,7 +20,7 @@ import { useMessages } from "@/lib/messages-store";
 import { useNotifications } from "@/lib/notifications-store";
 import { getCurrentSession, signOut } from "@/lib/auth";
 
-const LOGO = "/farmx-logo.png";
+const LOGO = "/goall26-logo.png";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
   const { t } = useI18n();

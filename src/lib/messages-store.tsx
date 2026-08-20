@@ -69,7 +69,7 @@ export interface ConversationPeer {
   phone?: string;
   online?: boolean;
   callsEnabled?: boolean;
-  messagePermission?: "everyone" | "farmx_members" | "followers";
+  messagePermission?: "everyone" | "goall26_members" | "followers";
 }
 
 export interface Conversation {
@@ -111,7 +111,7 @@ type StoreShape = {
   typing: Record<string, boolean>;
 };
 
-const CHANNEL = "farmx-messages-sync-v3";
+const CHANNEL = "goall26-messages-sync-v3";
 const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, "");
 const USE_SERVER_MESSAGE_STORE = !API_BASE && import.meta.env.PROD;
 

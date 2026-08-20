@@ -12,8 +12,8 @@ export function useAuth() {
         const active = !!session;
         setIsLoggedIn(active);
         if (typeof window !== "undefined") {
-          if (active) localStorage.setItem("farmx-session-active", "true");
-          else localStorage.removeItem("farmx-session-active");
+          if (active) localStorage.setItem("goall26-session-active", "true");
+          else localStorage.removeItem("goall26-session-active");
         }
       } catch {
         setIsLoggedIn(false);

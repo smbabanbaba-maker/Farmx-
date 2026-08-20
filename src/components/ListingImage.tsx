@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Image as ImageIcon, Loader2 } from "lucide-react";
 import { getS3ViewUrl } from "@/lib/s3-client";
 
-function isFarmXObjectKey(value: string) {
+function isGoall26ObjectKey(value: string) {
   return /^(listings|products|community|messages|profiles|business)\/[a-z0-9][a-z0-9._/-]*$/i.test(
     value,
   );
@@ -38,7 +38,7 @@ export function ListingImage({
       setResolvedUrl(src);
       return;
     }
-    if (!isFarmXObjectKey(src)) {
+    if (!isGoall26ObjectKey(src)) {
       setFailed(true);
       return;
     }

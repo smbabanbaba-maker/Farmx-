@@ -45,7 +45,7 @@ import {
   DEFAULT_FARMX_SETTINGS,
   getMySettings,
   saveMySettings,
-  type FarmXSettings,
+  type Goall26Settings,
 } from "@/lib/profile.functions";
 import { useAuth } from "@/lib/use-auth";
 import { getMyProfilePhotoUrl } from "@/lib/profile.functions";
@@ -269,7 +269,7 @@ function SettingsPage() {
   const { signOut } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [settings, setSettings] = useState<FarmXSettings>(DEFAULT_FARMX_SETTINGS);
+  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_FARMX_SETTINGS);
   const [settingsBusy, setSettingsBusy] = useState(false);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
@@ -436,7 +436,7 @@ function SettingsPage() {
                   notifications: Object.fromEntries(
                     Object.keys(settings.notifications).map((key) => [key, enabled]),
                   ),
-                } as FarmXSettings;
+                } as Goall26Settings;
                 setSettings(next);
                 setSettingsBusy(true);
                 try {
