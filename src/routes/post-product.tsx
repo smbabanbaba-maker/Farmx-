@@ -66,7 +66,6 @@ const PRICE_UNITS_BY_CATEGORY: Record<string, string[]> = {
   vehicles: ["per vehicle"],
   property: ["per year", "per month", "per plot", "per acre"],
   services: ["per service", "per hour", "per day", "per month", "request quote"],
-  jobs: ["per month", "per year", "request quote"],
   "animals-pets": ["per animal", "per batch", "per kg"],
   "solar-energy": ["per item", "per system", "per watt", "per service"],
 };
@@ -214,7 +213,7 @@ function PostProduct() {
 
   if (authLoading) {
     return (
-      <AppShell title="Post New Ad">
+      <AppShell title="Sell">
         <div className="flex h-64 items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-brand" />
         </div>
@@ -498,7 +497,7 @@ function PostProduct() {
           <div className="mt-8 space-y-3 w-full max-w-xs">
             <button
               onClick={() => navigate({ to: "/market" })}
-              className="w-full py-3 rounded-2xl bg-brand text-brand-foreground font-black shadow-lg shadow-brand/20"
+              className="w-full py-3 rounded-2xl bg-orange text-white font-black shadow-lg shadow-orange/20"
             >
               {t("post.goToMarket")}
             </button>
@@ -518,10 +517,10 @@ function PostProduct() {
   }
 
   return (
-    <AppShell title="Post New Ad">
+    <AppShell title="Sell">
       <div className="mx-auto max-w-2xl space-y-8 px-4 pb-10 pt-6">
         <header className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-black">Post New Ad</h1>
+          <h1 className="text-2xl font-black">Sell on Goall26</h1>
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -554,27 +553,28 @@ function PostProduct() {
         )}
         <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-5">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-            {t("postNewAd")}
+            Sell anything
           </p>
-          <h2 className="mt-1 text-lg font-black">Complete your listing</h2>
+          <h2 className="mt-1 text-lg font-black">Create your marketplace listing</h2>
           <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Fill in the details below from top to bottom. You can review everything before posting.
+            Add the important details, upload clear photos, and publish your product or service to
+            Goall26 Market.
           </p>
-          <div className="mt-4 grid gap-2 rounded-2xl bg-brand/[0.04] p-3 text-[11px] leading-relaxed text-muted-foreground sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 rounded-2xl bg-navy/[0.04] p-3 text-[11px] leading-relaxed text-muted-foreground sm:grid-cols-3">
             <div>
-              <span className="font-black text-brand">1. Describe it</span>
+              <span className="font-black text-navy">1. Describe it</span>
               <br />
-              Use a clear title, category, price, and honest condition.
+              Choose a category and write a clear, honest title.
             </div>
             <div>
-              <span className="font-black text-brand">2. Add proof</span>
+              <span className="font-black text-navy">2. Add photos</span>
               <br />
-              Upload bright photos that show the product from useful angles.
+              Show buyers the real item or service clearly.
             </div>
             <div>
-              <span className="font-black text-brand">3. Publish</span>
+              <span className="font-black text-navy">3. Go live</span>
               <br />
-              Confirm your phone and location, then post to the public Market.
+              Confirm your details and publish directly to Market.
             </div>
           </div>
         </section>
@@ -1182,16 +1182,16 @@ function PostProduct() {
         {/* Single publish action at the end of the scrolling form */}
         <section className="border-t border-border pt-6">
           <p className="mb-3 text-center text-xs leading-relaxed text-muted-foreground">
-            Review the information above, then post your ad when everything is complete.
+            Review your details, then publish your listing to the public Goall26 Market.
           </p>
           <button
             type="button"
             onClick={handlePost}
             disabled={loading || hasUploadingPhotos}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-orange font-black text-white shadow-lg shadow-orange/20 transition hover:bg-orange/90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : <Check className="h-5 w-5" />}
-            Post ad
+            Publish listing
           </button>
         </section>
       </div>
@@ -1237,7 +1237,7 @@ function PostProduct() {
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-                  Goall26 selector
+                  Choose listing details
                 </p>
                 <h2 className="mt-1 text-lg font-black">
                   {selector === "category"
