@@ -257,9 +257,9 @@ function MarketLoading() {
       {Array.from({ length: 2 }, (_, railIndex) => (
         <section key={railIndex} className="space-y-2">
           <div className="h-5 w-36 animate-pulse rounded bg-muted" />
-          <div className="flex gap-3 overflow-hidden">
+          <div className="space-y-3">
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="h-52 min-w-[196px] animate-pulse rounded-2xl bg-muted" />
+              <div key={index} className="h-72 animate-pulse rounded-2xl bg-muted" />
             ))}
           </div>
         </section>

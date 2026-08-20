@@ -1,4 +1,3 @@
-import { getCommunityRepository, type CommunityRepository } from "@/lib/community-repository";
 import {
   getMarketRepository,
   type MarketFilters,
@@ -6,11 +5,8 @@ import {
   type MarketSort,
 } from "@/lib/market-repository";
 import type { MarketListing } from "@/lib/market-types";
-import type { CommunityPost } from "@/lib/community.types";
-import type { JobPost } from "@/lib/job.types";
-import { getJobRepository } from "@/lib/job-repository";
 
-export type GlobalSearchTab = "all" | "listings" | "services" | "businesses" | "jobs" | "community";
+export type GlobalSearchTab = "all" | "listings" | "services" | "businesses";
 
 export type GlobalSearchQuery = {
   query: string;
@@ -32,15 +28,11 @@ export type BusinessSearchResult = {
   photo: string;
 };
 
-export type JobSearchResult = JobPost;
-
 export type GlobalSearchResult = {
   query: string;
   listings: MarketListing[];
   services: MarketListing[];
   businesses: BusinessSearchResult[];
-  jobs: JobSearchResult[];
-  community: CommunityPost[];
   counts: Record<GlobalSearchTab, number>;
   availableTabs: GlobalSearchTab[];
   hasMore: boolean;
@@ -48,9 +40,8 @@ export type GlobalSearchResult = {
 
 export type SearchSuggestion = {
   label: string;
-  type: "listing" | "business" | "community" | "recent";
+  type: "listing" | "business" | "recent";
   listingId?: string;
-  postId?: string;
 };
 
 function isServiceListing(listing: MarketListing) {
@@ -81,7 +72,6 @@ function businessResults(listings: MarketListing[]) {
 
 export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSearchResult> {
   const market: MarketRepository = await getMarketRepository();
-  const community: CommunityRepository = await getCommunityRepository();
   const pageSize = Math.min(24, Math.max(1, input.pageSize ?? 12));
   const page = Math.max(1, input.page ?? 1);
   const marketPage = await market.getListings({
@@ -93,45 +83,24 @@ export async function searchGlobal(input: GlobalSearchQuery): Promise<GlobalSear
   });
   const services = marketPage.listings.filter(isServiceListing);
   const businesses = businessResults(marketPage.listings);
-  const communityPage =
-    input.tab === "listings" ||
-    input.tab === "services" ||
-    input.tab === "businesses" ||
-    input.tab === "jobs"
-      ? { posts: [], hasMore: false }
-      : await community.getFeed({ tab: "latest", search: input.query, limit: pageSize });
-  const jobRepo = await getJobRepository();
-  const jobsList = await jobRepo.getJobs({
-    search: input.query,
-    state: input.filters?.state,
-  });
   const counts: Record<GlobalSearchTab, number> = {
-    all: marketPage.total + communityPage.posts.length + jobsList.length,
+    all: marketPage.total,
     listings: marketPage.total,
     services: services.length,
     businesses: businesses.length,
-    jobs: jobsList.length,
-    community: communityPage.posts.length,
   };
   const availableTabs: GlobalSearchTab[] = ["all"];
-  (["listings", "services", "businesses", "jobs", "community"] as const).forEach((tab) => {
+  (["listings", "services", "businesses"] as const).forEach((tab) => {
     if (counts[tab] > 0) availableTabs.push(tab);
   });
   return {
     query: input.query,
-    listings:
-      input.tab === "services"
-        ? []
-        : input.tab === "businesses" || input.tab === "jobs" || input.tab === "community"
-          ? []
-          : marketPage.listings,
+    listings: input.tab === "services" || input.tab === "businesses" ? [] : marketPage.listings,
     services: input.tab === "services" || input.tab === "all" ? services : [],
     businesses: input.tab === "businesses" || input.tab === "all" ? businesses : [],
-    jobs: input.tab === "jobs" || input.tab === "all" ? jobsList : [],
-    community: input.tab === "community" || input.tab === "all" ? communityPage.posts : [],
     counts,
     availableTabs,
-    hasMore: marketPage.hasMore || communityPage.hasMore,
+    hasMore: marketPage.hasMore,
   };
 }
 
@@ -154,15 +123,8 @@ export async function getSearchSuggestions(query: string): Promise<SearchSuggest
     label: business.name,
     type: "business" as const,
   }));
-  const community = await getCommunityRepository();
-  const communityPage = await community.getFeed({ tab: "latest", search: query, limit: 4 });
-  const communitySuggestions = communityPage.posts.slice(0, 2).map((post) => ({
-    label: post.content.slice(0, 72),
-    type: "community" as const,
-    postId: post.id,
-  }));
   const seen = new Set<string>();
-  return [...listingSuggestions, ...businessSuggestions, ...communitySuggestions]
+  return [...listingSuggestions, ...businessSuggestions]
     .filter((item) => {
       const key = item.label.toLowerCase();
       if (seen.has(key)) return false;

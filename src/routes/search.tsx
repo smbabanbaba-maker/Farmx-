@@ -2,13 +2,11 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
-  BriefcaseBusiness,
   Building2,
   Check,
   ChevronDown,
   Filter,
   MapPin,
-  MessageCircle,
   RotateCcw,
   Search as SearchIcon,
   UsersRound,
@@ -31,8 +29,6 @@ const tabs: { id: GlobalSearchTab; label: string }[] = [
   { id: "listings", label: "Listings" },
   { id: "services", label: "Services" },
   { id: "businesses", label: "Businesses" },
-  { id: "jobs", label: "Jobs" },
-  { id: "community", label: "Community" },
 ];
 
 export const Route = createFileRoute("/search")({
@@ -139,7 +135,7 @@ function GlobalSearch() {
               Find almost anything on Goall26.
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
-              Search public listings, services, businesses, jobs, and Community posts.
+              Search public listings, services, businesses, and sellers across Goall26.
             </p>
           </div>
           <Goall26SearchBar initialQuery={q} placeholder="Search products, services, businesses…" />
@@ -310,7 +306,7 @@ function FilterPanel({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="space-y-3">
           <FilterSelect
             label="Category"
             value={filters.category ?? ""}
@@ -516,13 +512,11 @@ function SearchResults({
   const showListings = tab === "all" || tab === "listings";
   const showServices = tab === "all" || tab === "services";
   const showBusinesses = tab === "all" || tab === "businesses";
-  const showJobs = tab === "all" || tab === "jobs";
-  const showCommunity = tab === "all" || tab === "community";
   return (
     <div className="space-y-8">
       {showListings && standardListings.length > 0 && (
         <ResultSection title="Listings" count={result.counts.listings}>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="space-y-3">
             {standardListings.map((listing) => (
               <MarketListingCard key={listing.id} listing={listing} />
             ))}
@@ -531,7 +525,7 @@ function SearchResults({
       )}
       {showServices && result.services.length > 0 && (
         <ResultSection title="Services" count={result.counts.services}>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="space-y-3">
             {result.services.map((listing) => (
               <MarketListingCard key={listing.id} listing={listing} />
             ))}
@@ -540,7 +534,7 @@ function SearchResults({
       )}
       {showBusinesses && result.businesses.length > 0 && (
         <ResultSection title="Businesses" count={result.counts.businesses}>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-3">
             {result.businesses.map((business) => (
               <Link
                 key={business.username}
@@ -570,78 +564,6 @@ function SearchResults({
                   <span>{business.activeListings} active ads</span>
                 </div>
                 <p className="mt-2 text-[10px] font-bold text-brand">View public profile</p>
-              </Link>
-            ))}
-          </div>
-        </ResultSection>
-      )}
-      {showJobs && result.jobs.length > 0 && (
-        <ResultSection title="Jobs" count={result.counts.jobs}>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {result.jobs.map((job) => (
-              <Link
-                key={job.id}
-                to="/jobs/$id"
-                params={{ id: job.id }}
-                search={{ q: "", category: undefined, tab: "explore" }}
-                className="rounded-2xl border border-border bg-card p-4 hover:border-brand/50 block"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-brand/10 p-2 text-brand">
-                    <BriefcaseBusiness className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate text-sm font-black">{job.title}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {job.company} · {job.location}
-                    </p>
-                    <p className="mt-3 text-xs font-black text-brand">
-                      {job.salaryAmount
-                        ? `₦${job.salaryAmount.toLocaleString()}`
-                        : job.salaryMin && job.salaryMax
-                          ? `₦${job.salaryMin.toLocaleString()} - ₦${job.salaryMax.toLocaleString()}`
-                          : "Negotiable"}
-                    </p>
-                  </div>
-                </div>
-                <span className="mt-3 inline-block rounded-full bg-muted px-2 py-1 text-[9px] font-bold">
-                  {job.jobType}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </ResultSection>
-      )}
-      {showCommunity && result.community.length > 0 && (
-        <ResultSection title="Community" count={result.counts.community}>
-          <div className="space-y-3">
-            {result.community.map((post) => (
-              <Link
-                key={post.id}
-                to="/community/$id"
-                params={{ id: post.id }}
-                className="block rounded-2xl border border-border bg-card p-4 hover:border-brand/50"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand/10 text-xs font-black text-brand">
-                      {post.author.name.slice(0, 1)}
-                    </div>
-                    <div>
-                      <p className="text-xs font-black">{post.author.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        @{post.author.username} · {post.topic}
-                      </p>
-                    </div>
-                  </div>
-                  <MessageCircle className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <p className="mt-3 text-sm leading-6">{post.content}</p>
-                <div className="mt-3 flex items-center gap-3 text-[10px] text-muted-foreground">
-                  <span>{post.likeCount} likes</span>
-                  <span>{post.commentCount} comments</span>
-                  {post.listing && <span className="font-bold text-brand">Shared listing</span>}
-                </div>
               </Link>
             ))}
           </div>
@@ -713,7 +635,7 @@ function EmptySearch({
 
 function SearchSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+    <div className="space-y-3">
       {Array.from({ length: 6 }, (_, index) => (
         <div key={index} className="h-64 animate-pulse rounded-2xl bg-muted" />
       ))}

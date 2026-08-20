@@ -191,7 +191,7 @@ function MarketCategoryPage() {
             </Link>
           </section>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="space-y-3">
             {listings.map((listing) => (
               <MarketListingCard key={listing.id} listing={listing} />
             ))}

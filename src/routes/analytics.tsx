@@ -1,23 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import {
-  TrendingUp,
-  Eye,
-  Bookmark,
-  MessageSquare,
-  Briefcase,
-  GraduationCap,
-  Award,
-  Users,
-  ShoppingBag,
-} from "lucide-react";
+import { TrendingUp, Eye, Bookmark, MessageSquare, Award, Users, ShoppingBag } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { getAnalyticsRepository } from "@/lib/analytics-repository";
 import type {
   UserAnalytics,
   SellerAnalytics,
-  JobSeekerAnalytics,
-  EmployerAnalytics,
   AdminAnalytics,
   AnalyticsRole,
   TimeRange,
@@ -32,8 +20,6 @@ function AnalyticsDashboard() {
   const [range, setRange] = useState<TimeRange>("30d");
   const [userStats, setUserStats] = useState<UserAnalytics | null>(null);
   const [sellerStats, setSellerStats] = useState<SellerAnalytics | null>(null);
-  const [jobSeekerStats, setJobSeekerStats] = useState<JobSeekerAnalytics | null>(null);
-  const [employerStats, setEmployerStats] = useState<EmployerAnalytics | null>(null);
   const [adminStats, setAdminStats] = useState<AdminAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -43,18 +29,14 @@ function AnalyticsDashboard() {
       setLoading(true);
       try {
         const repo = await getAnalyticsRepository();
-        const [u, s, j, e, a] = await Promise.all([
+        const [u, s, a] = await Promise.all([
           repo.getUserAnalytics(undefined, range),
           repo.getSellerAnalytics(undefined, range),
-          repo.getJobSeekerAnalytics(undefined, range),
-          repo.getEmployerAnalytics(undefined, range),
           repo.getAdminAnalytics(range),
         ]);
         if (cancelled) return;
         setUserStats(u);
         setSellerStats(s);
-        setJobSeekerStats(j);
-        setEmployerStats(e);
         setAdminStats(a);
       } catch {
         /* ignore */
@@ -96,8 +78,6 @@ function AnalyticsDashboard() {
           {[
             { id: "seller", label: "Seller Stats" },
             { id: "user", label: "Personal Activity" },
-            { id: "job_seeker", label: "Job Applications" },
-            { id: "employer", label: "Employer Hiring" },
             { id: "admin", label: "Platform Admin" },
           ].map((tab) => (
             <button
@@ -200,81 +180,6 @@ function AnalyticsDashboard() {
                   value={userStats.listingsPosted}
                   icon={ShoppingBag}
                 />
-                <StatCard title="Jobs Applied" value={userStats.jobsApplied} icon={Briefcase} />
-                <StatCard
-                  title="Courses Enrolled"
-                  value={userStats.coursesEnrolled}
-                  icon={GraduationCap}
-                />
-                <StatCard title="Certificates" value={userStats.certificatesEarned} icon={Award} />
-              </div>
-            )}
-
-            {role === "job_seeker" && jobSeekerStats && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard
-                    title="Applications"
-                    value={jobSeekerStats.totalApplications}
-                    icon={Briefcase}
-                  />
-                  <StatCard
-                    title="Shortlisted"
-                    value={jobSeekerStats.shortlisted}
-                    icon={TrendingUp}
-                  />
-                  <StatCard title="Interviews" value={jobSeekerStats.interviews} icon={Users} />
-                  <StatCard title="Selected" value={jobSeekerStats.selected} icon={Award} />
-                </div>
-                <div className="rounded-3xl border border-border bg-card p-5 space-y-3">
-                  <h3 className="text-sm font-black">Application Breakdown</h3>
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {Object.entries(jobSeekerStats.applicationsByStatus).map(([st, count]) => (
-                      <div key={st} className="rounded-2xl border border-border p-3 text-center">
-                        <p className="text-lg font-black text-brand">{count}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">
-                          {st}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {role === "employer" && employerStats && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <StatCard title="Active Jobs" value={employerStats.activeJobs} icon={Briefcase} />
-                  <StatCard
-                    title="Total Applications"
-                    value={employerStats.totalApplications}
-                    icon={Users}
-                  />
-                  <StatCard title="Interviews" value={employerStats.interviews} icon={TrendingUp} />
-                  <StatCard
-                    title="Hiring Rate"
-                    value={`${employerStats.hiringRate}%`}
-                    icon={Award}
-                  />
-                </div>
-                <div className="rounded-3xl border border-border bg-card p-5 space-y-4">
-                  <h3 className="text-sm font-black">Job Performance</h3>
-                  <div className="space-y-3">
-                    {employerStats.jobPerformance.map((jp) => (
-                      <div
-                        key={jp.id}
-                        className="flex items-center justify-between rounded-2xl border border-border p-3"
-                      >
-                        <p className="text-xs font-black">{jp.title}</p>
-                        <div className="flex items-center gap-3 text-xs font-bold text-muted-foreground">
-                          <span>{jp.views} views</span>
-                          <span className="text-brand">{jp.applications} applications</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             )}
 
@@ -290,12 +195,6 @@ function AnalyticsDashboard() {
                     title="Active Listings"
                     value={adminStats.activeListings.toLocaleString()}
                     icon={ShoppingBag}
-                  />
-                  <StatCard title="Active Jobs" value={adminStats.activeJobs} icon={Briefcase} />
-                  <StatCard
-                    title="Learn Enrollments"
-                    value={adminStats.learnEnrollments.toLocaleString()}
-                    icon={GraduationCap}
                   />
                 </div>
                 <div className="rounded-3xl border border-border bg-card p-5 space-y-4">

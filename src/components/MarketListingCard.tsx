@@ -173,9 +173,9 @@ export function ListingRail({
           </Link>
         )}
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="space-y-3">
         {listings.map((listing) => (
-          <MarketListingCard key={listing.id} listing={listing} compact />
+          <MarketListingCard key={listing.id} listing={listing} />
         ))}
       </div>
     </section>

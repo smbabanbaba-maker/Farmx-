@@ -303,7 +303,6 @@ function EditProfile() {
               <option value="farmer">Farmer</option>
               <option value="seller">Seller</option>
               <option value="buyer">Buyer</option>
-              <option value="employer">Employer</option>
               <option value="agricultural_business">Agricultural Business</option>
             </select>
           </label>

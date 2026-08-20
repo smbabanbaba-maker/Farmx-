@@ -221,7 +221,7 @@ const SETTING_GROUPS: SettingGroup[] = [
       {
         slug: "activity",
         label: "My activity",
-        description: "Ads, searches, saves, follows and community activity",
+        description: "Ads, searches, saves, follows and marketplace activity",
         icon: Activity,
       },
       {

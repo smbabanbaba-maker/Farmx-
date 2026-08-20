@@ -24,7 +24,6 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       "Follow sellers",
       "Save listings",
       "Basic profile",
-      "Basic Jobs & Learn access",
       "Limited free listings",
     ],
     restrictions: ["No premium promotion included", "Limited monthly listings"],

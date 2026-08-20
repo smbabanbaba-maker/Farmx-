@@ -580,7 +580,7 @@ function PersonalInfo({
           <SelectField
             label="Account type"
             value={form.role}
-            options={["farmer", "seller", "buyer", "employer", "agricultural_business"]}
+            options={["farmer", "seller", "buyer", "agricultural_business"]}
             onChange={(value) => update("role", value as ProfileForm["role"])}
           />
           <SelectField
@@ -1240,12 +1240,11 @@ function NotificationsPage() {
         ["New buyer inquiries", "buyerInquiries"],
         ["Listing activity", "listingActivity"],
         ["Saved-search alerts", "savedSearchAlerts"],
-        ["Followers and community activity", "socialActivity"],
+        ["Followers and seller activity", "socialActivity"],
         ["New messages", "newMessages"],
         ["Payment success and failure", "paymentUpdates"],
         ["Subscription renewal and expiry", "subscriptionUpdates"],
         ["Boost updates", "boostUpdates"],
-        ["Matching jobs", "jobAlerts"],
       ]}
     />
   );
@@ -1919,7 +1918,7 @@ function ActivityPage() {
       <Card title="Account activity" icon={Activity}>
         <InfoRow label="Listings" value="Open My ads" />
         <InfoRow label="Saved ads" value="Open Saved ads" />
-        <InfoRow label="Community and messages" value="Open the relevant app section" />
+        <InfoRow label="Messages" value="Open your conversations" />
       </Card>
       <div className="grid gap-2 sm:grid-cols-2">
         <Link
@@ -1930,10 +1929,10 @@ function ActivityPage() {
           My ads
         </Link>
         <Link
-          to="/community"
+          to="/messages"
           className="rounded-xl border border-border px-3 py-2.5 text-center text-xs font-black"
         >
-          Community
+          Messages
         </Link>
       </div>
     </div>
@@ -2067,7 +2066,6 @@ function LegalPage() {
   const documents = [
     "Terms of Service",
     "Privacy Policy",
-    "Community Guidelines",
     "Marketplace Rules",
     "Seller Rules",
     "Buyer Rules",
@@ -2105,7 +2103,7 @@ function AboutPage() {
           <div>
             <p className="text-lg font-black">Goall26 marketplace</p>
             <p className="text-xs text-muted-foreground">
-              Agricultural products, services, jobs and community.
+              Products, services, and trusted marketplace activity across Nigeria.
             </p>
           </div>
         </div>

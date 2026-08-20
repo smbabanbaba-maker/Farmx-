@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getPublicProfile, getPublicProfilePhotoUrl } from "@/lib/profile.functions";
-import { toggleCommunityFollow } from "@/lib/community.functions";
+import { getMarketRepository } from "@/lib/market-repository";
 import { useAuth } from "@/lib/use-auth";
 import {
   breadcrumbJsonLd,
@@ -168,10 +168,10 @@ function PublicProfile() {
     }
     setFollowBusy(true);
     try {
-      const result = await toggleCommunityFollow({
-        data: { targetUserId: profile.userId, targetUsername: profile.username },
-      });
-      setFollowing(result.following);
+      const repository = await getMarketRepository();
+      if (following) await repository.unfollowSeller(profile.username);
+      else await repository.followSeller(profile.username);
+      setFollowing((value) => !value);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Unable to update follow status.");
     } finally {

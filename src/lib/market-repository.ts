@@ -97,12 +97,30 @@ export type MarketRepository = {
   getSnapshot: () => Promise<MarketSnapshot>;
 };
 
+function isDeprecatedFeatureListing(listing: MarketListing) {
+  const category = `${listing.category} ${listing.metadata?.sourceCategoryId ?? ""}`.toLowerCase();
+  return category.includes("job") || category.includes("learn") || category.includes("community");
+}
+
+function withoutDeprecatedFeatureListings(page: MarketPage): MarketPage {
+  const listings = page.listings.filter((listing) => !isDeprecatedFeatureListing(listing));
+  return {
+    ...page,
+    listings,
+    total: Math.max(0, page.total - (page.listings.length - listings.length)),
+  };
+}
+
 function createProductionRepository(): MarketRepository {
-  const page = (query?: MarketQuery) => getPublicMarketListings({ data: query ?? {} });
+  const page = async (query?: MarketQuery) =>
+    withoutDeprecatedFeatureListings(await getPublicMarketListings({ data: query ?? {} }));
   return {
     mode: "production",
     getListings: page,
-    getListingById: (id) => getPublicMarketListing({ data: { id } }),
+    getListingById: async (id) => {
+      const listing = await getPublicMarketListing({ data: { id } });
+      return listing && !isDeprecatedFeatureListing(listing) ? listing : null;
+    },
     getCategories: async () => ALL_CATEGORIES,
     getFeaturedListings: async () =>
       (await page({ filters: { featured: true }, pageSize: 12 })).listings,

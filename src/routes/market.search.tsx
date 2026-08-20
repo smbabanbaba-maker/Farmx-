@@ -104,7 +104,7 @@ function MarketSearch() {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search crops, equipment, sellers…"
+            placeholder="Search products, services, sellers…"
             className="w-full rounded-2xl border border-border bg-card py-3 pl-10 pr-20 text-sm outline-none focus:border-brand"
             aria-label="Search listings"
           />
@@ -204,16 +204,13 @@ function MarketSearch() {
                   className="mt-1 w-full rounded-xl border border-border bg-background p-2 text-xs font-semibold"
                 >
                   <option value="">All categories</option>
-                  <option>Crops & Grains</option>
-                  <option>Livestock</option>
-                  <option>Seeds & Seedlings</option>
-                  <option>Fertilizers & Agrochemicals</option>
-                  <option>Farm Machinery & Equipment</option>
-                  <option>Irrigation</option>
-                  <option>Solar & Farm Energy</option>
-                  <option>Farm Services</option>
-                  <option>Land & Farm Properties</option>
-                  <option>Transport & Logistics</option>
+                  <option>Agriculture & Food</option>
+                  <option>Vehicles</option>
+                  <option>Property</option>
+                  <option>Electronics</option>
+                  <option>Fashion</option>
+                  <option>Services</option>
+                  <option>Other</option>
                 </select>
               </label>
               <label className="text-[10px] font-bold text-muted-foreground">
@@ -347,9 +344,9 @@ function MarketSearch() {
           </section>
         )}
         {loading ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-3">
             {Array.from({ length: 8 }, (_, index) => (
-              <div key={index} className="h-64 animate-pulse rounded-2xl bg-muted" />
+              <div key={index} className="h-72 animate-pulse rounded-2xl bg-muted" />
             ))}
           </div>
         ) : error ? (
@@ -378,7 +375,7 @@ function MarketSearch() {
             </button>
           </section>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="space-y-3">
             {listings.map((listing) => (
               <MarketListingCard key={listing.id} listing={listing} />
             ))}

@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getMarketRepository } from "@/lib/market-repository";
-import { getLearnRepository } from "@/lib/learn-repository";
-import { getJobRepository } from "@/lib/job-repository";
 import { publicIndexingEnabled, publicSiteUrl } from "@/lib/seo";
 
 function escapeXml(value: string) {
@@ -78,44 +76,13 @@ async function collectPublishedMarketUrls(urls: Map<string, SitemapUrl>) {
   urls.set("/market/categories", { loc: `${publicSiteUrl()}/market/categories` });
 }
 
-async function collectPublishedLearnUrls(urls: Map<string, SitemapUrl>) {
-  if (!publicIndexingEnabled("learn")) return;
-  const repository = await getLearnRepository();
-  const courses = await repository.getCourses();
-  for (const course of courses.filter((item) => item.status === "published")) {
-    urls.set(`/learn/${encodeURIComponent(course.id)}`, {
-      loc: `${publicSiteUrl()}/learn/${encodeURIComponent(course.id)}`,
-      lastmod: course.updatedAt,
-    });
-  }
-  if (courses.length > 0) urls.set("/learn", { loc: `${publicSiteUrl()}/learn` });
-}
-
-async function collectPublishedJobUrls(urls: Map<string, SitemapUrl>) {
-  if (!publicIndexingEnabled("jobs") || import.meta.env.VITE_JOBS_DATA_SOURCE !== "production")
-    return;
-  const repository = await getJobRepository();
-  const jobs = await repository.getJobs();
-  for (const job of jobs.filter((item) => item.status === "published")) {
-    urls.set(`/jobs/${encodeURIComponent(job.id)}`, {
-      loc: `${publicSiteUrl()}/jobs/${encodeURIComponent(job.id)}`,
-      lastmod: job.updatedAt,
-    });
-  }
-  if (jobs.length > 0) urls.set("/jobs", { loc: `${publicSiteUrl()}/jobs` });
-}
-
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
       GET: async () => {
         const urls = new Map<string, SitemapUrl>();
         if (publicIndexingEnabled()) urls.set("/", { loc: `${publicSiteUrl()}/` });
-        await Promise.all([
-          collectPublishedMarketUrls(urls),
-          collectPublishedLearnUrls(urls),
-          collectPublishedJobUrls(urls),
-        ]);
+        await collectPublishedMarketUrls(urls);
         const body = renderSitemap([...urls.values()]);
         return new Response(body, {
           status: 200,

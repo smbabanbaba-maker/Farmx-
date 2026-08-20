@@ -1,6 +1,4 @@
-import type { JobPost } from "@/lib/job.types";
 import type { MarketCategory, MarketListing } from "@/lib/market-types";
-import type { Course } from "@/lib/learn.types";
 
 const FALLBACK_SITE_URL = "https://goall26.example";
 const BRAND_LOGO_PATH = "/goall26-logo.png";
@@ -179,85 +177,6 @@ export function productJsonLd(listing: MarketListing) {
             reviewCount: listing.seller.reviews,
           }
         : undefined,
-  };
-}
-
-export function jobJsonLd(job: JobPost) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "JobPosting",
-    title: job.title,
-    description: truncateDescription(job.description, 5000),
-    datePosted: job.createdAt,
-    validThrough: job.deadline,
-    employmentType: job.jobType,
-    hiringOrganization: {
-      "@type": "Organization",
-      name: job.company,
-      logo: job.employer.logo ? safePublicImageUrl(job.employer.logo) : undefined,
-    },
-    jobLocation: {
-      "@type": "Place",
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: job.location,
-        addressRegion: job.state,
-        addressCountry: "NG",
-      },
-    },
-    applicantLocationRequirements: { "@type": "Country", name: "Nigeria" },
-    experienceRequirements: job.experienceLevel,
-    educationRequirements: job.educationRequirement,
-    skills: job.skillsRequired.join(", "),
-    baseSalary:
-      job.salaryAmount || job.salaryMin || job.salaryMax
-        ? {
-            "@type": "MonetaryAmount",
-            currency: job.salaryCurrency,
-            value: {
-              "@type": "QuantitativeValue",
-              value: job.salaryAmount ?? job.salaryMin ?? job.salaryMax,
-              minValue: job.salaryMin,
-              maxValue: job.salaryMax,
-              unitText: job.salaryType,
-            },
-          }
-        : undefined,
-  };
-}
-
-export function courseJsonLd(course: Course) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: course.title,
-    description: truncateDescription(course.fullDescription || course.shortDescription, 5000),
-    provider: {
-      "@type": "Organization",
-      name: "Goall26",
-      sameAs: publicSiteUrl(),
-    },
-    image: safePublicImageUrl(course.coverImage),
-    inLanguage: course.language,
-    educationalLevel: course.difficulty,
-    courseCode: course.id,
-    hasCourseInstance: {
-      "@type": "CourseInstance",
-      courseMode: course.courseType,
-      instructor: {
-        "@type": "Person",
-        name: course.instructor.name,
-        jobTitle: course.instructor.title,
-      },
-    },
-    offers: {
-      "@type": "Offer",
-      price: course.price,
-      priceCurrency: "NGN",
-      category: course.accessType,
-      availability: "https://schema.org/InStock",
-      url: absoluteUrl(`/learn/${encodeURIComponent(course.id)}`),
-    },
   };
 }
 

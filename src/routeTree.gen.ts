@@ -12,15 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as BuyerProtectionRouteImport } from './routes/buyer-protection'
-import { Route as CommunityRouteImport } from './routes/community'
 import { Route as CompanyRouteImport } from './routes/company'
 import { Route as DisputesRouteImport } from './routes/disputes'
 import { Route as EditProfileRouteImport } from './routes/edit-profile'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as FleetRouteImport } from './routes/fleet'
 import { Route as InventoryRouteImport } from './routes/inventory'
-import { Route as JobsRouteImport } from './routes/jobs'
-import { Route as LearnRouteImport } from './routes/learn'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MarketRouteImport } from './routes/market'
 import { Route as MessagesRouteImport } from './routes/messages'
@@ -28,8 +25,6 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PostRouteImport } from './routes/post'
-import { Route as PostCommunityRouteImport } from './routes/post-community'
-import { Route as PostJobRouteImport } from './routes/post-job'
 import { Route as PostProductRouteImport } from './routes/post-product'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReportsRouteImport } from './routes/reports'
@@ -47,10 +42,7 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as CSlugRouteImport } from './routes/c.$slug'
-import { Route as CommunityIdRouteImport } from './routes/community.$id'
 import { Route as EditAdIdRouteImport } from './routes/edit-ad.$id'
-import { Route as JobsIdRouteImport } from './routes/jobs.$id'
-import { Route as LearnCourseIdRouteImport } from './routes/learn.$courseId'
 import { Route as MarketCategoriesRouteImport } from './routes/market.categories'
 import { Route as MarketSearchRouteImport } from './routes/market.search'
 import { Route as MessagesIdRouteImport } from './routes/messages.$id'
@@ -75,11 +67,6 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
 const BuyerProtectionRoute = BuyerProtectionRouteImport.update({
   id: '/buyer-protection',
   path: '/buyer-protection',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CommunityRoute = CommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompanyRoute = CompanyRouteImport.update({
@@ -110,16 +97,6 @@ const FleetRoute = FleetRouteImport.update({
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const JobsRoute = JobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LearnRoute = LearnRouteImport.update({
-  id: '/learn',
-  path: '/learn',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -155,16 +132,6 @@ const PlansRoute = PlansRouteImport.update({
 const PostRoute = PostRouteImport.update({
   id: '/post',
   path: '/post',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PostCommunityRoute = PostCommunityRouteImport.update({
-  id: '/post-community',
-  path: '/post-community',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PostJobRoute = PostJobRouteImport.update({
-  id: '/post-job',
-  path: '/post-job',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostProductRoute = PostProductRouteImport.update({
@@ -252,25 +219,10 @@ const CSlugRoute = CSlugRouteImport.update({
   path: '/c/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CommunityIdRoute = CommunityIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => CommunityRoute,
-} as any)
 const EditAdIdRoute = EditAdIdRouteImport.update({
   id: '/edit-ad/$id',
   path: '/edit-ad/$id',
   getParentRoute: () => rootRouteImport,
-} as any)
-const JobsIdRoute = JobsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => JobsRoute,
-} as any)
-const LearnCourseIdRoute = LearnCourseIdRouteImport.update({
-  id: '/$courseId',
-  path: '/$courseId',
-  getParentRoute: () => LearnRoute,
 } as any)
 const MarketCategoriesRoute = MarketCategoriesRouteImport.update({
   id: '/categories',
@@ -327,15 +279,12 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRouteWithChildren
-  '/learn': typeof LearnRouteWithChildren
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
@@ -343,8 +292,6 @@ export interface FileRoutesByFullPath {
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
   '/post': typeof PostRoute
-  '/post-community': typeof PostCommunityRoute
-  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -362,10 +309,7 @@ export interface FileRoutesByFullPath {
   '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
-  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
-  '/jobs/$id': typeof JobsIdRoute
-  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -381,15 +325,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRouteWithChildren
-  '/learn': typeof LearnRouteWithChildren
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
@@ -397,8 +338,6 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
   '/post': typeof PostRoute
-  '/post-community': typeof PostCommunityRoute
-  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -416,10 +355,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
-  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
-  '/jobs/$id': typeof JobsIdRoute
-  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -436,15 +372,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/analytics': typeof AnalyticsRoute
   '/buyer-protection': typeof BuyerProtectionRoute
-  '/community': typeof CommunityRouteWithChildren
   '/company': typeof CompanyRoute
   '/disputes': typeof DisputesRoute
   '/edit-profile': typeof EditProfileRoute
   '/faq': typeof FaqRoute
   '/fleet': typeof FleetRoute
   '/inventory': typeof InventoryRoute
-  '/jobs': typeof JobsRouteWithChildren
-  '/learn': typeof LearnRouteWithChildren
   '/login': typeof LoginRoute
   '/market': typeof MarketRouteWithChildren
   '/messages': typeof MessagesRouteWithChildren
@@ -452,8 +385,6 @@ export interface FileRoutesById {
   '/orders': typeof OrdersRoute
   '/plans': typeof PlansRoute
   '/post': typeof PostRoute
-  '/post-community': typeof PostCommunityRoute
-  '/post-job': typeof PostJobRoute
   '/post-product': typeof PostProductRoute
   '/profile': typeof ProfileRoute
   '/reports': typeof ReportsRoute
@@ -471,10 +402,7 @@ export interface FileRoutesById {
   '/verify-email': typeof VerifyEmailRoute
   '/wallet': typeof WalletRoute
   '/c/$slug': typeof CSlugRoute
-  '/community/$id': typeof CommunityIdRoute
   '/edit-ad/$id': typeof EditAdIdRoute
-  '/jobs/$id': typeof JobsIdRoute
-  '/learn/$courseId': typeof LearnCourseIdRoute
   '/market/categories': typeof MarketCategoriesRoute
   '/market/search': typeof MarketSearchRoute
   '/messages/$id': typeof MessagesIdRoute
@@ -492,15 +420,12 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/buyer-protection'
-    | '/community'
     | '/company'
     | '/disputes'
     | '/edit-profile'
     | '/faq'
     | '/fleet'
     | '/inventory'
-    | '/jobs'
-    | '/learn'
     | '/login'
     | '/market'
     | '/messages'
@@ -508,8 +433,6 @@ export interface FileRouteTypes {
     | '/orders'
     | '/plans'
     | '/post'
-    | '/post-community'
-    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -527,10 +450,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wallet'
     | '/c/$slug'
-    | '/community/$id'
     | '/edit-ad/$id'
-    | '/jobs/$id'
-    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -546,15 +466,12 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/buyer-protection'
-    | '/community'
     | '/company'
     | '/disputes'
     | '/edit-profile'
     | '/faq'
     | '/fleet'
     | '/inventory'
-    | '/jobs'
-    | '/learn'
     | '/login'
     | '/market'
     | '/messages'
@@ -562,8 +479,6 @@ export interface FileRouteTypes {
     | '/orders'
     | '/plans'
     | '/post'
-    | '/post-community'
-    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -581,10 +496,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wallet'
     | '/c/$slug'
-    | '/community/$id'
     | '/edit-ad/$id'
-    | '/jobs/$id'
-    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -600,15 +512,12 @@ export interface FileRouteTypes {
     | '/'
     | '/analytics'
     | '/buyer-protection'
-    | '/community'
     | '/company'
     | '/disputes'
     | '/edit-profile'
     | '/faq'
     | '/fleet'
     | '/inventory'
-    | '/jobs'
-    | '/learn'
     | '/login'
     | '/market'
     | '/messages'
@@ -616,8 +525,6 @@ export interface FileRouteTypes {
     | '/orders'
     | '/plans'
     | '/post'
-    | '/post-community'
-    | '/post-job'
     | '/post-product'
     | '/profile'
     | '/reports'
@@ -635,10 +542,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/wallet'
     | '/c/$slug'
-    | '/community/$id'
     | '/edit-ad/$id'
-    | '/jobs/$id'
-    | '/learn/$courseId'
     | '/market/categories'
     | '/market/search'
     | '/messages/$id'
@@ -655,15 +559,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BuyerProtectionRoute: typeof BuyerProtectionRoute
-  CommunityRoute: typeof CommunityRouteWithChildren
   CompanyRoute: typeof CompanyRoute
   DisputesRoute: typeof DisputesRoute
   EditProfileRoute: typeof EditProfileRoute
   FaqRoute: typeof FaqRoute
   FleetRoute: typeof FleetRoute
   InventoryRoute: typeof InventoryRoute
-  JobsRoute: typeof JobsRouteWithChildren
-  LearnRoute: typeof LearnRouteWithChildren
   LoginRoute: typeof LoginRoute
   MarketRoute: typeof MarketRouteWithChildren
   MessagesRoute: typeof MessagesRouteWithChildren
@@ -671,8 +572,6 @@ export interface RootRouteChildren {
   OrdersRoute: typeof OrdersRoute
   PlansRoute: typeof PlansRoute
   PostRoute: typeof PostRoute
-  PostCommunityRoute: typeof PostCommunityRoute
-  PostJobRoute: typeof PostJobRoute
   PostProductRoute: typeof PostProductRoute
   ProfileRoute: typeof ProfileRoute
   ReportsRoute: typeof ReportsRoute
@@ -721,13 +620,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuyerProtectionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/community': {
-      id: '/community'
-      path: '/community'
-      fullPath: '/community'
-      preLoaderRoute: typeof CommunityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/company': {
       id: '/company'
       path: '/company'
@@ -768,20 +660,6 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/inventory'
       preLoaderRoute: typeof InventoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/jobs': {
-      id: '/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/learn': {
-      id: '/learn'
-      path: '/learn'
-      fullPath: '/learn'
-      preLoaderRoute: typeof LearnRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -831,20 +709,6 @@ declare module '@tanstack/react-router' {
       path: '/post'
       fullPath: '/post'
       preLoaderRoute: typeof PostRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/post-community': {
-      id: '/post-community'
-      path: '/post-community'
-      fullPath: '/post-community'
-      preLoaderRoute: typeof PostCommunityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/post-job': {
-      id: '/post-job'
-      path: '/post-job'
-      fullPath: '/post-job'
-      preLoaderRoute: typeof PostJobRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/post-product': {
@@ -966,33 +830,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/community/$id': {
-      id: '/community/$id'
-      path: '/$id'
-      fullPath: '/community/$id'
-      preLoaderRoute: typeof CommunityIdRouteImport
-      parentRoute: typeof CommunityRoute
-    }
     '/edit-ad/$id': {
       id: '/edit-ad/$id'
       path: '/edit-ad/$id'
       fullPath: '/edit-ad/$id'
       preLoaderRoute: typeof EditAdIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/jobs/$id': {
-      id: '/jobs/$id'
-      path: '/$id'
-      fullPath: '/jobs/$id'
-      preLoaderRoute: typeof JobsIdRouteImport
-      parentRoute: typeof JobsRoute
-    }
-    '/learn/$courseId': {
-      id: '/learn/$courseId'
-      path: '/$courseId'
-      fullPath: '/learn/$courseId'
-      preLoaderRoute: typeof LearnCourseIdRouteImport
-      parentRoute: typeof LearnRoute
     }
     '/market/categories': {
       id: '/market/categories'
@@ -1067,38 +910,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface CommunityRouteChildren {
-  CommunityIdRoute: typeof CommunityIdRoute
-}
-
-const CommunityRouteChildren: CommunityRouteChildren = {
-  CommunityIdRoute: CommunityIdRoute,
-}
-
-const CommunityRouteWithChildren = CommunityRoute._addFileChildren(
-  CommunityRouteChildren,
-)
-
-interface JobsRouteChildren {
-  JobsIdRoute: typeof JobsIdRoute
-}
-
-const JobsRouteChildren: JobsRouteChildren = {
-  JobsIdRoute: JobsIdRoute,
-}
-
-const JobsRouteWithChildren = JobsRoute._addFileChildren(JobsRouteChildren)
-
-interface LearnRouteChildren {
-  LearnCourseIdRoute: typeof LearnCourseIdRoute
-}
-
-const LearnRouteChildren: LearnRouteChildren = {
-  LearnCourseIdRoute: LearnCourseIdRoute,
-}
-
-const LearnRouteWithChildren = LearnRoute._addFileChildren(LearnRouteChildren)
-
 interface MarketRouteChildren {
   MarketCategoriesRoute: typeof MarketCategoriesRoute
   MarketSearchRoute: typeof MarketSearchRoute
@@ -1142,15 +953,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AnalyticsRoute: AnalyticsRoute,
   BuyerProtectionRoute: BuyerProtectionRoute,
-  CommunityRoute: CommunityRouteWithChildren,
   CompanyRoute: CompanyRoute,
   DisputesRoute: DisputesRoute,
   EditProfileRoute: EditProfileRoute,
   FaqRoute: FaqRoute,
   FleetRoute: FleetRoute,
   InventoryRoute: InventoryRoute,
-  JobsRoute: JobsRouteWithChildren,
-  LearnRoute: LearnRouteWithChildren,
   LoginRoute: LoginRoute,
   MarketRoute: MarketRouteWithChildren,
   MessagesRoute: MessagesRouteWithChildren,
@@ -1158,8 +966,6 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersRoute: OrdersRoute,
   PlansRoute: PlansRoute,
   PostRoute: PostRoute,
-  PostCommunityRoute: PostCommunityRoute,
-  PostJobRoute: PostJobRoute,
   PostProductRoute: PostProductRoute,
   ProfileRoute: ProfileRoute,
   ReportsRoute: ReportsRoute,

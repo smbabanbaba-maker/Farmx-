@@ -20,7 +20,6 @@ import { SubscriptionProvider } from "@/lib/subscription";
 import { PrefsProvider } from "@/lib/prefs";
 import { NotificationsProvider } from "@/lib/notifications-store";
 import { CommerceProvider } from "@/lib/commerce-store";
-import { CommunityProvider } from "@/lib/community-store";
 import { getIdToken } from "@/lib/auth";
 
 // Client-side fetch interceptor to inject Cognito ID token into server function calls
@@ -140,13 +139,11 @@ function RootComponent() {
               <SubscriptionProvider>
                 <PrefsProvider>
                   <NotificationsProvider>
-                    <CommunityProvider>
-                      <CommerceProvider>
-                        <MessagesProvider>
-                          <Outlet />
-                        </MessagesProvider>
-                      </CommerceProvider>
-                    </CommunityProvider>
+                    <CommerceProvider>
+                      <MessagesProvider>
+                        <Outlet />
+                      </MessagesProvider>
+                    </CommerceProvider>
                   </NotificationsProvider>
                 </PrefsProvider>
               </SubscriptionProvider>

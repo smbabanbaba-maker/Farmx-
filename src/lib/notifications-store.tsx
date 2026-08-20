@@ -9,10 +9,6 @@ import {
   type ReactNode,
 } from "react";
 import {
-  getCommunityNotifications,
-  markCommunityNotificationRead,
-} from "@/lib/community.functions";
-import {
   getMyNotifications,
   markMyNotificationRead,
   syncMyNotifications,
@@ -24,7 +20,6 @@ export type NotificationCategory =
   | "listing_activity"
   | "followers"
   | "promotions"
-  | "community"
   | "account"
   | "security"
   | "system"
@@ -54,7 +49,6 @@ export interface AppNotification {
   actor?: { id?: string; name: string; avatar?: string; username?: string };
   listing?: { id: string; title: string; price?: number | null; image?: string; location?: string };
   conversationId?: string;
-  communityPostId?: string;
   targetUrl?: string;
   link?: string;
 }
@@ -78,9 +72,8 @@ export const NOTIF_CHANNELS: { key: NotificationCategory; label: string; group: 
   { key: "messages", label: "Messages", group: "Communication" },
   { key: "listings", label: "Listings", group: "Marketplace" },
   { key: "listing_activity", label: "Listing activity", group: "Marketplace" },
-  { key: "followers", label: "Followers", group: "Community" },
+  { key: "followers", label: "Followers", group: "Marketplace" },
   { key: "promotions", label: "Promotions", group: "Goall26 services" },
-  { key: "community", label: "Community", group: "Community" },
   { key: "account", label: "Account", group: "Account & security" },
   { key: "security", label: "Security", group: "Account & security" },
   { key: "system", label: "Goall26 updates", group: "Goall26" },
@@ -238,11 +231,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           channels?: Record<string, boolean>;
         };
       } else {
-        remote = {
-          items: (await getCommunityNotifications({
-            data: { limit: MAX },
-          })) as Partial<AppNotification>[],
-        };
+        remote = { items: [] };
       }
       const items = (remote.items ?? [])
         .map(normalizeItem)
@@ -371,18 +360,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
           void markMyNotificationRead({
             data: { notificationId: item.eventId ?? item.id },
           }).catch(() => undefined);
-        if (item && (item.category === "community" || item.category === "followers"))
-          void markCommunityNotificationRead({
-            data: { notificationId: item.eventId ?? item.id },
-          }).catch(() => undefined);
       },
       markAllRead: () => {
         const now = Date.now();
         const unreadServerItems = stateRef.current.items.filter(
-          (item) =>
-            !item.archived &&
-            !item.read &&
-            (item.category === "community" || item.category === "followers"),
+          (item) => !item.archived && !item.read && item.category === "followers",
         );
         persist({
           ...stateRef.current,
@@ -396,8 +378,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
             const requests: Promise<unknown>[] = [];
             if (USE_SERVER_NOTIFICATION_STORE)
               requests.push(markMyNotificationRead({ data: { notificationId } }));
-            if (item.category === "community" || item.category === "followers")
-              requests.push(markCommunityNotificationRead({ data: { notificationId } }));
+
             return Promise.all(requests).catch(() => undefined);
           }),
         );

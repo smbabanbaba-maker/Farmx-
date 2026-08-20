@@ -32,7 +32,6 @@ import {
   Sparkles,
   Trash2,
   UserPlus,
-  Users,
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -43,8 +42,7 @@ export const Route = createFileRoute("/notifications")({
       { title: "Notifications — Goall26" },
       {
         name: "description",
-        content:
-          "Real Goall26 messages, listing activity, account, community and service notifications.",
+        content: "Real Goall26 messages, listing activity, account and service notifications.",
       },
       { property: "og:title", content: "Goall26 Notifications" },
       { property: "og:description", content: "Stay up to date with your Goall26 activity." },
@@ -70,7 +68,6 @@ const ICONS: Record<string, typeof Bell> = {
   followers: UserPlus,
   promotions: Rocket,
   promo: Rocket,
-  community: Users,
   account: BadgeCheck,
   security: Shield,
   system: Info,
@@ -89,7 +86,6 @@ const LABELS: Record<string, string> = {
   followers: "Followers",
   promotions: "Promotions",
   promo: "Promotions",
-  community: "Community",
   account: "Account",
   security: "Security",
   system: "Goall26",

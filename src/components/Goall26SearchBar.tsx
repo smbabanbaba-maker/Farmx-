@@ -84,10 +84,6 @@ export function Goall26SearchBar({
       await navigate({ to: "/search", search: { q: suggestion.label, tab: "businesses" } });
       return;
     }
-    if (suggestion.type === "community" && suggestion.postId) {
-      await navigate({ to: "/community/$id", params: { id: suggestion.postId } });
-      return;
-    }
     await submit(suggestion.label);
   };
 

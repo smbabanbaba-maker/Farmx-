@@ -22,7 +22,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { z } from "zod";
 import { getAwsClientOptions } from "@/lib/aws-config";
 
-const roles = ["farmer", "seller", "buyer", "employer", "agricultural_business"] as const;
+const roles = ["farmer", "seller", "buyer", "agricultural_business"] as const;
 const profileLanguageSchema = z.enum(["en", "ha", "ig", "yo", "kr"]);
 
 const profileSchema = z.object({
@@ -248,7 +248,6 @@ export const DEFAULT_GOALL26_SETTINGS: Goall26Settings = {
     paymentUpdates: true,
     subscriptionUpdates: true,
     boostUpdates: true,
-    jobAlerts: true,
   },
   communication: {
     allowMessages: true,
