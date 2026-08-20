@@ -14,7 +14,7 @@ const loadingState: ProfileLoadState = {
   error: null,
 };
 
-export function useProfileData() {
+export function useProfileData(enabled = true) {
   const [state, setState] = useState<ProfileLoadState>(loadingState);
 
   const refresh = useCallback(async () => {
@@ -39,8 +39,8 @@ export function useProfileData() {
   }, []);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (enabled) void refresh();
+  }, [enabled, refresh]);
 
   return { ...state, refresh };
 }

@@ -277,7 +277,16 @@ export const getProfileRuntimeMode = createServerFn({ method: "GET" }).handler(a
   return { mode: "production" as const };
 });
 
-function getConfig() {
+type ProfileServiceConfig = {
+  region: string;
+  profileTable: string;
+  listingsTable?: string;
+  bucket?: string;
+  userPoolId: string;
+  clientId: string;
+};
+
+function getConfig(): ProfileServiceConfig & { listingsTable: string; bucket: string } {
   const region = process.env.AWS_REGION;
   const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
   const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
@@ -287,20 +296,38 @@ function getConfig() {
 
   if (!region || !profileTable || !listingsTable || !bucket || !userPoolId || !clientId) {
     throw new Error(
-      "Profile service is not configured. Set GOALL26_PROFILE_TABLE, GOALL26_LISTINGS_TABLE, and GOALL26_MEDIA_BUCKET on the Goall26 server.",
+      "Profile service is not configured. Set AWS_REGION, GOALL26_PROFILE_TABLE, GOALL26_LISTINGS_TABLE, GOALL26_MEDIA_BUCKET, COGNITO_USER_POOL_ID, and COGNITO_WEB_CLIENT_ID on the Goall26 server.",
     );
   }
 
   return { region, profileTable, listingsTable, bucket, userPoolId, clientId };
 }
 
-async function requireAuthenticatedUser() {
+function getProfileReadConfig(): ProfileServiceConfig {
+  const region = process.env.AWS_REGION;
+  const profileTable = getServerEnv("GOALL26_PROFILE_TABLE", "FARMX_PROFILE_TABLE");
+  const userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
+  const clientId = process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID;
+  const listingsTable = getServerEnv("GOALL26_LISTINGS_TABLE", "FARMX_LISTINGS_TABLE");
+
+  if (!region || !profileTable || !userPoolId || !clientId) {
+    throw new Error(
+      "Profile service is not configured. Set AWS_REGION, GOALL26_PROFILE_TABLE, COGNITO_USER_POOL_ID, and COGNITO_WEB_CLIENT_ID on the Goall26 server.",
+    );
+  }
+
+  return { region, profileTable, listingsTable, userPoolId, clientId };
+}
+
+async function requireAuthenticatedUser(
+  authConfig: Pick<ProfileServiceConfig, "userPoolId" | "clientId"> = getConfig(),
+) {
   const authorization = getRequestHeader("authorization");
   if (!authorization?.startsWith("Bearer ")) {
     throw new Error("You must be signed in to use Profile.");
   }
 
-  const { userPoolId, clientId } = getConfig();
+  const { userPoolId, clientId } = authConfig;
   const token = authorization.slice("Bearer ".length);
 
   // The userPoolId from getConfig() is already sanitized
@@ -565,42 +592,53 @@ export const getPublicProfilePhotoUrl = createServerFn({ method: "GET" })
 
 export const getMyProfile = createServerFn({ method: "GET" }).handler(async () => {
   privateResponse();
-  const config = getConfig();
-  const actor = await requireAuthenticatedUser();
+  const config = getProfileReadConfig();
+  const actor = await requireAuthenticatedUser(config);
   const client = createDocumentClient(config.region);
 
-  const [profileResult, listingResult, followerResult, followingResult] = await Promise.all([
-    client.send(
-      new GetCommand({
-        TableName: config.profileTable,
-        Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
-      }),
-    ),
-    client.send(
-      new QueryCommand({
-        TableName: config.listingsTable,
-        IndexName: "GSI2",
-        KeyConditionExpression: "gsi2pk = :owner",
-        ExpressionAttributeValues: { ":owner": `SELLER#${actor.userId}` },
-      }),
-    ),
-    client.send(
-      new QueryCommand({
-        TableName: config.profileTable,
-        IndexName: "GSI1",
-        KeyConditionExpression: "gsi1pk = :followers",
-        ExpressionAttributeValues: { ":followers": `PROFILE_FOLLOWERS#${actor.userId}` },
-        Select: "COUNT",
-      }),
-    ),
-    client.send(
-      new QueryCommand({
-        TableName: config.profileTable,
-        KeyConditionExpression: "pk = :user AND begins_with(sk, :following)",
-        ExpressionAttributeValues: { ":user": `USER#${actor.userId}`, ":following": "FOLLOWING#" },
-        Select: "COUNT",
-      }),
-    ),
+  const profileResult = await client.send(
+    new GetCommand({
+      TableName: config.profileTable,
+      Key: { pk: `USER#${actor.userId}`, sk: "PROFILE" },
+    }),
+  );
+  const [listingResult, followerResult, followingResult] = await Promise.all([
+    config.listingsTable
+      ? client
+          .send(
+            new QueryCommand({
+              TableName: config.listingsTable,
+              IndexName: "GSI2",
+              KeyConditionExpression: "gsi2pk = :owner",
+              ExpressionAttributeValues: { ":owner": `SELLER#${actor.userId}` },
+            }),
+          )
+          .catch(() => ({ Items: [] }))
+      : Promise.resolve({ Items: [] }),
+    client
+      .send(
+        new QueryCommand({
+          TableName: config.profileTable,
+          IndexName: "GSI1",
+          KeyConditionExpression: "gsi1pk = :followers",
+          ExpressionAttributeValues: { ":followers": `PROFILE_FOLLOWERS#${actor.userId}` },
+          Select: "COUNT",
+        }),
+      )
+      .catch(() => ({ Count: 0 })),
+    client
+      .send(
+        new QueryCommand({
+          TableName: config.profileTable,
+          KeyConditionExpression: "pk = :user AND begins_with(sk, :following)",
+          ExpressionAttributeValues: {
+            ":user": `USER#${actor.userId}`,
+            ":following": "FOLLOWING#",
+          },
+          Select: "COUNT",
+        }),
+      )
+      .catch(() => ({ Count: 0 })),
   ]);
 
   const listings = listingResult.Items ?? [];

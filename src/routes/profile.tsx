@@ -152,17 +152,11 @@ const sections = [
 ] as const;
 
 function ProfilePage() {
-  const { status, profile, stats, error, refresh } = useProfileData();
-  const photoUrl = useProfilePhoto(profile?.photoKey);
   const { isLoggedIn, loading: authLoading } = useAuth();
+  const { status, profile, stats, error, refresh } = useProfileData(isLoggedIn === true);
+  const photoUrl = useProfilePhoto(profile?.photoKey);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Overview");
-
-  useEffect(() => {
-    if (status === "error" && error?.toLowerCase().includes("sign in")) {
-      // Potentially redirect or show login prompt
-    }
-  }, [status, error]);
 
   if (authLoading) {
     return <ProfileLoading />;
@@ -177,8 +171,8 @@ function ProfilePage() {
           </div>
           <h1 className="text-xl font-bold text-foreground">Sign in to Goall26</h1>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Join thousands of Nigerian farmers and buyers. Manage your ads, chats, and professional
-            profile securely.
+            Join Goall26 buyers and sellers. Manage your listings, chats, and marketplace profile
+            securely.
           </p>
           <div className="mt-8 flex flex-col gap-3">
             <Link
