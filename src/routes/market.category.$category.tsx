@@ -40,7 +40,7 @@ export const Route = createFileRoute("/market/category/$category")({
       });
     }
     return createSeoHead({
-      title: `${category.name} agricultural marketplace | Goall26`,
+      title: `${category.name} marketplace in Nigeria | Goall26`,
       description: truncateDescription(
         `${category.description} Browse ${listings.length} public ${category.name} listings on Goall26.`,
       ),

@@ -36,6 +36,7 @@ const webhookSchema = z.object({
     amount: z.number().optional(),
     metadata: z.record(z.unknown()).optional(),
   }),
+  rawBody: z.string().min(1).optional(),
 });
 
 function hasProductionConfig() {
@@ -578,12 +579,14 @@ export const handleSubscriptionWebhook = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => webhookSchema.parse(input))
   .handler(async ({ data }) => {
     noStore();
-    if (!hasProductionConfig()) return { processed: true, reference: data.data.reference };
+    if (!hasProductionConfig())
+      throw new Error("Subscription storage is not configured on the Goall26 server.");
     const secret = await getPaystackSecret();
     const signature =
       getRequestHeader("x-paystack-signature") ?? getRequestHeader("x-farmx-signature");
     if (!secret || !signature) throw new Error("Webhook verification is not configured.");
-    const expected = createHmac("sha512", secret).update(JSON.stringify(data)).digest("hex");
+    const signedBody = data.rawBody ?? JSON.stringify({ event: data.event, data: data.data });
+    const expected = createHmac("sha512", secret).update(signedBody).digest("hex");
     const actualBuffer = Buffer.from(signature, "hex");
     const expectedBuffer = Buffer.from(expected, "hex");
     if (

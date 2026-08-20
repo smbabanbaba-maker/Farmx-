@@ -45,6 +45,7 @@ const webhookSchema = z.object({
     amount: z.number().optional(),
     customer: z.object({ email: z.string().optional() }).optional(),
   }),
+  rawBody: z.string().min(1).optional(),
 });
 
 function getConfig() {
@@ -490,7 +491,8 @@ export const handleServiceWebhook = createServerFn({ method: "POST" })
     const signature =
       getRequestHeader("x-paystack-signature") ?? getRequestHeader("x-farmx-signature");
     if (!secret || !signature) throw new Error("Webhook verification is not configured.");
-    const expected = createHmac("sha512", secret).update(JSON.stringify(data)).digest("hex");
+    const signedBody = data.rawBody ?? JSON.stringify({ event: data.event, data: data.data });
+    const expected = createHmac("sha512", secret).update(signedBody).digest("hex");
     const actualBuffer = Buffer.from(signature, "hex");
     const expectedBuffer = Buffer.from(expected, "hex");
     if (

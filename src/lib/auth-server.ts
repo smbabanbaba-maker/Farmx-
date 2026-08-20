@@ -2,22 +2,16 @@ import { getRequestHeader } from "@tanstack/react-start/server";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 
 export function getAuthConfig() {
-  let userPoolId = process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID;
-
-  // Force correct ID if it matches the known typo pattern
-  if (userPoolId === "u-west-1_HXI6OOXpg" || userPoolId?.startsWith("u-west-1")) {
-    userPoolId = "eu-west-1_HXI6OOXpg";
-  }
-
-  // Fallback to hardcoded production ID if still missing or wrong
-  if (!userPoolId || userPoolId.startsWith("u-west-1")) {
-    userPoolId = "eu-west-1_HXI6OOXpg";
-  }
-
+  const userPoolId =
+    process.env.COGNITO_USER_POOL_ID ?? process.env.VITE_COGNITO_USER_POOL_ID ?? "";
   const clientId =
-    process.env.COGNITO_WEB_CLIENT_ID ??
-    process.env.VITE_COGNITO_WEB_CLIENT_ID ??
-    "5160g8vs8f7c55fnvovjtgqnab";
+    process.env.COGNITO_WEB_CLIENT_ID ?? process.env.VITE_COGNITO_WEB_CLIENT_ID ?? "";
+
+  if (!userPoolId || !clientId) {
+    throw new Error(
+      "Goall26 authentication is not configured. Set COGNITO_USER_POOL_ID and COGNITO_WEB_CLIENT_ID on the server.",
+    );
+  }
 
   return { userPoolId, clientId };
 }

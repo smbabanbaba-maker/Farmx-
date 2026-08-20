@@ -86,7 +86,7 @@ function LoginPage() {
             </div>
             <h1 className="text-xl font-bold">Welcome Back</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Sign in to manage your farm and marketplace.
+              Sign in to manage your Goall26 account, listings, and marketplace activity.
             </p>
           </div>
 
