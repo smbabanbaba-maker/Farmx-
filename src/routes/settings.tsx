@@ -42,7 +42,7 @@ import { useI18n } from "@/lib/i18n";
 import { useProfileData } from "@/lib/use-profile";
 import { settingsText } from "@/lib/settings-copy";
 import {
-  DEFAULT_FARMX_SETTINGS,
+  DEFAULT_GOALL26_SETTINGS,
   getMySettings,
   saveMySettings,
   type Goall26Settings,
@@ -269,7 +269,7 @@ function SettingsPage() {
   const { signOut } = useAuth();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_FARMX_SETTINGS);
+  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_GOALL26_SETTINGS);
   const [settingsBusy, setSettingsBusy] = useState(false);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [subscriptionError, setSubscriptionError] = useState<string | null>(null);
@@ -290,7 +290,7 @@ function SettingsPage() {
     void loadSubscription();
     void getMySettings()
       .then(({ settings: saved }) => {
-        if (saved) setSettings({ ...DEFAULT_FARMX_SETTINGS, ...saved });
+        if (saved) setSettings({ ...DEFAULT_GOALL26_SETTINGS, ...saved });
       })
       .catch(() => {
         setMessage("Notification preferences could not be loaded yet.");

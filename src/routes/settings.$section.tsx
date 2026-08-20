@@ -37,7 +37,7 @@ import { AppShell } from "@/components/AppShell";
 import { LANGUAGES, useI18n, type Lang } from "@/lib/i18n";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import {
-  DEFAULT_FARMX_SETTINGS,
+  DEFAULT_GOALL26_SETTINGS,
   createBusinessMediaUpload,
   deleteMyAccountData,
   getMyBusinessMediaUrl,
@@ -110,12 +110,12 @@ type Transaction = {
 
 function mergeSettings(saved: Partial<Goall26Settings>): Goall26Settings {
   return {
-    ...DEFAULT_FARMX_SETTINGS,
+    ...DEFAULT_GOALL26_SETTINGS,
     ...saved,
-    notifications: { ...DEFAULT_FARMX_SETTINGS.notifications, ...saved.notifications },
-    communication: { ...DEFAULT_FARMX_SETTINGS.communication, ...saved.communication },
-    buying: { ...DEFAULT_FARMX_SETTINGS.buying, ...saved.buying },
-    blockedUsers: saved.blockedUsers ?? DEFAULT_FARMX_SETTINGS.blockedUsers,
+    notifications: { ...DEFAULT_GOALL26_SETTINGS.notifications, ...saved.notifications },
+    communication: { ...DEFAULT_GOALL26_SETTINGS.communication, ...saved.communication },
+    buying: { ...DEFAULT_GOALL26_SETTINGS.buying, ...saved.buying },
+    blockedUsers: saved.blockedUsers ?? DEFAULT_GOALL26_SETTINGS.blockedUsers,
   };
 }
 
@@ -1276,7 +1276,7 @@ function PreferencePage({
   title: string;
   items: [string, string][];
 }) {
-  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_FARMX_SETTINGS);
+  const [settings, setSettings] = useState<Goall26Settings>(DEFAULT_GOALL26_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -1285,7 +1285,7 @@ function PreferencePage({
     void getMySettings()
       .then(({ settings: saved }) => {
         if (!active) return;
-        setSettings(saved ? mergeSettings(saved) : DEFAULT_FARMX_SETTINGS);
+        setSettings(saved ? mergeSettings(saved) : DEFAULT_GOALL26_SETTINGS);
       })
       .catch((reason) => {
         if (active)
@@ -1829,7 +1829,7 @@ function BlockedPage() {
   const unblock = async (username: string) => {
     try {
       const current = await getMySettings();
-      const base = current.settings ?? DEFAULT_FARMX_SETTINGS;
+      const base = current.settings ?? DEFAULT_GOALL26_SETTINGS;
       const updated = (base.blockedUsers ?? []).filter((u: string) => u !== username);
       await saveMySettings({
         data: {

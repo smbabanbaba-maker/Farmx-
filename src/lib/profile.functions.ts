@@ -235,7 +235,7 @@ const businessInputSchema = z.object({
 export type Goall26Settings = z.infer<typeof settingsInputSchema>;
 export type Goall26BusinessProfile = z.infer<typeof businessInputSchema>;
 
-export const DEFAULT_FARMX_SETTINGS: Goall26Settings = {
+export const DEFAULT_GOALL26_SETTINGS: Goall26Settings = {
   notifications: {
     securityAlerts: true,
     loginAlerts: true,
