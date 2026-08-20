@@ -45,7 +45,6 @@ import {
   AlertCircle,
   Eye,
   Trash2,
-  ExternalLink,
 } from "lucide-react";
 
 export const Route = createFileRoute("/post-product")({ component: PostProduct });
@@ -144,7 +143,6 @@ function PostProduct() {
   >(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [replaceIndex, setReplaceIndex] = useState<number | null>(null);
-  const [draftNotice, setDraftNotice] = useState(false);
 
   // Initialize repository and load draft
   useEffect(() => {
@@ -391,13 +389,6 @@ function PostProduct() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const saveDraft = () => {
-    if (!repository) return;
-    repository.saveDraft(form);
-    setDraftNotice(true);
-    window.setTimeout(() => setDraftNotice(false), 2200);
-  };
-
   const handlePost = async () => {
     if (!validateForm()) {
       const firstError = document.querySelector("[data-error]");
@@ -497,7 +488,7 @@ function PostProduct() {
           <div className="mt-8 space-y-3 w-full max-w-xs">
             <button
               onClick={() => navigate({ to: "/market" })}
-              className="w-full py-3 rounded-2xl bg-orange text-white font-black shadow-lg shadow-orange/20"
+              className="w-full py-3 rounded-xl bg-orange text-white font-black shadow-lg shadow-orange/20"
             >
               {t("post.goToMarket")}
             </button>
@@ -506,7 +497,7 @@ function PostProduct() {
                 setDone(false);
                 clearForm();
               }}
-              className="w-full py-3 rounded-2xl border border-border font-bold"
+              className="w-full py-3 rounded-xl border border-border font-bold"
             >
               {t("post.postAnother")}
             </button>
@@ -517,69 +508,30 @@ function PostProduct() {
   }
 
   return (
-    <AppShell title="Sell">
-      <div className="mx-auto max-w-2xl space-y-8 px-4 pb-10 pt-6">
-        <header className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-black">Sell on Goall26</h1>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={saveDraft}
-              className="rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-black text-muted-foreground transition hover:border-brand hover:text-brand"
-            >
-              Save Draft
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowClearConfirm(true)}
-              className="flex items-center gap-1 text-xs font-bold text-muted-foreground transition-colors hover:text-brand"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Clear
-            </button>
-          </div>
-        </header>
-        {draftNotice && (
-          <p className="-mt-6 text-right text-[10px] font-bold text-emerald-600">
-            Draft saved locally.
-          </p>
-        )}
-
+    <AppShell
+      title="Post new ad"
+      headerVariant="form"
+      hideBottomNav
+      headerAction={
+        <button
+          type="button"
+          onClick={() => setShowClearConfirm(true)}
+          className="flex items-center gap-1.5 rounded-xl px-2 py-2 text-sm font-black text-orange transition hover:bg-orange/10"
+        >
+          <Trash2 className="h-5 w-5" />
+          Clear
+        </button>
+      }
+    >
+      <div className="mx-auto max-w-2xl space-y-5 px-4 pb-10 pt-4 sm:px-6">
         {errors.global && (
-          <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-700 text-sm font-semibold flex gap-2">
+          <div className="flex gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
             <AlertCircle className="h-5 w-5 shrink-0" />
             <span>{errors.global}</span>
           </div>
         )}
-        <section className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-brand">
-            Sell anything
-          </p>
-          <h2 className="mt-1 text-lg font-black">Create your marketplace listing</h2>
-          <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-            Add the important details, upload clear photos, and publish your product or service to
-            Goall26 Market.
-          </p>
-          <div className="mt-4 grid gap-2 rounded-2xl bg-navy/[0.04] p-3 text-[11px] leading-relaxed text-muted-foreground sm:grid-cols-3">
-            <div>
-              <span className="font-black text-navy">1. Describe it</span>
-              <br />
-              Choose a category and write a clear, honest title.
-            </div>
-            <div>
-              <span className="font-black text-navy">2. Add photos</span>
-              <br />
-              Show buyers the real item or service clearly.
-            </div>
-            <div>
-              <span className="font-black text-navy">3. Go live</span>
-              <br />
-              Confirm your details and publish directly to Market.
-            </div>
-          </div>
-        </section>
 
-        <div className="space-y-8">
+        <div className="space-y-4">
           {/* 1. Title */}
           <section className="space-y-4">
             <div className="flex justify-between items-end">
@@ -596,7 +548,7 @@ function PostProduct() {
               placeholder={t("post.titlePlaceholder")}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.title ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
+              className={`w-full p-4 rounded-xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors.title ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
             />
             {errors.title && (
               <p className="text-[10px] font-bold text-brand flex items-center gap-1" data-error>
@@ -631,7 +583,7 @@ function PostProduct() {
             )}
           </section>
         </div>
-        <div className="space-y-8">
+        <div className="space-y-5">
           {/* 3. Photos */}
 
           <section className="space-y-4">
@@ -641,9 +593,7 @@ function PostProduct() {
                 {form.photos.length}/{MAX_LISTING_PHOTOS}
               </span>
             </div>
-            <div className="rounded-2xl border border-dashed border-brand/30 bg-brand/[0.03] p-4">
-              <p className="text-xs font-bold">{t("post.addPhotos")}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">{t("post.photoTip")}</p>
+            <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
@@ -651,18 +601,23 @@ function PostProduct() {
                   form.photos.length >= MAX_LISTING_PHOTOS ||
                   form.photos.some((photo) => photo.uploading)
                 }
-                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground shadow-sm shadow-brand/20 transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-24 w-24 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-brand/40 bg-brand/[0.04] text-brand transition hover:bg-brand/10 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Add listing photos"
               >
-                <Camera className="h-4 w-4" /> {t("post.addPhotosButton")}
+                <span className="text-3xl font-light leading-none">+</span>
+                <span className="text-[10px] font-black">Add photos</span>
               </button>
             </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              The first photo becomes your cover. Use clear JPG, PNG, or WebP images up to 5MB each.
+            </p>
 
             {form.photos.length > 0 && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {form.photos.map((p, i) => (
                   <div
                     key={p.id}
-                    className="group relative overflow-hidden rounded-2xl border border-border bg-muted"
+                    className="group relative overflow-hidden rounded-xl border border-border bg-muted"
                   >
                     <button
                       type="button"
@@ -821,7 +776,26 @@ function PostProduct() {
             />
           </section>
         </div>
-        <div className="space-y-8">
+
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <FieldLabel label="Video link" />
+            <span className="text-[10px] font-bold text-muted-foreground">Optional</span>
+          </div>
+          <input
+            type="url"
+            maxLength={1024}
+            placeholder="YouTube, Facebook, or other video link"
+            value={form.videoLink || ""}
+            onChange={(event) => setForm((prev) => ({ ...prev, videoLink: event.target.value }))}
+            className="w-full rounded-xl border border-border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+          />
+          <p className="text-[10px] text-muted-foreground">
+            A short video can help buyers understand the item or service.
+          </p>
+        </section>
+
+        <div className="space-y-5">
           {/* 5. Location */}
 
           <section className="space-y-3">
@@ -870,7 +844,7 @@ function PostProduct() {
                             dynamicFields: { ...form.dynamicFields, [field.id]: e.target.value },
                           })
                         }
-                        className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 appearance-none transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
+                        className={`w-full p-4 rounded-xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 appearance-none transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
                       >
                         <option value="">Select {field.label}</option>
                         {field.options?.map((opt) => (
@@ -896,7 +870,7 @@ function PostProduct() {
                               },
                             })
                           }
-                          className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
+                          className={`w-full p-4 rounded-xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
                         />
                         {field.suffix && (
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
@@ -917,7 +891,7 @@ function PostProduct() {
                             dynamicFields: { ...form.dynamicFields, [field.id]: e.target.value },
                           })
                         }
-                        className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
+                        className={`w-full p-4 rounded-xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
                       />
                     )}
 
@@ -932,7 +906,7 @@ function PostProduct() {
                             dynamicFields: { ...form.dynamicFields, [field.id]: e.target.value },
                           })
                         }
-                        className={`w-full resize-none rounded-2xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+                        className={`w-full resize-none rounded-xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
                       />
                     )}
 
@@ -957,7 +931,7 @@ function PostProduct() {
                             },
                           })
                         }
-                        className={`w-full rounded-2xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+                        className={`w-full rounded-xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors[`field_${field.id}`] ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
                       />
                     )}
 
@@ -998,7 +972,7 @@ function PostProduct() {
             </section>
           )}
         </div>
-        <div className="space-y-8">
+        <div className="space-y-5">
           {/* 7. Description */}
           <section className="space-y-4">
             <div className="flex justify-between items-end">
@@ -1015,7 +989,7 @@ function PostProduct() {
               placeholder={t("post.descriptionPlaceholder")}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className={`w-full p-4 rounded-2xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all resize-none ${errors.description ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
+              className={`w-full p-4 rounded-xl bg-card border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand/20 transition-all resize-none ${errors.description ? "border-brand ring-2 ring-brand/10" : "border-border focus:border-brand"}`}
             />
             <div className="flex gap-2 p-3 rounded-xl bg-blue-50 text-blue-700 text-[10px] font-medium leading-tight">
               <Info className="h-3.5 w-3.5 shrink-0" />
@@ -1029,7 +1003,7 @@ function PostProduct() {
           </section>
 
           {/* 8. Price & Negotiation */}
-          <section className="space-y-7 border-t border-border pt-7">
+          <section className="space-y-7 border-t border-border pt-5">
             <div className="space-y-3">
               <FieldLabel label={`${t("price")} *`} />
               <div className="relative">
@@ -1045,7 +1019,7 @@ function PostProduct() {
                   onChange={(e) =>
                     setForm({ ...form, price: e.target.value ? Number(e.target.value) : null })
                   }
-                  className={`w-full rounded-2xl border bg-card p-4 pl-10 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-muted ${errors.price ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+                  className={`w-full rounded-xl border bg-card p-4 pl-10 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-muted ${errors.price ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
                 />
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -1103,7 +1077,7 @@ function PostProduct() {
 
           {/* 9. Seller contact: profile data stays private and is used automatically. */}
           {(!form.contactPhone || profileStatus === "error") && (
-            <section className="space-y-4 border-t border-border pt-6">
+            <section className="space-y-4 border-t border-border pt-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand/10">
                   <Phone className="h-4 w-4 text-brand" />
@@ -1134,7 +1108,7 @@ function PostProduct() {
                         contactPhone: normalizePhone(event.target.value),
                       }))
                     }
-                    className={`w-full rounded-2xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors.contactPhone ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+                    className={`w-full rounded-xl border bg-card p-4 text-sm font-medium outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20 ${errors.contactPhone ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
                   />
                   {errors.contactPhone && <InlineError message={errors.contactPhone} />}
                 </div>
@@ -1180,7 +1154,7 @@ function PostProduct() {
           </section>
         </div>
         {/* Single publish action at the end of the scrolling form */}
-        <section className="border-t border-border pt-6">
+        <section className="border-t border-border pt-5">
           <p className="mb-3 text-center text-xs leading-relaxed text-muted-foreground">
             Review your details, then publish your listing to the public Goall26 Market.
           </p>
@@ -1200,7 +1174,7 @@ function PostProduct() {
       {showClearConfirm && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
           <div className="bg-card w-full max-w-xs rounded-3xl border border-border p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="h-12 w-12 rounded-2xl bg-red-50 flex items-center justify-center mb-4">
+            <div className="h-12 w-12 rounded-xl bg-red-50 flex items-center justify-center mb-4">
               <Trash2 className="h-6 w-6 text-red-600" />
             </div>
             <h3 className="text-lg font-black leading-tight">Clear Form?</h3>
@@ -1276,7 +1250,7 @@ function PostProduct() {
                       setErrors((prev) => ({ ...prev, category: "", subcategory: "" }));
                       setSelector(null);
                     }}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.categoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
+                    className={`flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.categoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-xl">
                       {item.icon}
@@ -1299,7 +1273,7 @@ function PostProduct() {
                       setErrors((prev) => ({ ...prev, subcategory: "" }));
                       setSelector(null);
                     }}
-                    className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.subcategoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
+                    className={`flex w-full items-center justify-between rounded-xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.subcategoryId === item.id ? "bg-brand/5 text-brand" : ""}`}
                   >
                     <span className="text-sm font-bold">{item.name}</span>
                     {form.subcategoryId === item.id ? (
@@ -1322,7 +1296,7 @@ function PostProduct() {
                       setForm((prev) => ({ ...prev, priceUnit: unit }));
                       setSelector(null);
                     }}
-                    className={`flex w-full items-center justify-between rounded-2xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.priceUnit === unit ? "bg-brand/5 text-brand" : ""}`}
+                    className={`flex w-full items-center justify-between rounded-xl px-4 py-4 text-left transition hover:bg-brand/5 active:scale-[0.99] ${form.priceUnit === unit ? "bg-brand/5 text-brand" : ""}`}
                   >
                     <span className="text-sm font-bold capitalize">{unit}</span>
                     {form.priceUnit === unit ? (
@@ -1339,7 +1313,7 @@ function PostProduct() {
               <div className="max-h-[76vh] space-y-4 overflow-y-auto p-5">
                 <div className="space-y-2">
                   <FieldLabel label={t("state")} />
-                  <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto rounded-2xl border border-border p-2 sm:grid-cols-3">
+                  <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-border p-2 sm:grid-cols-3">
                     {NIGERIA_STATES.map((state) => (
                       <button
                         key={state}
@@ -1373,13 +1347,13 @@ function PostProduct() {
                     value={form.city}
                     onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
                     placeholder={t("post.cityPlaceholder")}
-                    className="w-full rounded-2xl border border-border bg-background p-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+                    className="w-full rounded-xl border border-border bg-background p-4 text-sm outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelector(null)}
-                  className="w-full rounded-2xl bg-brand py-3.5 text-sm font-black text-brand-foreground shadow-lg shadow-brand/20"
+                  className="w-full rounded-xl bg-brand py-3.5 text-sm font-black text-brand-foreground shadow-lg shadow-brand/20"
                 >
                   {t("post.saveLocation")}
                 </button>
@@ -1405,7 +1379,7 @@ function PostProduct() {
           <img
             src={previewPhoto}
             alt="Full listing preview"
-            className="max-h-[85vh] max-w-full rounded-2xl object-contain"
+            className="max-h-[85vh] max-w-full rounded-xl object-contain"
             onClick={(event) => event.stopPropagation()}
           />
         </div>
@@ -1454,7 +1428,7 @@ function SelectorRow({
     <button
       type="button"
       onClick={onClick}
-      className={`flex min-h-14 w-full items-center gap-3 rounded-2xl border bg-card px-4 text-left transition hover:border-brand/60 active:scale-[0.995] ${invalid ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
+      className={`flex min-h-14 w-full items-center gap-3 rounded-xl border bg-card px-4 text-left transition hover:border-brand/60 active:scale-[0.995] ${invalid ? "border-brand ring-2 ring-brand/10" : "border-border"}`}
     >
       {icon && (
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand">

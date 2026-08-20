@@ -1,5 +1,6 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  ArrowLeft,
   Bell,
   Home,
   Bookmark,
@@ -22,8 +23,21 @@ import { getCurrentSession, signOut } from "@/lib/auth";
 
 const LOGO = "/goall26-logo.png";
 
-export function AppShell({ children, title }: { children: ReactNode; title?: string }) {
+export function AppShell({
+  children,
+  title,
+  headerVariant = "default",
+  headerAction,
+  hideBottomNav = false,
+}: {
+  children: ReactNode;
+  title?: string;
+  headerVariant?: "default" | "form";
+  headerAction?: ReactNode;
+  hideBottomNav?: boolean;
+}) {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { totalUnread } = useMessages();
@@ -49,100 +63,124 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   ] as const;
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
-        <div className="mx-auto max-w-2xl flex items-center justify-between px-4 py-3">
-          <Link to="/market" className="flex items-center gap-2">
-            <img
-              src={LOGO}
-              alt="Goall26"
-              decoding="async"
-              className="h-9 w-9 rounded-full object-cover"
-            />
-            <span className="font-black text-lg tracking-tight">
-              <span className="text-navy">Goall</span>
-              <span className="text-orange">26</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-1">
-            <Link
-              to="/notifications"
-              className="relative rounded-full p-2 text-navy hover:bg-accent"
-              aria-label={
-                unreadNotifications > 0
-                  ? `${unreadNotifications} ${t("notifications")}`
-                  : t("notifications")
-              }
+    <div className={`min-h-screen bg-background text-foreground ${hideBottomNav ? "" : "pb-20"}`}>
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
+        {headerVariant === "form" ? (
+          <div className="mx-auto flex min-h-16 max-w-2xl items-center justify-between gap-3 px-4">
+            <button
+              type="button"
+              onClick={() => {
+                if (window.history.length > 1) window.history.back();
+                else void navigate({ to: "/market" });
+              }}
+              className="rounded-full p-2 text-foreground transition hover:bg-accent"
+              aria-label="Go back"
             >
-              <Bell className="h-5 w-5" />
-              {unreadNotifications > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
-                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+            <h1 className="min-w-0 flex-1 truncate text-lg font-black">{title}</h1>
+            {headerAction ?? <span className="w-10" />}
+          </div>
+        ) : (
+          <>
+            <div className="mx-auto max-w-2xl flex items-center justify-between px-4 py-3">
+              <Link to="/market" className="flex items-center gap-2">
+                <img
+                  src={LOGO}
+                  alt="Goall26"
+                  decoding="async"
+                  className="h-9 w-9 rounded-full object-cover"
+                />
+                <span className="font-black text-lg tracking-tight">
+                  <span className="text-navy">Goall</span>
+                  <span className="text-orange">26</span>
                 </span>
-              )}
-            </Link>
-            <div className="flex items-center gap-1.5">
-              {!isLoggedIn && (
-                <>
-                  <Link
-                    to="/login"
-                    className="rounded-lg border border-navy px-2.5 py-1 text-xs font-bold text-navy hover:bg-navy/5"
+              </Link>
+              <div className="flex items-center gap-1">
+                <Link
+                  to="/notifications"
+                  className="relative rounded-full p-2 text-navy hover:bg-accent"
+                  aria-label={
+                    unreadNotifications > 0
+                      ? `${unreadNotifications} ${t("notifications")}`
+                      : t("notifications")
+                  }
+                >
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications > 0 && (
+                    <span className="absolute top-0.5 right-0.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
+                      {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                    </span>
+                  )}
+                </Link>
+                <div className="flex items-center gap-1.5">
+                  {!isLoggedIn && (
+                    <>
+                      <Link
+                        to="/login"
+                        className="rounded-lg border border-navy px-2.5 py-1 text-xs font-bold text-navy hover:bg-navy/5"
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="rounded-lg bg-orange px-2.5 py-1 text-xs font-bold text-white shadow-sm"
+                      >
+                        Sign Up
+                      </Link>
+                    </>
+                  )}
+                  <button
+                    onClick={() => setMenuOpen(true)}
+                    className="p-2 rounded-full hover:bg-accent"
+                    aria-label={t("menu")}
                   >
-                    Sign In
-                  </Link>
-                  <Link
-                    to="/signup"
-                    className="rounded-lg bg-orange px-2.5 py-1 text-xs font-bold text-white shadow-sm"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
-              <button
-                onClick={() => setMenuOpen(true)}
-                className="p-2 rounded-full hover:bg-accent"
-                aria-label={t("menu")}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+                    <Menu className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        {title && (
-          <div className="mx-auto max-w-2xl px-4 pb-3">
-            <h1 className="text-2xl font-bold">{title}</h1>
-          </div>
+            {title && (
+              <div className="mx-auto max-w-2xl px-4 pb-3">
+                <h1 className="text-2xl font-bold">{title}</h1>
+              </div>
+            )}
+          </>
         )}
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-4">{children}</main>
+      <main className={`mx-auto max-w-2xl ${headerVariant === "form" ? "px-0 py-0" : "px-4 py-4"}`}>
+        {children}
+      </main>
 
-      <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur border-t border-border">
-        <div className="mx-auto max-w-2xl grid grid-cols-5">
-          {tabs.map((tab) => {
-            const active = pathname.startsWith(tab.to);
-            const Icon = tab.icon;
-            return (
-              <Link
-                key={tab.to}
-                to={tab.to}
-                aria-label={tab.label}
-                className={`relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition-colors active:scale-[0.97] ${active ? "text-navy" : "text-muted-foreground"}`}
-              >
-                <div className="relative">
-                  <Icon className={`h-6 w-6 ${active ? "stroke-[2.7]" : "stroke-[1.9]"}`} />
-                  {tab.badge > 0 && (
-                    <span className="absolute -right-2 -top-1.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
-                      {tab.badge > 9 ? "9+" : tab.badge}
-                    </span>
-                  )}
-                </div>
-                <span className="max-w-full truncate">{tab.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      {!hideBottomNav && (
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur border-t border-border">
+          <div className="mx-auto max-w-2xl grid grid-cols-5">
+            {tabs.map((tab) => {
+              const active = pathname.startsWith(tab.to);
+              const Icon = tab.icon;
+              return (
+                <Link
+                  key={tab.to}
+                  to={tab.to}
+                  aria-label={tab.label}
+                  className={`relative flex min-w-0 min-h-16 flex-col items-center justify-center gap-1 px-0.5 py-2 text-[10px] font-semibold transition-colors active:scale-[0.97] ${active ? "text-navy" : "text-muted-foreground"}`}
+                >
+                  <div className="relative">
+                    <Icon className={`h-6 w-6 ${active ? "stroke-[2.7]" : "stroke-[1.9]"}`} />
+                    {tab.badge > 0 && (
+                      <span className="absolute -right-2 -top-1.5 min-w-4 h-4 px-1 rounded-full bg-brand text-brand-foreground text-[9px] font-bold flex items-center justify-center">
+                        {tab.badge > 9 ? "9+" : tab.badge}
+                      </span>
+                    )}
+                  </div>
+                  <span className="max-w-full truncate">{tab.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {menuOpen && <SettingsDrawer isLoggedIn={isLoggedIn} onClose={() => setMenuOpen(false)} />}
     </div>
