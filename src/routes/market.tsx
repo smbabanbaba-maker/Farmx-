@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { ListingRail, MarketListingCard } from "@/components/MarketListingCard";
+import { ListingRail } from "@/components/MarketListingCard";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
 import type { MarketCategory } from "@/lib/market-types";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
@@ -12,23 +12,23 @@ import { ChevronRight, CircleHelp, MapPin, Search, ShieldCheck, X } from "lucide
 export const Route = createFileRoute("/market")({
   head: () =>
     createSeoHead({
-      title: "Agricultural marketplace in Nigeria | Goall26",
+      title: "Goall26 marketplace in Nigeria | Buy and sell online",
       description:
-        "Browse public agricultural products, services and marketplace listings across Nigeria on Goall26.",
+        "Discover real products, services, vehicles, property, electronics, and more from sellers across Nigeria on Goall26.",
       path: "/market",
       keywords: [
-        "Nigeria agricultural marketplace",
-        "farm products",
-        "farm services",
-        "Goall26 Market",
+        "Nigeria online marketplace",
+        "buy and sell Nigeria",
+        "classified marketplace",
+        "Goall26 marketplace",
       ],
       noindex: !publicIndexingEnabled(),
       jsonLd: [
         {
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "Goall26 Market",
-          description: "Public agricultural products and marketplace listings on Goall26.",
+          name: "Goall26 marketplace",
+          description: "Public products, services, and marketplace listings on Goall26.",
         },
         breadcrumbJsonLd([{ name: "Goall26 Market", path: "/market" }]),
       ],
@@ -47,39 +47,23 @@ function Market() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<MarketCategory[]>([]);
   const [sections, setSections] = useState<{
-    featured: Awaited<ReturnType<MarketRepository["getFeaturedListings"]>>;
-    sponsored: Awaited<ReturnType<MarketRepository["getSponsoredListings"]>>;
     nearby: Awaited<ReturnType<MarketRepository["getNearbyListings"]>>;
     latest: Awaited<ReturnType<MarketRepository["getListings"]>>["listings"];
-    popular: Awaited<ReturnType<MarketRepository["getPopularListings"]>>;
-    all: Awaited<ReturnType<MarketRepository["getListings"]>>["listings"];
-  }>({ featured: [], sponsored: [], nearby: [], latest: [], popular: [], all: [] });
+  }>({ nearby: [], latest: [] });
 
   const loadMarket = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const nextRepository = await getMarketRepository();
-      const [categoriesResult, featured, sponsored, nearby, latest, popular, all] =
-        await Promise.all([
-          nextRepository.getCategories(),
-          nextRepository.getFeaturedListings(),
-          nextRepository.getSponsoredListings(),
-          nextRepository.getNearbyListings(location),
-          nextRepository.getListings({ sort: "newest", pageSize: 12 }),
-          nextRepository.getPopularListings(),
-          nextRepository.getListings({ sort: "relevant", pageSize: 8 }),
-        ]);
+      const [categoriesResult, nearby, latest] = await Promise.all([
+        nextRepository.getCategories(),
+        nextRepository.getNearbyListings(location),
+        nextRepository.getListings({ sort: "newest", pageSize: 12 }),
+      ]);
       setRepository(nextRepository);
       setCategories(categoriesResult);
-      setSections({
-        featured,
-        sponsored,
-        nearby,
-        latest: latest.listings,
-        popular,
-        all: all.listings,
-      });
+      setSections({ nearby, latest: latest.listings });
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Market listings could not be loaded.");
     } finally {
@@ -91,27 +75,10 @@ function Market() {
     void loadMarket();
   }, [loadMarket]);
 
-  const serviceListings = useMemo(
-    () =>
-      sections.all.filter(
-        (listing) =>
-          listing.category === "Farm Services" || listing.category === "Transport & Logistics",
-      ),
-    [sections.all],
-  );
-  const businessListings = useMemo(() => {
-    const seen = new Set<string>();
-    return sections.all.filter(
-      (listing) =>
-        listing.seller.type === "business" &&
-        !seen.has(listing.seller.name) &&
-        seen.add(listing.seller.name),
-    );
-  }, [sections.all]);
   const searchSuggestions = useMemo(() => {
     const search = query.trim().toLowerCase();
-    if (!search) return ["Maize", "Tractors", "Irrigation", "Fertilizer", "Farm services"];
-    return sections.all
+    if (!search) return ["Vehicles", "Phones", "Property", "Fashion", "Services"];
+    return [...sections.latest, ...sections.nearby]
       .filter(
         (listing) =>
           listing.title.toLowerCase().includes(search) ||
@@ -120,7 +87,7 @@ function Market() {
       )
       .slice(0, 5)
       .map((listing) => listing.title);
-  }, [query, sections.all]);
+  }, [query, sections.latest, sections.nearby]);
 
   const submitSearch = async (value = query) => {
     const search = value.trim();
@@ -222,7 +189,9 @@ function Market() {
           <div className="flex items-end justify-between px-1">
             <div>
               <h2 className="text-base font-black">Categories</h2>
-              <p className="text-[10px] text-muted-foreground">Shop by what you need.</p>
+              <p className="text-[10px] text-muted-foreground">
+                Find products and services for everyday life.
+              </p>
             </div>
             <Link to="/market/categories" className="text-[11px] font-bold text-navy">
               See all
@@ -254,93 +223,21 @@ function Market() {
         ) : (
           <>
             <ListingRail
-              title="Featured listings"
-              subtitle="Paid Goall26 visibility, clearly labelled."
-              listings={sections.featured}
-              href="/market/search"
-            />
-            <ListingRail
-              title="Sponsored listings"
-              subtitle="Seller-sponsored placements."
-              listings={sections.sponsored}
-              href="/market/search"
-            />
-            <ListingRail
               title={`Nearby in ${location || "Nigeria"}`}
-              subtitle="Choose a state above; GPS permission is never required."
               listings={sections.nearby}
               href="/market/search"
             />
-            <ListingRail
-              title="Latest listings"
-              subtitle="Recently published agricultural listings."
-              listings={sections.latest}
-              href="/market/search"
-            />
-            <ListingRail
-              title="Popular listings"
-              subtitle="Listings getting attention from Goall26 buyers."
-              listings={sections.popular}
-              href="/market/search"
-            />
-            {serviceListings.length > 0 && (
-              <ListingRail
-                title="Farm services"
-                subtitle="Connect directly with agricultural specialists."
-                listings={serviceListings}
-                href="/market/search"
-              />
-            )}
-            {businessListings.length > 0 && (
-              <ListingRail
-                title="Agricultural businesses"
-                subtitle="Explore businesses and their active listings."
-                listings={businessListings}
-                href="/market/search"
-              />
-            )}
-            <section className="space-y-2">
-              <div className="flex items-end justify-between px-1">
-                <div>
-                  <h2 className="text-base font-black">More listings</h2>
-                  <p className="text-[10px] text-muted-foreground">
-                    Browse all available marketplace ads.
-                  </p>
-                </div>
-                <Link
-                  to="/market/search"
-                  search={{ q: "" }}
-                  className="text-[11px] font-bold text-brand"
-                >
-                  See all
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {sections.all.map((listing) => (
-                  <MarketListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            </section>
-            <section className="rounded-2xl border border-brand/20 bg-brand/5 p-4">
-              <div className="flex gap-3">
-                <ShieldCheck className="h-5 w-5 shrink-0 text-brand" />
-                <div>
-                  <h2 className="text-sm font-black">Goall26 safety reminder</h2>
-                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                    Always verify products and sellers before making payment. Meet safely, inspect
-                    agricultural goods, avoid suspicious payments, and report suspicious listings.
-                    Goall26 does not hold or process private buyer-to-seller product payments.
-                  </p>
-                  <Link
-                    to="/profile-center/$section"
-                    params={{ section: "safety" }}
-                    className="mt-2 inline-flex items-center gap-1 text-[10px] font-black text-brand"
-                  >
-                    Read safety guidance <ChevronRight className="h-3 w-3" />
-                  </Link>
-                </div>
-              </div>
-            </section>
+            <ListingRail title="Latest listings" listings={sections.latest} href="/market/search" />
+            {sections.nearby.length === 0 && sections.latest.length === 0 && <MarketEmpty />}
+            <Link
+              to="/profile-center/$section"
+              params={{ section: "safety" }}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-[11px] font-black text-navy transition hover:border-navy/30 hover:bg-navy/5"
+            >
+              <ShieldCheck className="h-4 w-4 text-success" />
+              Shop safely on Goall26
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
           </>
         )}
       </div>
@@ -350,21 +247,37 @@ function Market() {
 
 function MarketLoading() {
   return (
-    <div className="space-y-4" aria-label="Loading market listings">
-      <div className="h-5 w-40 animate-pulse rounded bg-muted" />
-      <div className="flex gap-3 overflow-hidden">
-        {Array.from({ length: 3 }, (_, index) => (
-          <div key={index} className="h-52 min-w-[196px] animate-pulse rounded-2xl bg-muted" />
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="h-64 animate-pulse rounded-2xl bg-muted" />
-        ))}
-      </div>
+    <div className="space-y-6" aria-label="Loading market listings">
+      {Array.from({ length: 2 }, (_, railIndex) => (
+        <section key={railIndex} className="space-y-2">
+          <div className="h-5 w-36 animate-pulse rounded bg-muted" />
+          <div className="flex gap-3 overflow-hidden">
+            {Array.from({ length: 3 }, (_, index) => (
+              <div key={index} className="h-52 min-w-[196px] animate-pulse rounded-2xl bg-muted" />
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }
+function MarketEmpty() {
+  return (
+    <section className="rounded-2xl border border-dashed border-border bg-card px-5 py-10 text-center">
+      <h2 className="text-sm font-black">No listings here yet</h2>
+      <p className="mx-auto mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
+        Try another location or be the first seller to post a product or service.
+      </p>
+      <Link
+        to="/post"
+        className="mt-4 inline-flex rounded-xl bg-brand px-4 py-2.5 text-xs font-black text-brand-foreground"
+      >
+        Post a listing
+      </Link>
+    </section>
+  );
+}
+
 function MarketError({ message, retry }: { message: string; retry: () => void }) {
   return (
     <section className="rounded-2xl border border-dashed border-brand/40 bg-card px-5 py-10 text-center">
