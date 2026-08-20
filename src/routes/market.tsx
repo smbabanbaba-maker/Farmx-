@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { ListingRail } from "@/components/MarketListingCard";
 import { getMarketRepository, type MarketRepository } from "@/lib/market-repository";
+import { getCategoryImage } from "@/lib/market-category-images";
 import type { MarketCategory } from "@/lib/market-types";
 import { NIGERIA_STATES_LGAS } from "@/lib/nigeria-locations";
 import { useI18n } from "@/lib/i18n";
@@ -205,8 +206,13 @@ function Market() {
                 params={{ category: category.id }}
                 className="group flex min-w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-border bg-card px-2 py-2.5 text-center transition hover:border-navy/40 hover:bg-navy/5"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/10 text-xl">
-                  {category.icon}
+                <span className="flex h-10 w-12 items-center justify-center overflow-hidden rounded-xl bg-navy/10">
+                  <img
+                    src={getCategoryImage(category.id)}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </span>
                 <span className="w-full truncate text-[9px] font-bold group-hover:text-navy">
                   {category.name}

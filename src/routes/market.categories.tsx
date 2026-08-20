@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { getMarketRepository } from "@/lib/market-repository";
 import type { MarketCategory } from "@/lib/market-types";
 import { ChevronLeft, ChevronRight, Search, Tags } from "lucide-react";
+import { getCategoryImage } from "@/lib/market-category-images";
 import { breadcrumbJsonLd, createSeoHead, publicIndexingEnabled } from "@/lib/seo";
 
 export const Route = createFileRoute("/market/categories")({
@@ -11,9 +12,9 @@ export const Route = createFileRoute("/market/categories")({
     createSeoHead({
       title: "Marketplace categories | Goall26",
       description:
-        "Explore public Goall26 marketplace categories for agriculture, vehicles, property, services and more.",
+        "Explore public Goall26 marketplace categories for products, services, vehicles, property, electronics, fashion and more.",
       path: "/market/categories",
-      keywords: ["Goall26 categories", "agriculture categories", "Nigeria marketplace categories"],
+      keywords: ["Goall26 categories", "Nigeria marketplace categories", "buy and sell categories"],
       noindex: !publicIndexingEnabled(),
       jsonLd: breadcrumbJsonLd([
         { name: "Goall26 Market", path: "/market" },
@@ -53,7 +54,7 @@ function MarketCategories() {
             <p className="text-[10px] font-bold uppercase tracking-widest text-brand">
               Goall26 Market
             </p>
-            <h1 className="text-xl font-black">Agricultural categories</h1>
+            <h1 className="text-xl font-black">All categories</h1>
           </div>
         </div>
         <div className="relative">
@@ -74,8 +75,13 @@ function MarketCategories() {
               className="block rounded-2xl border border-border bg-card p-4 transition hover:border-brand/50 hover:bg-brand/5"
             >
               <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand/10 text-2xl">
-                  {category.icon}
+                <span className="h-16 w-20 shrink-0 overflow-hidden rounded-2xl bg-brand/10">
+                  <img
+                    src={getCategoryImage(category.id)}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
