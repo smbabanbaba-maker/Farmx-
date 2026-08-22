@@ -207,7 +207,7 @@ function ProfilePage() {
             Make sure the Goall26 Profile service environment is configured correctly on the server.
           </p>
           <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-left text-xs text-muted-foreground">
-            {error}
+            {profileErrorMessage(error)}
           </p>
           <button
             onClick={() => void refresh()}
@@ -572,6 +572,19 @@ function roleLabel(role: string) {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+function profileErrorMessage(error: string | null) {
+  const message = error?.toLowerCase() ?? "";
+  if (
+    message.includes("cognito") ||
+    message.includes("user pool") ||
+    message.includes("not configured") ||
+    message.includes("profile service")
+  ) {
+    return "Profile service is temporarily unavailable. Please try again shortly.";
+  }
+  return "We could not load your Profile right now. Please try again.";
 }
 
 function verificationLabel(status: string) {
