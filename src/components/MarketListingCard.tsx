@@ -26,9 +26,7 @@ export function MarketListingCard({
     }
   };
   return (
-    <article
-      className={`group relative overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-md ${compact ? "min-w-[196px] max-w-[196px]" : ""}`}
-    >
+    <article className="group relative min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:border-brand/50 hover:shadow-md">
       <div className="absolute right-2 top-2 z-10 flex gap-1">
         <button
           onClick={(event) => {
@@ -153,11 +151,13 @@ export function ListingRail({
   subtitle,
   listings,
   href,
+  layout = "list",
 }: {
   title: string;
   subtitle?: string;
   listings: MarketListing[];
   href?: string;
+  layout?: "list" | "grid";
 }) {
   if (listings.length === 0) return null;
   return (
@@ -173,7 +173,7 @@ export function ListingRail({
           </Link>
         )}
       </div>
-      <div className="space-y-3">
+      <div className={layout === "grid" ? "grid grid-cols-2 gap-2.5" : "space-y-3"}>
         {listings.map((listing) => (
           <MarketListingCard key={listing.id} listing={listing} />
         ))}

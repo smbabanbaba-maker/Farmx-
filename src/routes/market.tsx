@@ -232,8 +232,14 @@ function Market() {
               title={`Nearby in ${location || "Nigeria"}`}
               listings={sections.nearby}
               href="/market/search"
+              layout="grid"
             />
-            <ListingRail title="Latest listings" listings={sections.latest} href="/market/search" />
+            <ListingRail
+              title="Latest listings"
+              listings={sections.latest}
+              href="/market/search"
+              layout="grid"
+            />
             {sections.nearby.length === 0 && sections.latest.length === 0 && <MarketEmpty />}
             <Link
               to="/profile-center/$section"
@@ -257,8 +263,8 @@ function MarketLoading() {
       {Array.from({ length: 2 }, (_, railIndex) => (
         <section key={railIndex} className="space-y-2">
           <div className="h-5 w-36 animate-pulse rounded bg-muted" />
-          <div className="space-y-3">
-            {Array.from({ length: 3 }, (_, index) => (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {Array.from({ length: 4 }, (_, index) => (
               <div key={index} className="h-72 animate-pulse rounded-2xl bg-muted" />
             ))}
           </div>
