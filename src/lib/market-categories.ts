@@ -120,19 +120,6 @@ const PROPERTY_COMMON: DynamicField[] = [
   CONDITION,
 ];
 
-const JOB_COMMON: DynamicField[] = [
-  {
-    id: "job-type",
-    label: "Job Type",
-    type: "select",
-    options: ["Full-time", "Part-time", "Contract", "Internship", "Freelance"],
-  },
-  { id: "salary", label: "Salary", type: "text", placeholder: "e.g. ₦250,000 per month" },
-  { id: "experience", label: "Experience", type: "text", placeholder: "e.g. 2 years" },
-  { id: "education", label: "Education", type: "text" },
-  { id: "deadline", label: "Deadline", type: "text", placeholder: "e.g. 30 Sep 2026" },
-];
-
 const SERVICE_COMMON: DynamicField[] = [
   { id: "experience", label: "Experience", type: "text", placeholder: "e.g. 5 years" },
   {
@@ -234,7 +221,6 @@ export const UNIVERSAL_CATEGORIES: MainCategory[] = [
     icon: "🛠️",
     commonFields: SERVICE_COMMON,
     subcategories: [
-      { id: "education-courses", name: "Education & Courses" },
       { id: "construction-building", name: "Construction & Building Materials" },
       { id: "industrial-equipment", name: "Industrial Equipment" },
       { id: "business-commercial", name: "Business & Commercial" },
